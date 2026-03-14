@@ -1,0 +1,57 @@
+import express from 'express'
+import cors from 'cors'
+import { json, urlencoded } from 'express'
+import { config } from './config'
+import { testConnection } from './db'
+import { authRouter } from './routes/auth'
+import { postRouter } from './routes/posts'
+import { messageRouter } from './routes/messages'
+import { adminRouter } from './routes/admin'
+
+const app = express()
+
+// 全局中间件
+app.use(
+  cors({
+    origin: true,
+    credentials: true
+  })
+)
+app.use(json())
+app.use(urlencoded({ extended: true }))
+
+// 基础健康检查接口
+app.get('/api/health', (_req, res) => {
+  res.json({ status: 'ok', service: 'WiseLearn API' })
+})
+
+// 功能路由
+app.use('/api/auth', authRouter)
+app.use('/api/posts', postRouter)
+app.use('/api/messages', messageRouter)
+app.use('/api/admin', adminRouter)
+
+// 全局错误处理
+app.use(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  (err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+    // eslint-disable-next-line no-console
+    console.error('Unhandled error:', err)
+    res.status(500).json({ message: '服务器内部错误，请稍后重试' })
+  }
+)
+
+async function bootstrap(): Promise<void> {
+  try {
+    await testConnection()
+    app.listen(config.port, () => {
+      // eslint-disable-next-line no-console
+      console.log(`WiseLearn API listening on port ${config.port}`)
+    })
+  } catch {
+    process.exit(1)
+  }
+}
+
+bootstrap()
+
