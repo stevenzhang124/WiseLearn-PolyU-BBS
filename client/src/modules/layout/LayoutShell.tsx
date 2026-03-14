@@ -3,6 +3,7 @@ import { Layout, Menu, Badge, Typography } from 'antd'
 import {
   MessageOutlined,
   HomeOutlined,
+  EditOutlined,
   UserOutlined,
   DashboardOutlined,
   LogoutOutlined
@@ -25,6 +26,7 @@ export const LayoutShell: React.FC<{ children: React.ReactNode }> = ({
 
   const selectedKeys: string[] = []
   if (location.pathname.startsWith('/messages')) selectedKeys.push('messages')
+  else if (location.pathname === '/create') selectedKeys.push('create')
   else if (location.pathname.startsWith('/profile')) selectedKeys.push('profile')
   else if (location.pathname.startsWith('/admin')) selectedKeys.push('admin')
   else selectedKeys.push('home')
@@ -95,6 +97,11 @@ export const LayoutShell: React.FC<{ children: React.ReactNode }> = ({
                 key: 'home',
                 icon: <HomeOutlined />,
                 label: <Link to="/">首页</Link>
+              },
+              {
+                key: 'create',
+                icon: <EditOutlined />,
+                label: <Link to="/create">发帖</Link>
               },
               {
                 key: 'messages',

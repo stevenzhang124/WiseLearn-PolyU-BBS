@@ -7,6 +7,7 @@ import { authRouter } from './routes/auth'
 import { postRouter } from './routes/posts'
 import { messageRouter } from './routes/messages'
 import { adminRouter } from './routes/admin'
+import { usersRouter } from './routes/users'
 
 const app = express()
 
@@ -30,6 +31,7 @@ app.use('/api/auth', authRouter)
 app.use('/api/posts', postRouter)
 app.use('/api/messages', messageRouter)
 app.use('/api/admin', adminRouter)
+app.use('/api/users', usersRouter)
 
 // 全局错误处理
 app.use(

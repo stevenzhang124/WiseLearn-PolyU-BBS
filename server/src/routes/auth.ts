@@ -3,7 +3,7 @@ import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import { pool } from '../db'
 import { config } from '../config'
-import { AuthUser, AuthRequest } from '../middleware/auth'
+import { AuthUser, AuthRequest, authMiddleware } from '../middleware/auth'
 
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@(polyu\.edu\.hk|connect\.polyu\.hk)$/
 const NICKNAME_REGEX = /^[\u4e00-\u9fa5A-Za-z0-9]{2,20}$/
@@ -111,9 +111,9 @@ authRouter.post('/login', async (req, res) => {
 })
 
 /**
- * 获取当前登录用户信息
+ * 获取当前登录用户信息（需要携带有效 JWT）
  */
-authRouter.get('/me', async (req: AuthRequest, res) => {
+authRouter.get('/me', authMiddleware, async (req: AuthRequest, res) => {
   if (!req.user) {
     res.status(401).json({ message: '未登录' })
     return
@@ -143,9 +143,9 @@ authRouter.get('/me', async (req: AuthRequest, res) => {
 })
 
 /**
- * 更新昵称
+ * 更新昵称（需要携带有效 JWT）
  */
-authRouter.put('/nickname', async (req: AuthRequest, res) => {
+authRouter.put('/nickname', authMiddleware, async (req: AuthRequest, res) => {
   if (!req.user) {
     res.status(401).json({ message: '未登录' })
     return

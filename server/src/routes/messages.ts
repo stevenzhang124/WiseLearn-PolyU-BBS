@@ -8,6 +8,61 @@ export const messageRouter = Router()
 messageRouter.use(authMiddleware)
 
 /**
+ * 获取当前用户的会话列表（有过消息往来的用户，含对方发来的）
+ * 返回：{ conversations: [{ userId, nickname, lastMessageAt, unreadCount }] }
+ */
+messageRouter.get('/conversations', async (req: AuthRequest, res) => {
+  if (!req.user) {
+    res.status(401).json({ message: '未登录' })
+    return
+  }
+
+  const myId = req.user.id
+
+  try {
+    const [rows] = await pool.query(
+      `
+      SELECT
+        u.id AS userId,
+        u.nickname,
+        sub.last_at AS lastMessageAt,
+        COALESCE(unread.cnt, 0) AS unreadCount
+      FROM (
+        SELECT
+          CASE WHEN from_user_id = ? THEN to_user_id ELSE from_user_id END AS peer_id,
+          MAX(created_at) AS last_at
+        FROM messages
+        WHERE from_user_id = ? OR to_user_id = ?
+        GROUP BY peer_id
+      ) sub
+      JOIN users u ON u.id = sub.peer_id
+      LEFT JOIN (
+        SELECT from_user_id, COUNT(*) AS cnt
+        FROM messages
+        WHERE to_user_id = ? AND is_read = 0
+        GROUP BY from_user_id
+      ) unread ON unread.from_user_id = u.id
+      ORDER BY sub.last_at DESC
+    `,
+      [myId, myId, myId, myId]
+    )
+
+    const conversations = (rows as any[]).map((r) => ({
+      userId: r.userId,
+      nickname: r.nickname,
+      lastMessageAt: r.lastMessageAt,
+      unreadCount: Number(r.unreadCount) || 0
+    }))
+
+    res.json({ conversations })
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('Get conversations error', err)
+    res.status(500).json({ message: '获取会话列表失败' })
+  }
+})
+
+/**
  * 发送私信
  */
 messageRouter.post('/', async (req: AuthRequest, res) => {

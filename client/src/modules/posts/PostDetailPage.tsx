@@ -1,17 +1,7 @@
 import React, { useEffect, useState } from 'react'
-import {
-  Button,
-  Card,
-  Comment,
-  Form,
-  Input,
-  List,
-  Space,
-  Typography,
-  message
-} from 'antd'
+import { Button, Card, Form, Input, List, Space, Typography, message } from 'antd'
 import { LikeOutlined, ShareAltOutlined } from '@ant-design/icons'
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import {
   deleteComment,
   fetchPostDetail,
@@ -32,6 +22,7 @@ export const PostDetailPage: React.FC = () => {
   const [submitting, setSubmitting] = useState(false)
   const [liked, setLiked] = useState(false)
   const { user } = useAuth()
+  const navigate = useNavigate()
 
   const loadDetail = async () => {
     if (!postId) return
@@ -114,7 +105,23 @@ export const PostDetailPage: React.FC = () => {
           <>
             <Typography.Title level={3}>{post.title}</Typography.Title>
             <Space style={{ marginBottom: 16 }} size="large">
-              <span>作者：{post.author}</span>
+              <span>
+                作者：
+                <Typography.Link
+                  onClick={() =>
+                    post.user_id !== user?.id &&
+                    navigate(`/messages/${post.user_id}`)
+                  }
+                  style={
+                    post.user_id === user?.id
+                      ? { cursor: 'default', color: 'inherit' }
+                      : undefined
+                  }
+                >
+                  {post.author}
+                  {post.user_id === user?.id ? '（我）' : '（发私信）'}
+                </Typography.Link>
+              </span>
               <span>浏览：{post.view_count}</span>
               <span>点赞：{post.like_count}</span>
               <span>
@@ -187,25 +194,22 @@ export const PostDetailPage: React.FC = () => {
           dataSource={comments}
           renderItem={(item) => (
             <li key={item.id}>
-              <Comment
-                author={item.author}
-                content={item.content}
-                datetime={new Date(
-                  item.created_at
-                ).toLocaleString('zh-CN')}
-                actions={
-                  item.author === user?.nickname
-                    ? [
-                        <span
-                          key="delete"
-                          onClick={() => handleDeleteComment(item.id)}
-                        >
-                          删除
-                        </span>
-                      ]
-                    : undefined
-                }
-              />
+              <Space direction="vertical" style={{ width: '100%' }}>
+                <Space>
+                  <Typography.Text strong>{item.author}</Typography.Text>
+                  <Typography.Text type="secondary">
+                    {new Date(item.created_at).toLocaleString('zh-CN')}
+                  </Typography.Text>
+                </Space>
+                <Typography.Paragraph style={{ marginBottom: 4 }}>
+                  {item.content}
+                </Typography.Paragraph>
+                {item.author === user?.nickname && (
+                  <Typography.Link onClick={() => handleDeleteComment(item.id)}>
+                    删除
+                  </Typography.Link>
+                )}
+              </Space>
             </li>
           )}
         />

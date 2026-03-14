@@ -1,13 +1,20 @@
 import axios from 'axios'
 import type { AuthUser } from '../auth/AuthContext'
 
+let inMemoryToken: string | null = null
+
+export function setApiToken(token: string | null): void {
+  inMemoryToken = token
+}
+
 const api = axios.create({
   baseURL: 'http://localhost:4000/api',
   timeout: 10000
 })
 
 api.interceptors.request.use((config) => {
-  const token = window.localStorage.getItem('wiselearn_token')
+  const stored = window.localStorage.getItem('wiselearn_token')
+  const token = inMemoryToken ?? stored
   if (token) {
     config.headers = {
       ...config.headers,
@@ -109,11 +116,28 @@ export async function getActivities(): Promise<any> {
   return res.data
 }
 
+export async function getUserApi(id: number): Promise<{ id: number; nickname: string }> {
+  const res = await api.get(`/users/${id}`)
+  return res.data
+}
+
 export async function sendMessage(data: {
   toUserId: number
   content: string
 }): Promise<void> {
   await api.post('/messages', data)
+}
+
+export async function fetchConversationsList(): Promise<{
+  conversations: Array<{
+    userId: number
+    nickname: string
+    lastMessageAt: string
+    unreadCount: number
+  }>
+}> {
+  const res = await api.get('/messages/conversations')
+  return res.data
 }
 
 export async function fetchConversation(userId: number): Promise<any> {

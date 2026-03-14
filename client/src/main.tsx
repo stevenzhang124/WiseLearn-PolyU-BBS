@@ -8,6 +8,7 @@ import { LayoutShell } from './modules/layout/LayoutShell'
 import { LoginPage } from './modules/auth/LoginPage'
 import { RegisterPage } from './modules/auth/RegisterPage'
 import { HomePage } from './modules/home/HomePage'
+import { CreatePostPage } from './modules/posts/CreatePostPage'
 import { PostDetailPage } from './modules/posts/PostDetailPage'
 import { ProfilePage } from './modules/profile/ProfilePage'
 import { MessagesPage } from './modules/messages/MessagesPage'
@@ -78,6 +79,14 @@ ReactDOM.createRoot(document.getElementById('app') as HTMLElement).render(
                 }
               />
               <Route
+                path="/create"
+                element={
+                  <PrivateRoute>
+                    <CreatePostPage />
+                  </PrivateRoute>
+                }
+              />
+              <Route
                 path="/posts/:id"
                 element={
                   <PrivateRoute>
@@ -90,6 +99,14 @@ ReactDOM.createRoot(document.getElementById('app') as HTMLElement).render(
                 element={
                   <PrivateRoute>
                     <ProfilePage />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/messages/:userId"
+                element={
+                  <PrivateRoute>
+                    <MessagesPage />
                   </PrivateRoute>
                 }
               />

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import { getMeApi, loginApi } from '../shared/api'
+import { getMeApi, loginApi, setApiToken } from '../shared/api'
 
 export interface AuthUser {
   id: number
@@ -27,9 +27,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children
 }) => {
   const [user, setUser] = useState<AuthUser | null>(null)
-  const [token, setToken] = useState<string | null>(
-    () => window.localStorage.getItem(TOKEN_KEY)
-  )
+  const [token, setToken] = useState<string | null>(() => {
+    const stored = window.localStorage.getItem(TOKEN_KEY)
+    if (stored) {
+      setApiToken(stored)
+    }
+    return stored
+  })
 
   useEffect(() => {
     if (!token) return
@@ -44,6 +48,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     const { token: newToken, user: userInfo } = await loginApi(email, password)
     setToken(newToken)
     setUser(userInfo)
+    setApiToken(newToken)
     if (remember) {
       window.localStorage.setItem(TOKEN_KEY, newToken)
     } else {
@@ -54,6 +59,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const logout = (): void => {
     setUser(null)
     setToken(null)
+    setApiToken(null)
     window.localStorage.removeItem(TOKEN_KEY)
   }
 
