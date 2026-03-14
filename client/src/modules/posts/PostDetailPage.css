@@ -1,0 +1,201 @@
+/* 帖子详情：小红书风格 */
+.wiselearn-detail {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 16px 32px;
+}
+.wiselearn-detail-loading {
+  text-align: center;
+  padding: 48px;
+  color: #999;
+}
+
+.wiselearn-detail-article {
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+.wiselearn-detail-title {
+  font-size: 22px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.85);
+  margin: 0 0 16px;
+  line-height: 1.4;
+}
+.wiselearn-detail-author-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.wiselearn-detail-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #C8102E;
+  color: #fff;
+  font-size: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.wiselearn-detail-author-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.wiselearn-detail-author-name {
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.85);
+}
+.wiselearn-detail-date {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.45);
+}
+.wiselearn-detail-content {
+  margin-bottom: 20px;
+}
+.wiselearn-detail-actions {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding-top: 16px;
+  border-top: 1px solid #f0f0f0;
+}
+.wiselearn-detail-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.65);
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.wiselearn-detail-action:hover {
+  color: #C8102E;
+}
+.wiselearn-detail-action.active {
+  color: #C8102E;
+}
+.wiselearn-detail-action.stat {
+  cursor: default;
+}
+
+/* 评论区 */
+.wiselearn-detail-comments {
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+.wiselearn-detail-comments-title {
+  margin: 0 0 16px !important;
+  font-size: 16px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.85);
+}
+.wiselearn-detail-comment-form {
+  margin-bottom: 24px;
+}
+.wiselearn-detail-comment-form .ant-form-item {
+  margin-bottom: 12px;
+}
+
+/* 评论列表与回复树 */
+.wiselearn-comment-list {
+  border-top: 1px solid #f0f0f0;
+  padding-top: 16px;
+}
+.wiselearn-comment-block {
+  margin-bottom: 20px;
+}
+.wiselearn-comment-block:last-child {
+  margin-bottom: 0;
+}
+.wiselearn-comment-item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.wiselearn-comment-item.is-reply {
+  margin-left: 0;
+}
+.wiselearn-comment-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #C8102E;
+  color: #fff;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.wiselearn-comment-body {
+  flex: 1;
+  min-width: 0;
+}
+.wiselearn-comment-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.wiselearn-comment-author {
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.85);
+}
+.wiselearn-comment-time {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.45);
+}
+.wiselearn-comment-text {
+  margin: 0 0 8px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: rgba(0, 0, 0, 0.85);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.wiselearn-comment-actions {
+  display: flex;
+  gap: 16px;
+}
+.wiselearn-comment-reply-btn,
+.wiselearn-comment-delete-btn {
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: 13px;
+  color: rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+}
+.wiselearn-comment-reply-btn:hover,
+.wiselearn-comment-delete-btn:hover {
+  color: #C8102E;
+}
+.wiselearn-comment-delete-btn {
+  color: rgba(0, 0, 0, 0.35);
+}
+
+/* 回复框（内联在评论下） */
+.wiselearn-comment-children {
+  margin-top: 12px;
+  margin-left: 44px;
+  padding-left: 12px;
+  border-left: 2px solid #f0f0f0;
+}
+.wiselearn-reply-inline {
+  margin-top: 12px;
+}
+.wiselearn-reply-inline .ant-input {
+  border-radius: 8px;
+}

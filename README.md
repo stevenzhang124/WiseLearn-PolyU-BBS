@@ -4,9 +4,10 @@
 
 ## 一、技术栈
 
-- 前端：React + TypeScript + Vite + Ant Design
-- 后端：Node.js + Express + TypeScript + MySQL（mysql2）
+- 前端：React + TypeScript + Vite + Ant Design + Tiptap 富文本 + DOMPurify
+- 后端：Node.js + Express + TypeScript + MySQL（mysql2）+ Multer 图片上传
 - 认证：JWT（7 天有效期）、bcrypt 密码加密
+- UI：香港理工大学官方配色（理工红 #C8102E）、校园论坛/小红书风格、私信为微信/QQ 气泡聊天风格
 
 ## 二、快速启动
 
@@ -43,7 +44,10 @@ DB_USER=root
 DB_PASSWORD=你的数据库密码
 DB_NAME=wiselearn
 JWT_SECRET=请替换为随机生成的安全字符串
+API_BASE_URL=http://localhost:4000
 ```
+
+（`API_BASE_URL` 用于图片上传后返回的图片 URL，生产环境请改为实际后端地址。）
 
 ### 4. 启动后端
 
@@ -66,9 +70,9 @@ npm run dev
 ## 三、功能概览
 
 - 用户模块：注册（限制 PolyU 邮箱）、登录、昵称修改、个人发帖/评论/点赞记录
-- 帖子模块：发帖（富文本 + 图片 URL）、评论与二级回复、浏览量统计、点赞/取消点赞、按时间/热度排序、转发链接生成
-- 私信模块：一对一私信、会话记录、未读消息数量提醒
-- 管理后台：数据统计（用户/帖子/新增）、热门帖子 TOP10、帖子置顶/取消置顶、删除帖子、关键词搜索
+- 帖子模块：发帖（Tiptap 富文本 + 图片上传/粘贴/拖拽）、评论、浏览量、点赞、按时间/热度排序、转发链接；正文使用 DOMPurify 防 XSS
+- 私信模块：会话列表（含别人发来的）、微信/QQ 风格气泡聊天、导航栏未读私信数量实时展示
+- 管理后台：数据统计、热门帖子 TOP10、帖子置顶/删除、关键词搜索
 
 ## 四、安全与优化
 
@@ -77,10 +81,15 @@ npm run dev
 - 所有数据库操作使用参数化查询，避免 SQL 注入
 - 帖子列表使用分页（默认每页 20 条，最大 50 条），避免一次性加载大量数据
 
-## 五、后续扩展建议
+## 五、图片上传说明
+
+- 发帖时在富文本中点击「图片」或粘贴/拖拽图片即可上传（接口 `POST /api/upload/image`，保存至 `server/uploads`，单张限 5MB，格式 JPEG/PNG/GIF/WEBP）。
+- 图片通过 `http://localhost:4000/uploads/文件名` 访问，前端需能访问后端域名；生产环境请配置 `API_BASE_URL` 并保证静态目录可访问。
+
+## 六、后续扩展建议
 
 - 帖子分类的后台管理（增删改分类）
 - 用户等级、积分体系
-- 富文本编辑器中增加附件上传、更多格式支持
+- 替换为学校提供的正式 PolyU Logo 图片
 - 允许多管理员角色（如版主）、细粒度权限控制
 

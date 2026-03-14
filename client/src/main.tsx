@@ -15,42 +15,43 @@ import { MessagesPage } from './modules/messages/MessagesPage'
 import { AdminDashboardPage } from './modules/admin/AdminDashboardPage'
 import { AuthProvider, useAuth } from './modules/auth/AuthContext'
 
+/* 香港理工大学官方配色：理工红 #C8102E + 金色 */
+const POLYU_RED = '#C8102E'
+const POLYU_GOLD = '#B8860B'
+
 const PolyUTheme: React.ComponentProps<typeof ConfigProvider>['theme'] = {
   token: {
-    colorPrimary: '#003366',
-    colorLink: '#003366',
-    colorInfo: '#003366',
-    borderRadius: 6,
+    colorPrimary: POLYU_RED,
+    colorLink: POLYU_RED,
+    colorInfo: POLYU_RED,
+    borderRadius: 12,
     fontFamily:
-      '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif'
+      '-apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif'
   },
   components: {
     Layout: {
-      headerBg: '#003366',
-      headerColor: '#ffffff',
-      siderBg: '#001b3d'
+      headerBg: '#fff',
+      headerColor: 'rgba(0,0,0,0.85)',
+      siderBg: '#fff'
     },
     Button: {
-      colorPrimary: '#D4AF37',
-      colorPrimaryHover: '#e1c05f'
+      colorPrimary: POLYU_RED,
+      colorPrimaryHover: '#a00d24'
     },
     Menu: {
-      itemActiveBg: '#001b3d',
-      itemSelectedBg: '#001b3d',
-      itemSelectedColor: '#D4AF37'
+      itemColor: 'rgba(0,0,0,0.85)',
+      itemSelectedBg: POLYU_RED,
+      itemSelectedColor: '#fff',
+      itemHoverBg: 'rgba(200, 16, 46, 0.08)',
+      itemHoverColor: POLYU_RED
+    },
+    Card: {
+      borderRadiusLG: 16
     }
   }
 }
 
-function PrivateRoute({ children }: { children: JSX.Element }) {
-  const { user } = useAuth()
-  if (!user) {
-    return <Navigate to="/login" replace />
-  }
-  return children
-}
-
-function AdminRoute({ children }: { children: JSX.Element }) {
+function AdminRoute({ children }: { children: React.ReactElement }) {
   const { user } = useAuth()
   if (!user) {
     return <Navigate to="/login" replace />
@@ -61,73 +62,46 @@ function AdminRoute({ children }: { children: JSX.Element }) {
   return children
 }
 
+function RequireLayout({ children }: { children: React.ReactElement }) {
+  const { user } = useAuth()
+  if (!user) {
+    return <Navigate to="/login" replace />
+  }
+  return children
+}
+
 ReactDOM.createRoot(document.getElementById('app') as HTMLElement).render(
   <React.StrictMode>
     <ConfigProvider locale={zhCN} theme={PolyUTheme}>
       <AuthProvider>
         <BrowserRouter>
-          <LayoutShell>
-            <Routes>
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route
+              path="/"
+              element={
+                <RequireLayout>
+                  <LayoutShell />
+                </RequireLayout>
+              }
+            >
+              <Route index element={<HomePage />} />
+              <Route path="create" element={<CreatePostPage />} />
+              <Route path="posts/:id" element={<PostDetailPage />} />
+              <Route path="profile" element={<ProfilePage />} />
+              <Route path="messages/:userId" element={<MessagesPage />} />
+              <Route path="messages" element={<MessagesPage />} />
               <Route
-                path="/"
-                element={
-                  <PrivateRoute>
-                    <HomePage />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/create"
-                element={
-                  <PrivateRoute>
-                    <CreatePostPage />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/posts/:id"
-                element={
-                  <PrivateRoute>
-                    <PostDetailPage />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/profile"
-                element={
-                  <PrivateRoute>
-                    <ProfilePage />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/messages/:userId"
-                element={
-                  <PrivateRoute>
-                    <MessagesPage />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/messages"
-                element={
-                  <PrivateRoute>
-                    <MessagesPage />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/admin"
+                path="admin"
                 element={
                   <AdminRoute>
                     <AdminDashboardPage />
                   </AdminRoute>
                 }
               />
-            </Routes>
-          </LayoutShell>
+            </Route>
+          </Routes>
         </BrowserRouter>
       </AuthProvider>
     </ConfigProvider>

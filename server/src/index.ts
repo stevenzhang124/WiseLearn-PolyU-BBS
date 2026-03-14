@@ -1,5 +1,6 @@
 import express from 'express'
 import cors from 'cors'
+import path from 'path'
 import { json, urlencoded } from 'express'
 import { config } from './config'
 import { testConnection } from './db'
@@ -8,6 +9,7 @@ import { postRouter } from './routes/posts'
 import { messageRouter } from './routes/messages'
 import { adminRouter } from './routes/admin'
 import { usersRouter } from './routes/users'
+import { uploadRouter } from './routes/upload'
 
 const app = express()
 
@@ -21,6 +23,9 @@ app.use(
 app.use(json())
 app.use(urlencoded({ extended: true }))
 
+// 上传文件静态访问（图片 URL 指向此处）
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')))
+
 // 基础健康检查接口
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', service: 'WiseLearn API' })
@@ -28,6 +33,7 @@ app.get('/api/health', (_req, res) => {
 
 // 功能路由
 app.use('/api/auth', authRouter)
+app.use('/api/upload', uploadRouter)
 app.use('/api/posts', postRouter)
 app.use('/api/messages', messageRouter)
 app.use('/api/admin', adminRouter)

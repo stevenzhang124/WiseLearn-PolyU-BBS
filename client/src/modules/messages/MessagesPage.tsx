@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react'
-import { Card, List, Input, Button, Space, Typography, message, Badge } from 'antd'
+import React, { useEffect, useState, useRef } from 'react'
+import { Card, List, Input, Button, Typography, message, Badge } from 'antd'
+import { SendOutlined } from '@ant-design/icons'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import {
@@ -9,9 +10,10 @@ import {
   getUserApi
 } from '../shared/api'
 
+import './MessagesPage.css'
+
 /**
- * 私信页面：支持通过 URL /messages/:userId 进入与某用户的会话。
- * 无 userId 时展示会话列表（含发过消息的和别人发来的），点击进入对应会话。
+ * 私信：会话列表 + 微信/QQ 风格气泡聊天
  */
 export const MessagesPage: React.FC = () => {
   const { userId: paramUserId } = useParams<{ userId: string }>()
@@ -25,11 +27,12 @@ export const MessagesPage: React.FC = () => {
     Array<{ userId: number; nickname: string; lastMessageAt: string; unreadCount: number }>
   >([])
   const [loadingList, setLoadingList] = useState(false)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const otherId = paramUserId ? Number(paramUserId) : null
 
-  const loadConversation = async (targetId: number) => {
-    setLoading(true)
+  const loadConversation = async (targetId: number, silent = false) => {
+    if (!silent) setLoading(true)
     try {
       const [convRes, userRes] = await Promise.all([
         fetchConversation(targetId),
@@ -38,11 +41,11 @@ export const MessagesPage: React.FC = () => {
       setMessagesList(convRes.messages)
       setOtherNickname(userRes.nickname)
     } catch (err) {
-      message.error((err as Error).message)
+      if (!silent) message.error((err as Error).message)
       setOtherNickname(null)
       setMessagesList([])
     } finally {
-      setLoading(false)
+      if (!silent) setLoading(false)
     }
   }
 
@@ -54,6 +57,19 @@ export const MessagesPage: React.FC = () => {
       setMessagesList([])
     }
   }, [otherId])
+
+  /* 聊天界面轮询新消息，实现近实时收到对方消息 */
+  useEffect(() => {
+    if (otherId == null || Number.isNaN(otherId) || otherId <= 0 || otherId === user?.id) return
+    const timer = setInterval(() => {
+      void loadConversation(otherId, true)
+    }, 3000)
+    return () => clearInterval(timer)
+  }, [otherId, user?.id])
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messagesList])
 
   const loadConversationsList = async () => {
     setLoadingList(true)
@@ -86,19 +102,19 @@ export const MessagesPage: React.FC = () => {
     try {
       await sendMessage({ toUserId: otherId, content })
       setContent('')
-      message.success('发送成功')
       await loadConversation(otherId)
     } catch (err) {
       message.error((err as Error).message)
     }
   }
 
-  // 无指定用户：展示会话列表（含之前发过的 + 别人发来的）
   if (otherId == null || Number.isNaN(otherId) || otherId <= 0) {
     return (
-      <div>
-        <Typography.Title level={3}>私信</Typography.Title>
-        <Card title="会话列表">
+      <div className="wiselearn-messages-list">
+        <Typography.Title level={4} style={{ marginBottom: 16 }}>
+          私信
+        </Typography.Title>
+        <Card className="wiselearn-card" title="会话列表">
           {loadingList ? (
             <List loading />
           ) : conversations.length === 0 ? (
@@ -111,31 +127,32 @@ export const MessagesPage: React.FC = () => {
               renderItem={(c) => (
                 <List.Item
                   key={c.userId}
-                  style={{ cursor: 'pointer' }}
+                  className="wiselearn-conv-item"
                   onClick={() => navigate(`/messages/${c.userId}`)}
                   extra={
                     c.unreadCount > 0 ? (
-                      <Badge count={c.unreadCount} />
+                      <Badge count={c.unreadCount} size="small" />
                     ) : null
                   }
                 >
-                  <List.Item.Meta
-                    title={
-                      <Space>
-                        <span>{c.nickname}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                    <div className="wiselearn-conv-avatar">
+                      {(c.nickname || '?').charAt(0)}
+                    </div>
+                    <div className="wiselearn-conv-body">
+                      <div className="wiselearn-conv-name">
+                        {c.nickname}
                         {c.unreadCount > 0 && (
-                          <Typography.Text type="danger">
+                          <span className="wiselearn-conv-unread">
                             {c.unreadCount} 条未读
-                          </Typography.Text>
+                          </span>
                         )}
-                      </Space>
-                    }
-                    description={
-                      <Typography.Text type="secondary">
-                        最后消息：{new Date(c.lastMessageAt).toLocaleString('zh-CN')}
+                      </div>
+                      <Typography.Text type="secondary" className="wiselearn-conv-time">
+                        {new Date(c.lastMessageAt).toLocaleString('zh-CN')}
                       </Typography.Text>
-                    }
-                  />
+                    </div>
+                  </div>
                 </List.Item>
               )}
             />
@@ -145,12 +162,11 @@ export const MessagesPage: React.FC = () => {
     )
   }
 
-  // 与自己私信
   if (otherId === user?.id) {
     return (
       <div>
-        <Typography.Title level={3}>私信</Typography.Title>
-        <Card>
+        <Typography.Title level={4}>私信</Typography.Title>
+        <Card className="wiselearn-card">
           <Typography.Paragraph type="secondary">
             不能给自己发私信。请从帖子中点击其他作者进入私信。
           </Typography.Paragraph>
@@ -160,52 +176,68 @@ export const MessagesPage: React.FC = () => {
   }
 
   return (
-    <div>
-      <Typography.Title level={3}>
-        与 {otherNickname ?? '...'} 的对话
-      </Typography.Title>
+    <div className="wiselearn-chat">
+      <div className="wiselearn-chat-header">
+        <div className="wiselearn-chat-avatar">
+          {(otherNickname || '?').charAt(0)}
+        </div>
+        <Typography.Title level={5} style={{ margin: 0 }}>
+          {otherNickname ?? '...'}
+        </Typography.Title>
+      </div>
 
-      <Card title={`与 ${otherNickname ?? '...'} 的对话`} style={{ marginBottom: 16 }}>
-        <Space direction="vertical" style={{ width: '100%' }} size="middle">
-          <Space.Compact style={{ width: '100%' }}>
-            <Input
-              placeholder="输入私信内容"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              onPressEnter={(e) => {
-                if (!e.shiftKey) {
-                  e.preventDefault()
-                  void onSend()
-                }
-              }}
-            />
-            <Button type="primary" onClick={onSend}>
-              发送
-            </Button>
-          </Space.Compact>
-        </Space>
-      </Card>
+      <div className="wiselearn-chat-messages">
+        {loading ? (
+          <div className="wiselearn-chat-loading">加载中...</div>
+        ) : (
+          messagesList.map((item) => {
+            const isMe = item.from_user_id === user?.id
+            return (
+              <div
+                key={item.id}
+                className={`wiselearn-bubble-wrap ${isMe ? 'is-me' : ''}`}
+              >
+                <div className="wiselearn-bubble">
+                  <div className="wiselearn-bubble-text">{item.content}</div>
+                  <div className="wiselearn-bubble-time">
+                    {new Date(item.created_at).toLocaleString('zh-CN', {
+                      month: 'numeric',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </div>
+                </div>
+              </div>
+            )
+          })
+        )}
+        <div ref={messagesEndRef} />
+      </div>
 
-      <Card title="会话记录">
-        <List
-          loading={loading}
-          dataSource={messagesList}
-          renderItem={(item) => (
-            <List.Item key={item.id}>
-              <Space>
-                <Typography.Text strong>
-                  {item.from_user_id === user?.id ? '我' : otherNickname ?? `用户 ${item.from_user_id}`}
-                  ：
-                </Typography.Text>
-                <span>{item.content}</span>
-                <Typography.Text type="secondary">
-                  {new Date(item.created_at).toLocaleString('zh-CN')}
-                </Typography.Text>
-              </Space>
-            </List.Item>
-          )}
+      <div className="wiselearn-chat-input-wrap">
+        <Input.TextArea
+          className="wiselearn-chat-input"
+          placeholder="输入消息，按 Enter 发送"
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          onPressEnter={(e) => {
+            if (!e.shiftKey) {
+              e.preventDefault()
+              void onSend()
+            }
+          }}
+          autoSize={{ minRows: 1, maxRows: 4 }}
         />
-      </Card>
+        <Button
+          type="primary"
+          icon={<SendOutlined />}
+          onClick={() => void onSend()}
+          className="wiselearn-chat-send"
+        >
+          发送
+        </Button>
+      </div>
     </div>
   )
 }

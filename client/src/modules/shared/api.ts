@@ -16,10 +16,7 @@ api.interceptors.request.use((config) => {
   const stored = window.localStorage.getItem('wiselearn_token')
   const token = inMemoryToken ?? stored
   if (token) {
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`
-    }
+    config.headers.Authorization = `Bearer ${token}`
   }
   return config
 })
@@ -113,6 +110,16 @@ export async function getShareLink(postId: number): Promise<{ link: string }> {
 
 export async function getActivities(): Promise<any> {
   const res = await api.get('/posts/me/activities')
+  return res.data
+}
+
+/** 上传图片，返回可访问的 URL（用于富文本插入图片） */
+export async function uploadImageApi(file: File): Promise<{ url: string }> {
+  const form = new FormData()
+  form.append('file', file)
+  const res = await api.post<{ url: string }>('/upload/image', form, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  })
   return res.data
 }
 

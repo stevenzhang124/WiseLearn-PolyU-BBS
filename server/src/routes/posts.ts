@@ -63,7 +63,10 @@ postRouter.get('/', async (req: AuthRequest, res) => {
       SELECT
         p.id,
         p.title,
+        p.content,
         p.category,
+        p.image_urls,
+        p.is_pinned,
         p.created_at,
         p.view_count,
         p.like_count,

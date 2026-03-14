@@ -80,7 +80,7 @@ export const AdminDashboardPage: React.FC = () => {
     <div>
       <Row gutter={16} style={{ marginBottom: 16 }}>
         <Col span={6}>
-          <Card>
+          <Card loading={loading}>
             <Statistic
               title="总用户数"
               value={stats?.totalUsers ?? 0}
