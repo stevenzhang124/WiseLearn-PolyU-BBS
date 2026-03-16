@@ -7,17 +7,18 @@ import {
   Button,
   Tabs,
   List,
-  message
+  message,
+  Typography
 } from 'antd'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { Avatar } from '../shared/Avatar'
-import { getActivities, updateNicknameApi, uploadAvatarApi } from '../shared/api'
+import { getActivities, updateNicknameApi, uploadAvatarApi, getMyProfileApi } from '../shared/api'
 import './ProfilePage.css'
 
 /**
- * 个人中心：显示基本信息 + 修改昵称 + 发帖 / 评论 / 点赞记录
+ * 个人中心：显示基本信息（含关注数、粉丝数、收到赞，左排）+ 修改昵称 + 发帖/评论/点赞记录；点击关注/粉丝进入列表页
  */
 export const ProfilePage: React.FC = () => {
   const { t, i18n } = useTranslation()
@@ -27,6 +28,11 @@ export const ProfilePage: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [myStats, setMyStats] = useState<{
+    followingCount: number
+    followerCount: number
+    totalLikes: number
+  } | null>(null)
   const [activities, setActivities] = useState<{
     posts: any[]
     comments: any[]
@@ -45,10 +51,25 @@ export const ProfilePage: React.FC = () => {
     }
   }
 
+  const loadMyProfile = async () => {
+    if (!user) return
+    try {
+      const data = await getMyProfileApi()
+      setMyStats({
+        followingCount: data.followingCount,
+        followerCount: data.followerCount,
+        totalLikes: data.totalLikes
+      })
+    } catch (err) {
+      message.error((err as Error).message)
+    }
+  }
+
   useEffect(() => {
     if (user) {
       form.setFieldsValue({ nickname: user.nickname })
       void loadActivities()
+      void loadMyProfile()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user])
@@ -59,7 +80,12 @@ export const ProfilePage: React.FC = () => {
       message.success(t('profile.updateSuccess'))
       await refreshMe()
     } catch (err) {
-      message.error((err as Error).message)
+      const msg = (err as Error).message
+      message.error(
+        msg.includes('昵称') && msg.includes('已被使用')
+          ? t('auth.nicknameTaken')
+          : msg
+      )
     }
   }
 
@@ -121,6 +147,26 @@ export const ProfilePage: React.FC = () => {
             </span>
           </div>
         </div>
+        {myStats != null && (
+          <div className="wiselearn-profile-stats">
+            <span className="wiselearn-profile-stat">
+              <Typography.Text type="secondary">{t('profile.followingCount')}：</Typography.Text>
+              <Button type="link" style={{ padding: 0, fontWeight: 600 }} onClick={() => navigate('/profile/following')}>
+                {myStats.followingCount}
+              </Button>
+            </span>
+            <span className="wiselearn-profile-stat">
+              <Typography.Text type="secondary">{t('profile.followerCount')}：</Typography.Text>
+              <Button type="link" style={{ padding: 0, fontWeight: 600 }} onClick={() => navigate('/profile/followers')}>
+                {myStats.followerCount}
+              </Button>
+            </span>
+            <span className="wiselearn-profile-stat">
+              <Typography.Text type="secondary">{t('profile.totalLikesReceived')}：</Typography.Text>
+              <Typography.Text strong>{myStats.totalLikes}</Typography.Text>
+            </span>
+          </div>
+        )}
         <Descriptions column={1}>
           <Descriptions.Item label={t('profile.email')}>
             {user?.email}

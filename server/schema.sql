@@ -57,6 +57,15 @@ CREATE TABLE IF NOT EXISTS messages (
   FOREIGN KEY (to_user_id) REFERENCES users(id)
 );
 
+CREATE TABLE IF NOT EXISTS follows (
+  follower_id INT NOT NULL,
+  following_id INT NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (follower_id, following_id),
+  FOREIGN KEY (follower_id) REFERENCES users(id),
+  FOREIGN KEY (following_id) REFERENCES users(id)
+);
+
 -- 手动创建管理员账号示例（请根据需要修改邮箱和密码哈希）
 -- INSERT INTO users (email, password_hash, nickname, is_admin)
 -- VALUES ('admin@polyu.edu.hk', '<bcrypt_hash>', '管理员', 1);

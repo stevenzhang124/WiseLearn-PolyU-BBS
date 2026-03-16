@@ -12,7 +12,7 @@ import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
 import { Avatar } from '../shared/Avatar'
-import { getUnreadCount } from '../shared/api'
+import { getUnreadCount, getNotificationsUnreadCount } from '../shared/api'
 
 const { Header, Content, Sider } = Layout
 
@@ -40,8 +40,10 @@ export const LayoutShell: React.FC = () => {
 
   const fetchUnread = () => {
     if (!user) return
-    getUnreadCount()
-      .then((r) => setUnreadCount(r.count))
+    Promise.all([getUnreadCount(), getNotificationsUnreadCount()])
+      .then(([msg, notif]) =>
+        setUnreadCount(msg.count + notif.likes + notif.follows + notif.comments)
+      )
       .catch(() => setUnreadCount(0))
   }
 

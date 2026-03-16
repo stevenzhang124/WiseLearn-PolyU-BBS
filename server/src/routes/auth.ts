@@ -4,25 +4,84 @@ import jwt from 'jsonwebtoken'
 import { pool } from '../db'
 import { config } from '../config'
 import { AuthUser, AuthRequest, authMiddleware } from '../middleware/auth'
+import { sendVerificationEmail } from '../email'
+import {
+  setCode,
+  verifyAndConsumeCode,
+  canSendAgain,
+  getCooldownSeconds
+} from '../verificationStore'
 
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@(polyu\.edu\.hk|connect\.polyu\.hk)$/
 const NICKNAME_REGEX = /^[\u4e00-\u9fa5A-Za-z0-9]{2,20}$/
 
+function randomSixDigit(): string {
+  return String(Math.floor(100000 + Math.random() * 900000))
+}
+
 export const authRouter = Router()
 
 /**
- * 用户注册
- * body: { email, password, nickname }
+ * 发送注册验证码（仅 PolyU 邮箱，且未注册）
+ * body: { email }
+ */
+authRouter.post('/send-code', async (req, res) => {
+  const { email } = req.body as { email?: string }
+
+  if (!email || typeof email !== 'string') {
+    res.status(400).json({ message: '请填写邮箱' })
+    return
+  }
+
+  const normalized = email.trim().toLowerCase()
+  if (!EMAIL_REGEX.test(normalized)) {
+    res.status(400).json({ message: '仅允许使用 PolyU 校园邮箱' })
+    return
+  }
+
+  try {
+    const [rows] = await pool.query('SELECT id FROM users WHERE email = ?', [normalized])
+    if ((rows as any[]).length > 0) {
+      res.status(409).json({ message: '该邮箱已注册，请直接登录' })
+      return
+    }
+
+    if (!canSendAgain(normalized)) {
+      const sec = getCooldownSeconds(normalized)
+      res.status(429).json({ message: `请 ${sec} 秒后再获取验证码` })
+      return
+    }
+
+    const code = randomSixDigit()
+    setCode(normalized, code)
+    await sendVerificationEmail(normalized, code)
+    res.json({ message: '验证码已发送，请查收邮箱' })
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('Send code error', err)
+    res.status(500).json({ message: '发送失败，请稍后重试' })
+  }
+})
+
+/**
+ * 用户注册（需先获取验证码）
+ * body: { email, password, nickname, code }
  */
 authRouter.post('/register', async (req, res) => {
-  const { email, password, nickname } = req.body as {
+  const { email, password, nickname, code } = req.body as {
     email?: string
     password?: string
     nickname?: string
+    code?: string
   }
 
   if (!email || !password || !nickname) {
     res.status(400).json({ message: '邮箱、密码和昵称均为必填' })
+    return
+  }
+
+  if (!code || String(code).trim().length !== 6) {
+    res.status(400).json({ message: '请输入 6 位验证码' })
     return
   }
 
@@ -36,17 +95,29 @@ authRouter.post('/register', async (req, res) => {
     return
   }
 
+  const normalized = email.trim().toLowerCase()
+  if (!verifyAndConsumeCode(normalized, code)) {
+    res.status(400).json({ message: '验证码错误或已过期，请重新获取' })
+    return
+  }
+
   try {
-    const [rows] = await pool.query('SELECT id FROM users WHERE email = ?', [email])
+    const [rows] = await pool.query('SELECT id FROM users WHERE email = ?', [normalized])
     if ((rows as any[]).length > 0) {
       res.status(409).json({ message: '该邮箱已注册，请直接登录' })
+      return
+    }
+
+    const [nickRows] = await pool.query('SELECT id FROM users WHERE nickname = ?', [nickname.trim()])
+    if ((nickRows as any[]).length > 0) {
+      res.status(409).json({ message: '该昵称已被使用，请更换' })
       return
     }
 
     const hashed = await bcrypt.hash(password, 10)
     await pool.query(
       'INSERT INTO users (email, password_hash, nickname) VALUES (?, ?, ?)',
-      [email, hashed, nickname]
+      [normalized, hashed, nickname.trim()]
     )
     res.json({ message: '注册成功，请登录' })
   } catch (err) {
@@ -178,12 +249,22 @@ authRouter.put('/nickname', authMiddleware, async (req: AuthRequest, res) => {
     return
   }
 
+  const trimmed = nickname.trim()
   try {
+    const [rows] = await pool.query(
+      'SELECT id FROM users WHERE nickname = ? AND id != ?',
+      [trimmed, req.user.id]
+    )
+    if ((rows as any[]).length > 0) {
+      res.status(409).json({ message: '该昵称已被使用，请更换' })
+      return
+    }
+
     await pool.query('UPDATE users SET nickname = ? WHERE id = ?', [
-      nickname,
+      trimmed,
       req.user.id
     ])
-    res.json({ message: '昵称更新成功', nickname })
+    res.json({ message: '昵称更新成功', nickname: trimmed })
   } catch (err) {
     // eslint-disable-next-line no-console
     console.error('Update nickname error', err)

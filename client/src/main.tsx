@@ -14,7 +14,9 @@ import { HomePage } from './modules/home/HomePage'
 import { CreatePostPage } from './modules/posts/CreatePostPage'
 import { EditPostPage } from './modules/posts/EditPostPage'
 import { PostDetailPage } from './modules/posts/PostDetailPage'
+import { UserProfilePage } from './modules/user/UserProfilePage'
 import { ProfilePage } from './modules/profile/ProfilePage'
+import { ProfileFollowListPage } from './modules/profile/ProfileFollowListPage'
 import { MessagesPage } from './modules/messages/MessagesPage'
 import { AdminDashboardPage } from './modules/admin/AdminDashboardPage'
 import { AuthProvider, useAuth } from './modules/auth/AuthContext'
@@ -95,7 +97,10 @@ function AppWithLocale() {
               <Route path="create" element={<CreatePostPage />} />
               <Route path="posts/:id/edit" element={<EditPostPage />} />
               <Route path="posts/:id" element={<PostDetailPage />} />
+              <Route path="users/:id" element={<UserProfilePage />} />
               <Route path="profile" element={<ProfilePage />} />
+              <Route path="profile/following" element={<ProfileFollowListPage />} />
+              <Route path="profile/followers" element={<ProfileFollowListPage />} />
               <Route path="messages/:userId" element={<MessagesPage />} />
               <Route path="messages" element={<MessagesPage />} />
               <Route

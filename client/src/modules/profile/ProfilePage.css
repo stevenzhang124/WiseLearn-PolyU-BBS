@@ -1,3 +1,19 @@
+/* 基本信息下的关注、粉丝、收到赞：左边排列 */
+.wiselearn-profile-stats {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 16px 24px;
+  margin-bottom: 16px;
+  text-align: left;
+}
+.wiselearn-profile-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
 /* 个人中心：我的发帖 / 评论 / 点赞 列表靠左、可点击跳转 */
 .wiselearn-profile-activity-card .wiselearn-profile-list {
   text-align: left;

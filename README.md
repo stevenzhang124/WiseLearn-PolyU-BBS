@@ -30,7 +30,9 @@
    mysql -u root -p wiselearn < server/schema.sql
    ```
 
-3. 按需手动创建管理员账号（见 `schema.sql` 文件注释）。
+3. 执行迁移（按需）：`server/migrations/add-users-avatar.sql`、`add-follows-table.sql`、`add-user-notification-read.sql`（消息中心点赞/关注/评论未读用）。
+
+4. 按需手动创建管理员账号（见 `schema.sql` 文件注释）。
 
 ### 3. 配置环境变量
 
@@ -48,6 +50,18 @@ API_BASE_URL=http://localhost:4000
 ```
 
 （`API_BASE_URL` 用于图片上传后返回的图片 URL，生产环境请改为实际后端地址。）
+
+**注册邮箱验证（可选）**：如需向用户邮箱发送 6 位验证码，在 `.env` 中配置 SMTP：
+
+```bash
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_USER=your-user
+SMTP_PASS=your-password
+MAIL_FROM=noreply@example.com
+```
+
+不配置时，验证码会打印在后端控制台，便于本地调试。
 
 ### 4. 启动后端
 

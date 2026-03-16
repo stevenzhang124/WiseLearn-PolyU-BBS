@@ -170,7 +170,7 @@ export const PostDetailPage: React.FC = () => {
             <span
               style={{ cursor: post.user_id === user?.id ? 'default' : 'pointer' }}
               onClick={() =>
-                post.user_id !== user?.id && navigate(`/messages/${post.user_id}`)
+                post.user_id !== user?.id && navigate(`/users/${post.user_id}`)
               }
               role="button"
               tabIndex={0}
@@ -186,7 +186,7 @@ export const PostDetailPage: React.FC = () => {
               <span
                 className="wiselearn-detail-author-name"
                 onClick={() =>
-                  post.user_id !== user?.id && navigate(`/messages/${post.user_id}`)
+                  post.user_id !== user?.id && navigate(`/users/${post.user_id}`)
                 }
                 style={{
                   cursor: post.user_id === user?.id ? 'default' : 'pointer'
@@ -269,15 +269,31 @@ export const PostDetailPage: React.FC = () => {
           {commentTree.map(({ root, children }) => (
             <div key={root.id} className="wiselearn-comment-block">
               <div className="wiselearn-comment-item">
-                <Avatar
-                  src={root.author_avatar}
-                  name={root.author}
-                  size={32}
-                  className="wiselearn-comment-avatar"
-                />
+                <span
+                  className="wiselearn-comment-avatar-wrap"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => root.user_id && navigate(`/users/${root.user_id}`)}
+                  onKeyDown={(e) => e.key === 'Enter' && root.user_id && navigate(`/users/${root.user_id}`)}
+                >
+                  <Avatar
+                    src={root.author_avatar}
+                    name={root.author}
+                    size={32}
+                    className="wiselearn-comment-avatar"
+                  />
+                </span>
                 <div className="wiselearn-comment-body">
                   <div className="wiselearn-comment-meta">
-                    <span className="wiselearn-comment-author">{root.author}</span>
+                    <span
+                      className="wiselearn-comment-author"
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => root.user_id && navigate(`/users/${root.user_id}`)}
+                      onKeyDown={(e) => e.key === 'Enter' && root.user_id && navigate(`/users/${root.user_id}`)}
+                    >
+                      {root.author}
+                    </span>
                     {root.is_author && (
                       <span className="wiselearn-comment-author-tag">{t('post.authorLabel')}</span>
                     )}
@@ -342,15 +358,31 @@ export const PostDetailPage: React.FC = () => {
                 <div className="wiselearn-comment-children">
                   {children.map(({ root: sub }) => (
                     <div key={sub.id} className="wiselearn-comment-item is-reply">
-                      <Avatar
-                        src={sub.author_avatar}
-                        name={sub.author}
-                        size={32}
-                        className="wiselearn-comment-avatar"
-                      />
+                      <span
+                        className="wiselearn-comment-avatar-wrap"
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => sub.user_id && navigate(`/users/${sub.user_id}`)}
+                        onKeyDown={(e) => e.key === 'Enter' && sub.user_id && navigate(`/users/${sub.user_id}`)}
+                      >
+                        <Avatar
+                          src={sub.author_avatar}
+                          name={sub.author}
+                          size={32}
+                          className="wiselearn-comment-avatar"
+                        />
+                      </span>
                       <div className="wiselearn-comment-body">
                         <div className="wiselearn-comment-meta">
-                          <span className="wiselearn-comment-author">{sub.author}</span>
+                          <span
+                            className="wiselearn-comment-author"
+                            role="button"
+                            tabIndex={0}
+                            onClick={() => sub.user_id && navigate(`/users/${sub.user_id}`)}
+                            onKeyDown={(e) => e.key === 'Enter' && sub.user_id && navigate(`/users/${sub.user_id}`)}
+                          >
+                            {sub.author}
+                          </span>
                           {sub.is_author && (
                             <span className="wiselearn-comment-author-tag">{t('post.authorLabel')}</span>
                           )}

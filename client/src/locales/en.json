@@ -28,6 +28,7 @@
     "nickname": "Nickname",
     "nicknameRequired": "Please enter nickname",
     "nicknameInvalid": "2–20 characters: Chinese, letters or numbers only",
+    "nicknameTaken": "This nickname is already taken. Please choose another.",
     "nicknamePlaceholder": "Your nickname",
     "remember": "Remember me (auto login for 7 days)",
     "login": "Login",
@@ -37,7 +38,14 @@
     "hasAccount": "Already have an account? ",
     "goLogin": "Back to Login",
     "loginSuccess": "Login successful",
-    "registerSuccess": "Registered. Please log in."
+    "registerSuccess": "Registered. Please log in.",
+    "verificationCode": "Verification code",
+    "codePlaceholder": "Enter 6-digit code",
+    "codeRequired": "Please enter the code",
+    "codeLength": "Code must be 6 digits",
+    "getCode": "Get code",
+    "codeCooldown": "Retry in {{sec}}s",
+    "codeSent": "Code sent. Check your email."
   },
   "home": {
     "discover": "Discover",
@@ -96,6 +104,25 @@
     "editNotAuthor": "You can only edit your own post",
     "authorLabel": "Author"
   },
+  "notifications": {
+    "title": "Messages",
+    "likes": "Likes",
+    "follows": "Follows",
+    "comments": "Comments",
+    "dm": "DMs",
+    "whoLiked": "Who liked",
+    "whoFollowed": "Who followed",
+    "whoCommented": "Comments & replies",
+    "likedYourPost": "liked your post \"{{title}}\"",
+    "followedYou": "followed you",
+    "commentedOrReplied": "commented or replied",
+    "goToPost": "View post",
+    "viewProfile": "View profile",
+    "reply": "Reply",
+    "noLikes": "No likes yet",
+    "noFollows": "No new followers",
+    "noComments": "No comments or replies"
+  },
   "messages": {
     "title": "Messages",
     "conversationList": "Conversations",
@@ -127,7 +154,16 @@
     "myComments": "My comments",
     "myLikes": "My likes",
     "commentedIn": "Commented on «{{title}}»: {{content}}",
-    "likedPost": "Liked «{{title}}»"
+    "likedPost": "Liked «{{title}}»",
+    "followingCount": "Following",
+    "followerCount": "Followers",
+    "totalLikesReceived": "Likes received",
+    "followingList": "Following",
+    "followersList": "Followers",
+    "viewProfile": "View profile",
+    "noFollowing": "No following",
+    "noFollowers": "No followers",
+    "backToProfile": "Back to profile"
   },
   "admin": {
     "totalUsers": "Total users",
@@ -151,6 +187,20 @@
     "dataDesc": "About",
     "dataDescLabel": "Description",
     "dataDescText": "This page shows WiseLearn platform statistics for admins."
+  },
+  "user": {
+    "selfLabel": " (me)",
+    "posts": "Posts",
+    "followers": "Followers",
+    "likesReceived": "Likes",
+    "follow": "Follow",
+    "unfollow": "Following",
+    "followSuccess": "Following",
+    "unfollowSuccess": "Unfollowed",
+    "message": "Message",
+    "editProfile": "Edit profile",
+    "theirPosts": "Posts",
+    "noPosts": "No posts yet"
   },
   "common": {
     "loading": "Loading..."

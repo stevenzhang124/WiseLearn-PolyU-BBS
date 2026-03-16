@@ -62,6 +62,7 @@ postRouter.get('/', async (req: AuthRequest, res) => {
       `
       SELECT
         p.id,
+        p.user_id,
         p.title,
         p.content,
         p.category,

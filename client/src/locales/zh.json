@@ -2,7 +2,7 @@
   "nav": {
     "home": "首页",
     "create": "发帖",
-    "messages": "私信",
+    "messages": "消息",
     "profile": "个人中心",
     "admin": "后台管理",
     "logout": "退出",
@@ -28,6 +28,7 @@
     "nickname": "昵称",
     "nicknameRequired": "请输入昵称",
     "nicknameInvalid": "2-20 位中英文或数字，禁止特殊符号",
+    "nicknameTaken": "该昵称已被使用，请更换",
     "nicknamePlaceholder": "你的昵称",
     "remember": "记住我（7 天内自动登录）",
     "login": "登录",
@@ -37,7 +38,14 @@
     "hasAccount": "已有账号？",
     "goLogin": "返回登录",
     "loginSuccess": "登录成功",
-    "registerSuccess": "注册成功，请登录"
+    "registerSuccess": "注册成功，请登录",
+    "verificationCode": "验证码",
+    "codePlaceholder": "请输入 6 位验证码",
+    "codeRequired": "请输入验证码",
+    "codeLength": "验证码为 6 位数字",
+    "getCode": "获取验证码",
+    "codeCooldown": "{{sec}} 秒后重试",
+    "codeSent": "验证码已发送，请查收邮箱"
   },
   "home": {
     "discover": "发现",
@@ -96,6 +104,25 @@
     "editNotAuthor": "只能编辑自己的帖子",
     "authorLabel": "作者"
   },
+  "notifications": {
+    "title": "消息",
+    "likes": "点赞",
+    "follows": "关注",
+    "comments": "评论",
+    "dm": "私信",
+    "whoLiked": "谁赞了我",
+    "whoFollowed": "谁关注了我",
+    "whoCommented": "评论与回复",
+    "likedYourPost": "赞了你的帖子《{{title}}》",
+    "followedYou": "关注了你",
+    "commentedOrReplied": "评论/回复了你",
+    "goToPost": "查看帖子",
+    "viewProfile": "查看主页",
+    "reply": "回复",
+    "noLikes": "暂无点赞",
+    "noFollows": "暂无新关注",
+    "noComments": "暂无评论或回复"
+  },
   "messages": {
     "title": "私信",
     "conversationList": "会话列表",
@@ -127,7 +154,16 @@
     "myComments": "我的评论",
     "myLikes": "我的点赞",
     "commentedIn": "在《{{title}}》中评论：{{content}}",
-    "likedPost": "点赞了《{{title}}》"
+    "likedPost": "点赞了《{{title}}》",
+    "followingCount": "关注",
+    "followerCount": "粉丝",
+    "totalLikesReceived": "收到赞",
+    "followingList": "关注的人",
+    "followersList": "粉丝",
+    "viewProfile": "查看主页",
+    "noFollowing": "暂无关注",
+    "noFollowers": "暂无粉丝",
+    "backToProfile": "返回个人中心"
   },
   "admin": {
     "totalUsers": "总用户数",
@@ -151,6 +187,20 @@
     "dataDesc": "数据说明",
     "dataDescLabel": "统计说明",
     "dataDescText": "本页面展示 WiseLearn 平台核心数据概览，帮助管理员了解站点活跃度和内容质量。"
+  },
+  "user": {
+    "selfLabel": "（我）",
+    "posts": "发帖",
+    "followers": "粉丝",
+    "likesReceived": "获赞",
+    "follow": "关注",
+    "unfollow": "已关注",
+    "followSuccess": "关注成功",
+    "unfollowSuccess": "已取消关注",
+    "message": "私信",
+    "editProfile": "编辑个人资料",
+    "theirPosts": "TA 的帖子",
+    "noPosts": "暂无帖子"
   },
   "common": {
     "loading": "加载中..."

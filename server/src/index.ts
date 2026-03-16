@@ -10,6 +10,7 @@ import { messageRouter } from './routes/messages'
 import { adminRouter } from './routes/admin'
 import { usersRouter } from './routes/users'
 import { uploadRouter } from './routes/upload'
+import { notificationsRouter } from './routes/notifications'
 
 const app = express()
 
@@ -38,6 +39,7 @@ app.use('/api/posts', postRouter)
 app.use('/api/messages', messageRouter)
 app.use('/api/admin', adminRouter)
 app.use('/api/users', usersRouter)
+app.use('/api/notifications', notificationsRouter)
 
 // 全局错误处理
 app.use(

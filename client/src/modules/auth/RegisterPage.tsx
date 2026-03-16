@@ -1,37 +1,78 @@
 import React, { useState, useEffect } from 'react'
-import { Button, Card, Form, Input, Typography, message } from 'antd'
+import { Button, Card, Form, Input, Space, Typography, message } from 'antd'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { registerApi } from '../shared/api'
+import { registerApi, sendVerificationCodeApi } from '../shared/api'
 import { useAuth } from './AuthContext'
 
 const POLYU_RED = '#C8102E'
+const CODE_COOLDOWN_SEC = 60
 
 /**
- * 注册页：独立全屏，理工红主题
+ * 注册页：邮箱验证码 + 理工红主题
  */
 export const RegisterPage: React.FC = () => {
   const { t, i18n } = useTranslation()
   const { user } = useAuth()
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
+  const [codeLoading, setCodeLoading] = useState(false)
+  const [codeCooldown, setCodeCooldown] = useState(0)
+  const [form] = Form.useForm()
 
   useEffect(() => {
     if (user) navigate('/', { replace: true })
   }, [user, navigate])
 
+  useEffect(() => {
+    if (codeCooldown <= 0) return
+    const timer = setInterval(() => setCodeCooldown((c) => c - 1), 1000)
+    return () => clearInterval(timer)
+  }, [codeCooldown])
+
+  const onSendCode = async () => {
+    try {
+      await form.validateFields(['email'])
+    } catch {
+      return
+    }
+    const email = form.getFieldValue('email')?.trim()
+    if (!email) return
+    setCodeLoading(true)
+    try {
+      await sendVerificationCodeApi(email)
+      message.success(t('auth.codeSent'))
+      setCodeCooldown(CODE_COOLDOWN_SEC)
+    } catch (err) {
+      message.error((err as Error).message)
+    } finally {
+      setCodeLoading(false)
+    }
+  }
+
   const onFinish = async (values: {
     email: string
     password: string
     nickname: string
+    code: string
   }): Promise<void> => {
     setLoading(true)
     try {
-      await registerApi(values)
+      await registerApi({
+        email: values.email.trim(),
+        password: values.password,
+        nickname: values.nickname,
+        code: values.code.trim()
+      })
       message.success(t('auth.registerSuccess'))
       navigate('/login')
     } catch (err) {
-      message.error((err as Error).message)
+      const msg = (err as Error).message
+      message.error(
+        msg.includes('昵称') && msg.includes('已被使用')
+          ? t('auth.nicknameTaken')
+          : msg
+      )
     } finally {
       setLoading(false)
     }
@@ -102,7 +143,7 @@ export const RegisterPage: React.FC = () => {
           }
         }}
       >
-        <Form onFinish={onFinish} layout="vertical">
+        <Form form={form} onFinish={onFinish} layout="vertical">
           <Form.Item
             label={t('auth.email')}
             name="email"
@@ -116,6 +157,41 @@ export const RegisterPage: React.FC = () => {
             ]}
           >
             <Input placeholder={t('auth.emailPlaceholder')} size="large" />
+          </Form.Item>
+          <Form.Item
+            label={t('auth.verificationCode')}
+            name="code"
+            rules={[
+              { required: true, message: t('auth.codeRequired') },
+              { pattern: /^[0-9]{6}$/, message: t('auth.codeLength') }
+            ]}
+          >
+            <Space.Compact style={{ width: '100%' }}>
+              <Input
+                placeholder={t('auth.codePlaceholder')}
+                size="large"
+                maxLength={6}
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                style={{ flex: 1 }}
+              />
+              <Button
+                type="primary"
+                size="large"
+                onClick={onSendCode}
+                loading={codeLoading}
+                disabled={codeCooldown > 0}
+                style={{
+                  background: POLYU_RED,
+                  borderColor: POLYU_RED,
+                  minWidth: 120
+                }}
+              >
+                {codeCooldown > 0
+                  ? t('auth.codeCooldown', { sec: codeCooldown })
+                  : t('auth.getCode')}
+              </Button>
+            </Space.Compact>
           </Form.Item>
           <Form.Item
             label={t('auth.password')}

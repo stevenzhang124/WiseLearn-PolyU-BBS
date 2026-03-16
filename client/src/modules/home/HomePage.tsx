@@ -102,8 +102,17 @@ export const HomePage: React.FC = () => {
                   >
                     {item.title}
                   </Typography.Paragraph>
-                  <div className="wiselearn-feed-card-meta">
-                    <div className="wiselearn-feed-card-author">
+                  <div
+                    className="wiselearn-feed-card-meta"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div
+                      className="wiselearn-feed-card-author"
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => e.key === 'Enter' && item.user_id && navigate(`/users/${item.user_id}`)}
+                      onClick={() => item.user_id && navigate(`/users/${item.user_id}`)}
+                    >
                       <Avatar
                         src={item.author_avatar}
                         name={item.author}

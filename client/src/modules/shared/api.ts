@@ -40,10 +40,16 @@ export async function loginApi(
   return res.data
 }
 
+/** 发送注册验证码到邮箱（仅 PolyU 邮箱） */
+export async function sendVerificationCodeApi(email: string): Promise<void> {
+  await api.post('/auth/send-code', { email: email.trim() })
+}
+
 export async function registerApi(data: {
   email: string
   password: string
   nickname: string
+  code: string
 }): Promise<void> {
   await api.post('/auth/register', data)
 }
@@ -135,6 +141,66 @@ export async function getUserApi(id: number): Promise<{ id: number; nickname: st
   return res.data
 }
 
+/** 当前用户资料（个人中心用：关注数、粉丝数、收到总赞数） */
+export async function getMyProfileApi(): Promise<{
+  id: number
+  nickname: string
+  avatar: string | null
+  postCount: number
+  followerCount: number
+  followingCount: number
+  totalLikes: number
+}> {
+  const res = await api.get('/users/me/profile')
+  return res.data
+}
+
+/** 用户公开资料（发帖数、粉丝数、获赞数、是否已关注） */
+export async function getUserProfileApi(id: number): Promise<{
+  id: number
+  nickname: string
+  avatar: string | null
+  postCount: number
+  followerCount: number
+  totalLikes: number
+  isFollowing: boolean
+}> {
+  const res = await api.get(`/users/${id}/profile`)
+  return res.data
+}
+
+/** 某用户的关注列表（关注的人） */
+export async function getFollowingListApi(userId: number): Promise<{
+  list: Array<{ id: number; nickname: string; avatar: string | null }>
+}> {
+  const res = await api.get(`/users/${userId}/following`)
+  return res.data
+}
+
+/** 某用户的粉丝列表 */
+export async function getFollowersListApi(userId: number): Promise<{
+  list: Array<{ id: number; nickname: string; avatar: string | null }>
+}> {
+  const res = await api.get(`/users/${userId}/followers`)
+  return res.data
+}
+
+/** 关注用户 */
+export async function followUserApi(id: number): Promise<void> {
+  await api.post(`/users/${id}/follow`)
+}
+
+/** 取消关注 */
+export async function unfollowUserApi(id: number): Promise<void> {
+  await api.delete(`/users/${id}/follow`)
+}
+
+/** 某用户发布的帖子列表 */
+export async function getUserPostsApi(userId: number): Promise<{ list: any[] }> {
+  const res = await api.get(`/users/${userId}/posts`)
+  return res.data
+}
+
 /** 上传当前用户头像，返回新头像 URL */
 export async function uploadAvatarApi(file: File): Promise<{ avatar: string }> {
   const form = new FormData()
@@ -172,6 +238,73 @@ export async function fetchConversation(userId: number): Promise<any> {
 export async function getUnreadCount(): Promise<{ count: number }> {
   const res = await api.get('/messages/unread-count')
   return res.data
+}
+
+/** 消息中心未读数（点赞/关注/评论），私信未读见 getUnreadCount */
+export async function getNotificationsUnreadCount(): Promise<{
+  likes: number
+  follows: number
+  comments: number
+}> {
+  const res = await api.get('/notifications/unread-count')
+  return res.data
+}
+
+export async function getNotificationsLikes(params?: {
+  mark_read?: boolean
+}): Promise<{
+  list: Array<{
+    likeId: number
+    postId: number
+    postTitle: string
+    createdAt: string
+    actor: { id: number; nickname: string; avatar: string | null }
+  }>
+  unreadCount: number
+}> {
+  const res = await api.get('/notifications/likes', {
+    params: params?.mark_read ? { mark_read: '1' } : undefined
+  })
+  return res.data
+}
+
+export async function getNotificationsFollows(params?: {
+  mark_read?: boolean
+}): Promise<{
+  list: Array<{
+    createdAt: string
+    actor: { id: number; nickname: string; avatar: string | null }
+  }>
+  unreadCount: number
+}> {
+  const res = await api.get('/notifications/follows', {
+    params: params?.mark_read ? { mark_read: '1' } : undefined
+  })
+  return res.data
+}
+
+export async function getNotificationsComments(params?: {
+  mark_read?: boolean
+}): Promise<{
+  list: Array<{
+    commentId: number
+    postId: number
+    postTitle: string
+    content: string
+    parentCommentId: number | null
+    createdAt: string
+    actor: { id: number; nickname: string; avatar: string | null }
+  }>
+  unreadCount: number
+}> {
+  const res = await api.get('/notifications/comments', {
+    params: params?.mark_read ? { mark_read: '1' } : undefined
+  })
+  return res.data
+}
+
+export async function markNotificationsRead(type: 'like' | 'follow' | 'comment'): Promise<void> {
+  await api.post('/notifications/read', { type })
 }
 
 export async function fetchAdminStats(): Promise<any> {

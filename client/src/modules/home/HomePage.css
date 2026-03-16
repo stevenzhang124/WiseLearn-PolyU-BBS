@@ -113,6 +113,10 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  cursor: pointer;
+}
+.wiselearn-feed-card-author:hover .wiselearn-feed-card-name {
+  color: #C8102E;
 }
 .wiselearn-feed-card-avatar {
   width: 22px;

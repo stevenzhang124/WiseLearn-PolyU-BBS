@@ -126,6 +126,10 @@
 .wiselearn-comment-item.is-reply {
   margin-left: 0;
 }
+.wiselearn-comment-avatar-wrap {
+  cursor: pointer;
+  flex-shrink: 0;
+}
 .wiselearn-comment-avatar {
   width: 32px;
   height: 32px;
@@ -152,6 +156,10 @@
   font-size: 14px;
   font-weight: 500;
   color: rgba(0, 0, 0, 0.85);
+  cursor: pointer;
+}
+.wiselearn-comment-author:hover {
+  color: #C8102E;
 }
 .wiselearn-comment-author-tag {
   margin-left: 6px;
