@@ -45,7 +45,17 @@
     "codeLength": "Code must be 6 digits",
     "getCode": "Get code",
     "codeCooldown": "Retry in {{sec}}s",
-    "codeSent": "Code sent. Check your email."
+    "codeSent": "Code sent. Check your email.",
+    "forgetPassword": "Forgot password?",
+    "resetPasswordTitle": "Reset Password",
+    "resetStep1": "Enter your PolyU email to receive a 6-digit code",
+    "sendResetCode": "Send code",
+    "resetStep2": "Enter the code and set a new password",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm password",
+    "passwordMismatch": "Passwords do not match",
+    "resetSubmit": "Reset password",
+    "resetSuccess": "Password reset. Please log in with your new password."
   },
   "home": {
     "discover": "Discover",

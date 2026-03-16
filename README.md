@@ -32,7 +32,7 @@
 
 3. 执行迁移（按需）：`server/migrations/add-users-avatar.sql`、`add-follows-table.sql`、`add-user-notification-read.sql`（消息中心点赞/关注/评论未读用）。
 
-4. 按需手动创建管理员账号（见 `schema.sql` 文件注释）。
+4. 按需创建管理员账号（见下方「管理员登录」）。
 
 ### 3. 配置环境变量
 
@@ -80,6 +80,21 @@ npm run dev
 ```
 
 浏览器访问 Vite 提示的地址（通常是 `http://localhost:5173`）。
+
+### 6. 管理员登录与后台
+
+1. **创建管理员账号**（在 `server` 目录下执行，邮箱须为 `@polyu.edu.hk` 或 `@connect.polyu.edu.hk`）：
+
+   ```bash
+   cd server
+   npm run create-admin -- 你的邮箱@polyu.edu.hk 你的密码 管理员
+   ```
+
+   若该邮箱已存在，会将其设为管理员并重置密码。
+
+2. **登录**：在前端登录页使用上述邮箱和密码登录。
+
+3. **进入后台**：登录后左侧导航会出现「管理后台」，点击进入即可查看数据统计、热门帖子、帖子搜索与置顶/删除等。
 
 ## 三、功能概览
 

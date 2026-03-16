@@ -45,6 +45,20 @@ export async function sendVerificationCodeApi(email: string): Promise<void> {
   await api.post('/auth/send-code', { email: email.trim() })
 }
 
+/** 发送找回密码验证码（仅已注册的 PolyU 邮箱） */
+export async function sendResetCodeApi(email: string): Promise<void> {
+  await api.post('/auth/send-reset-code', { email: email.trim() })
+}
+
+/** 通过邮箱验证码重置密码 */
+export async function resetPasswordApi(data: {
+  email: string
+  code: string
+  password: string
+}): Promise<void> {
+  await api.post('/auth/reset-password', data)
+}
+
 export async function registerApi(data: {
   email: string
   password: string

@@ -89,7 +89,7 @@ adminRouter.post('/posts/:id/pin', async (req: AuthRequest, res) => {
 })
 
 /**
- * 删除违规帖子
+ * 删除违规帖子（先删该帖下的评论、点赞，再删帖子，避免外键约束报错）
  */
 adminRouter.delete('/posts/:id', async (req: AuthRequest, res) => {
   const id = Number(req.params.id)
@@ -98,13 +98,23 @@ adminRouter.delete('/posts/:id', async (req: AuthRequest, res) => {
     return
   }
 
+  const conn = await pool.getConnection()
   try {
-    await pool.query('DELETE FROM posts WHERE id = ?', [id])
+    await conn.beginTransaction()
+    // 评论有 parent_comment_id 自引用，先置空再删
+    await conn.query('UPDATE comments SET parent_comment_id = NULL WHERE post_id = ?', [id])
+    await conn.query('DELETE FROM comments WHERE post_id = ?', [id])
+    await conn.query('DELETE FROM likes WHERE post_id = ?', [id])
+    await conn.query('DELETE FROM posts WHERE id = ?', [id])
+    await conn.commit()
     res.json({ message: '帖子已删除' })
   } catch (err) {
+    await conn.rollback()
     // eslint-disable-next-line no-console
     console.error('Delete post error', err)
     res.status(500).json({ message: '删除失败' })
+  } finally {
+    conn.release()
   }
 })
 

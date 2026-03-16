@@ -4,12 +4,16 @@ import jwt from 'jsonwebtoken'
 import { pool } from '../db'
 import { config } from '../config'
 import { AuthUser, AuthRequest, authMiddleware } from '../middleware/auth'
-import { sendVerificationEmail } from '../email'
+import { sendVerificationEmail, sendPasswordResetEmail } from '../email'
 import {
   setCode,
   verifyAndConsumeCode,
+  setResetCode,
+  verifyAndConsumeResetCode,
   canSendAgain,
-  getCooldownSeconds
+  getCooldownSeconds,
+  canSendResetAgain,
+  getResetCooldownSeconds
 } from '../verificationStore'
 
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@(polyu\.edu\.hk|connect\.polyu\.hk)$/
@@ -124,6 +128,102 @@ authRouter.post('/register', async (req, res) => {
     // eslint-disable-next-line no-console
     console.error('Register error', err)
     res.status(500).json({ message: '注册失败，请稍后重试' })
+  }
+})
+
+/**
+ * 发送找回密码验证码（仅 PolyU 邮箱，且已注册）
+ * body: { email }
+ */
+authRouter.post('/send-reset-code', async (req, res) => {
+  const { email } = req.body as { email?: string }
+
+  if (!email || typeof email !== 'string') {
+    res.status(400).json({ message: '请填写邮箱' })
+    return
+  }
+
+  const normalized = email.trim().toLowerCase()
+  if (!EMAIL_REGEX.test(normalized)) {
+    res.status(400).json({ message: '仅允许使用 PolyU 校园邮箱' })
+    return
+  }
+
+  try {
+    const [rows] = await pool.query('SELECT id FROM users WHERE email = ?', [normalized])
+    if ((rows as any[]).length === 0) {
+      res.status(404).json({ message: '该邮箱未注册，请先注册' })
+      return
+    }
+
+    if (!canSendResetAgain(normalized)) {
+      const sec = getResetCooldownSeconds(normalized)
+      res.status(429).json({ message: `请 ${sec} 秒后再获取验证码` })
+      return
+    }
+
+    const code = randomSixDigit()
+    setResetCode(normalized, code)
+    await sendPasswordResetEmail(normalized, code)
+    res.json({ message: '验证码已发送，请查收邮箱' })
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('Send reset code error', err)
+    res.status(500).json({ message: '发送失败，请稍后重试' })
+  }
+})
+
+/**
+ * 通过邮箱验证码重置密码
+ * body: { email, code, password }
+ */
+authRouter.post('/reset-password', async (req, res) => {
+  const { email, code, password } = req.body as {
+    email?: string
+    code?: string
+    password?: string
+  }
+
+  if (!email || !code || !password) {
+    res.status(400).json({ message: '邮箱、验证码和新密码均为必填' })
+    return
+  }
+
+  if (String(code).trim().length !== 6) {
+    res.status(400).json({ message: '请输入 6 位验证码' })
+    return
+  }
+
+  if (password.length < 6) {
+    res.status(400).json({ message: '密码长度至少 6 位' })
+    return
+  }
+
+  const normalized = email.trim().toLowerCase()
+  if (!EMAIL_REGEX.test(normalized)) {
+    res.status(400).json({ message: '仅允许使用 PolyU 校园邮箱' })
+    return
+  }
+
+  if (!verifyAndConsumeResetCode(normalized, code)) {
+    res.status(400).json({ message: '验证码错误或已过期，请重新获取' })
+    return
+  }
+
+  try {
+    const [rows] = await pool.query('SELECT id FROM users WHERE email = ?', [normalized])
+    if ((rows as any[]).length === 0) {
+      res.status(404).json({ message: '该邮箱未注册' })
+      return
+    }
+
+    const hashed = await bcrypt.hash(password, 10)
+    await pool.query('UPDATE users SET password_hash = ? WHERE email = ?', [hashed, normalized])
+    res.json({ message: '密码已重置，请使用新密码登录' })
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('Reset password error', err)
+    res.status(500).json({ message: '重置失败，请稍后重试' })
   }
 })
 

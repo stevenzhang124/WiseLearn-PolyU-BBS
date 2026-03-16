@@ -45,7 +45,17 @@
     "codeLength": "验证码为 6 位数字",
     "getCode": "获取验证码",
     "codeCooldown": "{{sec}} 秒后重试",
-    "codeSent": "验证码已发送，请查收邮箱"
+    "codeSent": "验证码已发送，请查收邮箱",
+    "forgetPassword": "忘记密码？",
+    "resetPasswordTitle": "找回密码",
+    "resetStep1": "输入您的 PolyU 邮箱，我们将发送 6 位验证码",
+    "sendResetCode": "发送验证码",
+    "resetStep2": "输入验证码并设置新密码",
+    "newPassword": "新密码",
+    "confirmPassword": "确认密码",
+    "passwordMismatch": "两次输入的密码不一致",
+    "resetSubmit": "重置密码",
+    "resetSuccess": "密码已重置，请使用新密码登录"
   },
   "home": {
     "discover": "发现",
