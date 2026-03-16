@@ -1,0 +1,22 @@
+/* 个人中心：我的发帖 / 评论 / 点赞 列表靠左、可点击跳转 */
+.wiselearn-profile-activity-card .wiselearn-profile-list {
+  text-align: left;
+}
+.wiselearn-profile-activity-card .wiselearn-profile-list .ant-list-item {
+  text-align: left;
+  justify-content: flex-start;
+}
+.wiselearn-profile-list-item {
+  cursor: pointer;
+  padding: 10px 0;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+.wiselearn-profile-list-item:hover {
+  background: #f5f5f5;
+}
+.wiselearn-profile-list-text {
+  display: block;
+  text-align: left;
+  width: 100%;
+}

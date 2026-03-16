@@ -3,21 +3,24 @@ import ReactDOM from 'react-dom/client'
 import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom'
 import { ConfigProvider } from 'antd'
 import zhCN from 'antd/locale/zh_CN'
+import enUS from 'antd/locale/en_US'
+import { useTranslation } from 'react-i18next'
+import './i18n'
 import './style.css'
 import { LayoutShell } from './modules/layout/LayoutShell'
 import { LoginPage } from './modules/auth/LoginPage'
 import { RegisterPage } from './modules/auth/RegisterPage'
 import { HomePage } from './modules/home/HomePage'
 import { CreatePostPage } from './modules/posts/CreatePostPage'
+import { EditPostPage } from './modules/posts/EditPostPage'
 import { PostDetailPage } from './modules/posts/PostDetailPage'
 import { ProfilePage } from './modules/profile/ProfilePage'
 import { MessagesPage } from './modules/messages/MessagesPage'
 import { AdminDashboardPage } from './modules/admin/AdminDashboardPage'
 import { AuthProvider, useAuth } from './modules/auth/AuthContext'
 
-/* 香港理工大学官方配色：理工红 #C8102E + 金色 */
+/* 香港理工大学官方配色：理工红 #C8102E */
 const POLYU_RED = '#C8102E'
-const POLYU_GOLD = '#B8860B'
 
 const PolyUTheme: React.ComponentProps<typeof ConfigProvider>['theme'] = {
   token: {
@@ -70,9 +73,11 @@ function RequireLayout({ children }: { children: React.ReactElement }) {
   return children
 }
 
-ReactDOM.createRoot(document.getElementById('app') as HTMLElement).render(
-  <React.StrictMode>
-    <ConfigProvider locale={zhCN} theme={PolyUTheme}>
+function AppWithLocale() {
+  const { i18n } = useTranslation()
+  const antdLocale = i18n.language === 'en' ? enUS : zhCN
+  return (
+    <ConfigProvider locale={antdLocale} theme={PolyUTheme}>
       <AuthProvider>
         <BrowserRouter>
           <Routes>
@@ -88,6 +93,7 @@ ReactDOM.createRoot(document.getElementById('app') as HTMLElement).render(
             >
               <Route index element={<HomePage />} />
               <Route path="create" element={<CreatePostPage />} />
+              <Route path="posts/:id/edit" element={<EditPostPage />} />
               <Route path="posts/:id" element={<PostDetailPage />} />
               <Route path="profile" element={<ProfilePage />} />
               <Route path="messages/:userId" element={<MessagesPage />} />
@@ -105,5 +111,11 @@ ReactDOM.createRoot(document.getElementById('app') as HTMLElement).render(
         </BrowserRouter>
       </AuthProvider>
     </ConfigProvider>
+  )
+}
+
+ReactDOM.createRoot(document.getElementById('app') as HTMLElement).render(
+  <React.StrictMode>
+    <AppWithLocale />
   </React.StrictMode>
 )

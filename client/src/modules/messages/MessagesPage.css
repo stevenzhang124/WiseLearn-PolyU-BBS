@@ -1,12 +1,16 @@
-/* 会话列表 */
+/* 会话列表：姓名和时间居左 */
 .wiselearn-messages-list .wiselearn-conv-item {
   cursor: pointer;
   padding: 12px 16px;
   border-radius: 12px;
   transition: background 0.2s;
+  text-align: left;
 }
 .wiselearn-messages-list .wiselearn-conv-item:hover {
   background: #f5f5f5;
+}
+.wiselearn-messages-list .wiselearn-conv-item > div {
+  justify-content: flex-start;
 }
 .wiselearn-conv-avatar {
   width: 44px;
@@ -25,6 +29,7 @@
   flex: 1;
   min-width: 0;
   margin-left: 12px;
+  text-align: left;
 }
 .wiselearn-conv-name {
   font-weight: 500;
@@ -49,13 +54,16 @@
   border-radius: 16px;
   overflow: hidden;
 }
+/* 顶栏姓名居左 */
 .wiselearn-chat-header {
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   gap: 12px;
   padding: 12px 16px;
   background: #fff;
   border-bottom: 1px solid #eee;
+  text-align: left;
 }
 .wiselearn-chat-avatar {
   width: 40px;
@@ -82,15 +90,24 @@
   color: #999;
   padding: 24px;
 }
+/* 每条消息：头像 + 气泡，微信/小红书风格 */
 .wiselearn-bubble-wrap {
   display: flex;
+  align-items: flex-end;
+  gap: 10px;
   justify-content: flex-start;
 }
 .wiselearn-bubble-wrap.is-me {
   justify-content: flex-end;
 }
-.wiselearn-bubble {
+.wiselearn-chat-msg-avatar {
+  flex-shrink: 0;
+}
+.wiselearn-bubble-wrap .wiselearn-bubble {
   max-width: 70%;
+  min-width: 0;
+}
+.wiselearn-bubble {
   padding: 10px 14px;
   border-radius: 16px;
   background: #fff;
@@ -105,13 +122,17 @@
   line-height: 1.5;
   white-space: pre-wrap;
 }
-.wiselearn-bubble-time {
-  font-size: 11px;
-  color: rgba(0,0,0,0.45);
-  margin-top: 4px;
+/* 对话中间显示的时间分隔（微信风格） */
+.wiselearn-chat-time-sep {
+  text-align: center;
+  padding: 8px 0;
 }
-.wiselearn-bubble-wrap.is-me .wiselearn-bubble-time {
-  color: rgba(255,255,255,0.8);
+.wiselearn-chat-time-sep span {
+  font-size: 12px;
+  color: rgba(0,0,0,0.45);
+  background: rgba(0,0,0,0.06);
+  padding: 4px 12px;
+  border-radius: 4px;
 }
 .wiselearn-chat-input-wrap {
   display: flex;

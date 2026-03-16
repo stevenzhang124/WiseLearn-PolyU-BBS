@@ -70,7 +70,8 @@ postRouter.get('/', async (req: AuthRequest, res) => {
         p.created_at,
         p.view_count,
         p.like_count,
-        u.nickname AS author
+        u.nickname AS author,
+        u.avatar AS author_avatar
       FROM posts p
       JOIN users u ON p.user_id = u.id
       ORDER BY ${orderBy}
@@ -78,12 +79,17 @@ postRouter.get('/', async (req: AuthRequest, res) => {
     `,
       [pageSize, offset]
     )
+    const listBaseUrl = process.env.API_BASE_URL || 'http://localhost:4000'
+    const list = (listRows as any[]).map((p) => ({
+      ...p,
+      author_avatar: p.author_avatar ? `${listBaseUrl}${p.author_avatar}` : null
+    }))
 
     const [countRows] = await pool.query('SELECT COUNT(*) as total FROM posts')
     const total = (countRows as any[])[0]?.total ?? 0
 
     res.json({
-      list: listRows,
+      list,
       pagination: {
         page,
         pageSize,
@@ -94,6 +100,57 @@ postRouter.get('/', async (req: AuthRequest, res) => {
     // eslint-disable-next-line no-console
     console.error('List posts error', err)
     res.status(500).json({ message: '获取帖子列表失败' })
+  }
+})
+
+/**
+ * 编辑帖子（仅作者本人）
+ * body: { title, content, category, imageUrls? }
+ */
+postRouter.put('/:id', async (req: AuthRequest, res) => {
+  if (!req.user) {
+    res.status(401).json({ message: '未登录' })
+    return
+  }
+  const id = Number(req.params.id)
+  if (Number.isNaN(id)) {
+    res.status(400).json({ message: '帖子 ID 不合法' })
+    return
+  }
+  const { title, content, category, imageUrls } = req.body as {
+    title?: string
+    content?: string
+    category?: string
+    imageUrls?: string[]
+  }
+  if (!title || !content || !category) {
+    res.status(400).json({ message: '标题、内容和分类为必填' })
+    return
+  }
+  try {
+    const [rows] = await pool.query(
+      'SELECT id, user_id FROM posts WHERE id = ?',
+      [id]
+    )
+    const post = (rows as any[])[0]
+    if (!post) {
+      res.status(404).json({ message: '帖子不存在' })
+      return
+    }
+    if (post.user_id !== req.user.id) {
+      res.status(403).json({ message: '只能编辑自己的帖子' })
+      return
+    }
+    const images = Array.isArray(imageUrls) ? imageUrls.join(',') : null
+    await pool.query(
+      'UPDATE posts SET title = ?, content = ?, category = ?, image_urls = ? WHERE id = ?',
+      [title, content, category, images, id]
+    )
+    res.json({ message: '更新成功' })
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('Update post error', err)
+    res.status(500).json({ message: '更新失败，请稍后重试' })
   }
 })
 
@@ -110,11 +167,13 @@ postRouter.get('/:id', async (req: AuthRequest, res) => {
   try {
     await pool.query('UPDATE posts SET view_count = view_count + 1 WHERE id = ?', [id])
 
+    const baseUrl = process.env.API_BASE_URL || 'http://localhost:4000'
     const [rows] = await pool.query(
       `
       SELECT
         p.*,
-        u.nickname AS author
+        u.nickname AS author,
+        u.avatar AS author_avatar
       FROM posts p
       JOIN users u ON p.user_id = u.id
       WHERE p.id = ?
@@ -122,19 +181,24 @@ postRouter.get('/:id', async (req: AuthRequest, res) => {
       [id]
     )
     const post = (rows as any[])[0]
+    if (post && post.author_avatar) {
+      post.author_avatar = `${baseUrl}${post.author_avatar}`
+    }
     if (!post) {
       res.status(404).json({ message: '帖子不存在' })
       return
     }
 
-    const [comments] = await pool.query(
+    const [commentRows] = await pool.query(
       `
       SELECT
         c.id,
+        c.user_id,
         c.content,
         c.parent_comment_id,
         c.created_at,
-        u.nickname AS author
+        u.nickname AS author,
+        u.avatar AS author_avatar
       FROM comments c
       JOIN users u ON c.user_id = u.id
       WHERE c.post_id = ?
@@ -142,6 +206,12 @@ postRouter.get('/:id', async (req: AuthRequest, res) => {
     `,
       [id]
     )
+    const postUserId = post.user_id
+    const comments = (commentRows as any[]).map((c) => ({
+      ...c,
+      author_avatar: c.author_avatar ? `${baseUrl}${c.author_avatar}` : null,
+      is_author: c.user_id === postUserId
+    }))
 
     res.json({ post, comments })
   } catch (err) {

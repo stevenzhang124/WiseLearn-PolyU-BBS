@@ -25,6 +25,7 @@ messageRouter.get('/conversations', async (req: AuthRequest, res) => {
       SELECT
         u.id AS userId,
         u.nickname,
+        u.avatar,
         sub.last_at AS lastMessageAt,
         COALESCE(unread.cnt, 0) AS unreadCount
       FROM (
@@ -47,9 +48,11 @@ messageRouter.get('/conversations', async (req: AuthRequest, res) => {
       [myId, myId, myId, myId]
     )
 
+    const baseUrl = process.env.API_BASE_URL || 'http://localhost:4000'
     const conversations = (rows as any[]).map((r) => ({
       userId: r.userId,
       nickname: r.nickname,
+      avatar: r.avatar ? `${baseUrl}${r.avatar}` : null,
       lastMessageAt: r.lastMessageAt,
       unreadCount: Number(r.unreadCount) || 0
     }))

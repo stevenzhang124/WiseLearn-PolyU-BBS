@@ -81,6 +81,13 @@ export async function createPost(data: {
   await api.post('/posts', data)
 }
 
+export async function updatePost(
+  id: number,
+  data: { title: string; content: string; category: string; imageUrls?: string[] }
+): Promise<void> {
+  await api.put(`/posts/${id}`, data)
+}
+
 export async function fetchPostDetail(id: number): Promise<any> {
   const res = await api.get(`/posts/${id}`)
   return res.data
@@ -123,8 +130,18 @@ export async function uploadImageApi(file: File): Promise<{ url: string }> {
   return res.data
 }
 
-export async function getUserApi(id: number): Promise<{ id: number; nickname: string }> {
+export async function getUserApi(id: number): Promise<{ id: number; nickname: string; avatar?: string | null }> {
   const res = await api.get(`/users/${id}`)
+  return res.data
+}
+
+/** 上传当前用户头像，返回新头像 URL */
+export async function uploadAvatarApi(file: File): Promise<{ avatar: string }> {
+  const form = new FormData()
+  form.append('file', file)
+  const res = await api.put<{ avatar: string }>('/users/me/avatar', form, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  })
   return res.data
 }
 

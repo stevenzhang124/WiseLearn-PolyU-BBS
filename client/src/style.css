@@ -383,3 +383,21 @@ code {
   .wiselearn-header-white .wiselearn-header-title { font-size: 16px; white-space: normal; }
   .wiselearn-header-white .wiselearn-header-subtitle { font-size: 11px; white-space: normal; }
 }
+
+/* 顶栏语言切换 */
+.wiselearn-lang-switch button {
+  padding: 4px 10px;
+  border: none;
+  background: none;
+  color: rgba(0, 0, 0, 0.5);
+  font-size: 13px;
+  cursor: pointer;
+  border-radius: 6px;
+}
+.wiselearn-lang-switch button:hover {
+  color: #C8102E;
+}
+.wiselearn-lang-switch button.active {
+  color: #C8102E;
+  font-weight: 600;
+}

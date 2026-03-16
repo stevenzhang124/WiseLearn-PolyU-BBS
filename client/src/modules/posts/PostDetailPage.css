@@ -153,6 +153,14 @@
   font-weight: 500;
   color: rgba(0, 0, 0, 0.85);
 }
+.wiselearn-comment-author-tag {
+  margin-left: 6px;
+  font-size: 12px;
+  color: #C8102E;
+  background: rgba(200, 16, 46, 0.08);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
 .wiselearn-comment-time {
   font-size: 12px;
   color: rgba(0, 0, 0, 0.45);

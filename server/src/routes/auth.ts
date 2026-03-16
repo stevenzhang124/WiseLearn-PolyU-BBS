@@ -88,20 +88,31 @@ authRouter.post('/login', async (req, res) => {
       return
     }
 
+    const baseUrl = process.env.API_BASE_URL || 'http://localhost:4000'
+    let avatar: string | null = null
+    try {
+      const [avRows] = await pool.query('SELECT avatar FROM users WHERE id = ?', [user.id])
+      const av = (avRows as any[])[0]
+      if (av?.avatar) avatar = `${baseUrl}${av.avatar}`
+    } catch {
+      // avatar 列可能不存在（未执行迁移），忽略
+    }
+
     const payload: AuthUser = {
       id: user.id,
       email: user.email,
       nickname: user.nickname,
       isAdmin: Boolean(user.is_admin)
     }
-
     const token = jwt.sign(payload, config.jwtSecret, {
       expiresIn: config.jwtExpiresIn
     })
-
     res.json({
       token,
-      user: payload
+      user: {
+        ...payload,
+        avatar
+      }
     })
   } catch (err) {
     // eslint-disable-next-line no-console
@@ -129,10 +140,20 @@ authRouter.get('/me', authMiddleware, async (req: AuthRequest, res) => {
       res.status(404).json({ message: '用户不存在' })
       return
     }
+    let avatar: string | null = null
+    try {
+      const [avRows] = await pool.query('SELECT avatar FROM users WHERE id = ?', [req.user.id])
+      const av = (avRows as any[])[0]
+      const baseUrl = process.env.API_BASE_URL || 'http://localhost:4000'
+      if (av?.avatar) avatar = `${baseUrl}${av.avatar}`
+    } catch {
+      // avatar 列可能不存在（未执行迁移），忽略
+    }
     res.json({
       id: user.id,
       email: user.email,
       nickname: user.nickname,
+      avatar,
       isAdmin: Boolean(user.is_admin)
     })
   } catch (err) {

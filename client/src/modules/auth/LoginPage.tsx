@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Button, Card, Form, Input, Typography, Checkbox, message } from 'antd'
 import { useNavigate, Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from './AuthContext'
 
 /** 理工红主色 */
@@ -10,6 +11,7 @@ const POLYU_RED = '#C8102E'
  * 登录页：独立全屏，不显示侧栏/顶栏；理工红主题
  */
 export const LoginPage: React.FC = () => {
+  const { t, i18n } = useTranslation()
   const { user, login } = useAuth()
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
@@ -26,7 +28,7 @@ export const LoginPage: React.FC = () => {
     setLoading(true)
     try {
       await login(values.email, values.password, values.remember)
-      message.success('登录成功')
+      message.success(t('auth.loginSuccess'))
       navigate('/')
     } catch (err) {
       message.error((err as Error).message)
@@ -41,14 +43,47 @@ export const LoginPage: React.FC = () => {
       style={{
         minHeight: '100vh',
         display: 'flex',
+        flexDirection: 'column',
         justifyContent: 'center',
         alignItems: 'center',
         background: 'linear-gradient(160deg, #f8f4f4 0%, #eee 50%, #f5f0f0 100%)',
         padding: 24
       }}
     >
+      <div style={{ position: 'absolute', top: 24, right: 24, display: 'flex', gap: 8 }}>
+        <button
+          type="button"
+          onClick={() => { i18n.changeLanguage('zh'); localStorage.setItem('wiselearn_lang', 'zh') }}
+          style={{
+            border: 'none',
+            background: i18n.language === 'zh' ? POLYU_RED : 'transparent',
+            color: i18n.language === 'zh' ? '#fff' : 'rgba(0,0,0,0.65)',
+            padding: '6px 12px',
+            borderRadius: 8,
+            cursor: 'pointer',
+            fontSize: 14
+          }}
+        >
+          {t('lang.zh')}
+        </button>
+        <button
+          type="button"
+          onClick={() => { i18n.changeLanguage('en'); localStorage.setItem('wiselearn_lang', 'en') }}
+          style={{
+            border: 'none',
+            background: i18n.language === 'en' ? POLYU_RED : 'transparent',
+            color: i18n.language === 'en' ? '#fff' : 'rgba(0,0,0,0.65)',
+            padding: '6px 12px',
+            borderRadius: 8,
+            cursor: 'pointer',
+            fontSize: 14
+          }}
+        >
+          {t('lang.en')}
+        </button>
+      </div>
       <Card
-        title="WiseLearn 登录"
+        title={t('auth.loginTitle')}
         className="wiselearn-auth-card"
         style={{
           width: 400,
@@ -70,28 +105,28 @@ export const LoginPage: React.FC = () => {
       >
         <Form onFinish={onFinish} layout="vertical">
           <Form.Item
-            label="PolyU 邮箱"
+            label={t('auth.email')}
             name="email"
             rules={[
-              { required: true, message: '请输入邮箱' },
+              { required: true, message: t('auth.emailRequired') },
               {
                 pattern:
                   /^[a-zA-Z0-9._%+-]+@(polyu\.edu\.hk|connect\.polyu\.hk)$/,
-                message: '仅支持 polyu.edu.hk / connect.polyu.hk 邮箱'
+                message: t('auth.emailInvalid')
               }
             ]}
           >
-            <Input placeholder="yourid@polyu.edu.hk" size="large" />
+            <Input placeholder={t('auth.emailPlaceholder')} size="large" />
           </Form.Item>
           <Form.Item
-            label="密码"
+            label={t('auth.password')}
             name="password"
-            rules={[{ required: true, message: '请输入密码' }]}
+            rules={[{ required: true, message: t('auth.passwordRequired') }]}
           >
             <Input.Password size="large" />
           </Form.Item>
           <Form.Item name="remember" valuePropName="checked" initialValue>
-            <Checkbox>记住我（7 天内自动登录）</Checkbox>
+            <Checkbox>{t('auth.remember')}</Checkbox>
           </Form.Item>
           <Form.Item>
             <Button
@@ -106,11 +141,11 @@ export const LoginPage: React.FC = () => {
                 height: 44
               }}
             >
-              登录
+              {t('auth.login')}
             </Button>
           </Form.Item>
           <Typography.Text type="secondary">
-            还没有账号？<Link to="/register" style={{ color: POLYU_RED }}>立即注册</Link>
+            {t('auth.noAccount')}<Link to="/register" style={{ color: POLYU_RED }}>{t('auth.goRegister')}</Link>
           </Typography.Text>
         </Form>
       </Card>

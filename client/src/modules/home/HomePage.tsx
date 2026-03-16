@@ -1,15 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import { Tabs, Typography, message } from 'antd'
+import { useTranslation } from 'react-i18next'
 import './HomePage.css'
 import { HeartOutlined, EyeOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
+import { Avatar } from '../shared/Avatar'
 import { fetchPosts } from '../shared/api'
-
-const categories = [
-  { label: '教学交流', value: 'teaching' },
-  { label: '校园生活', value: 'campus' },
-  { label: '求职分享', value: 'career' }
-]
 
 /** 从帖子内容取第一张图片 URL（用于列表封面） */
 function getFirstImageUrl(post: { content?: string; image_urls?: string | null }): string | null {
@@ -28,6 +24,7 @@ function getFirstImageUrl(post: { content?: string; image_urls?: string | null }
  * 首页：小红书风格卡片流（封面图 + 标题 + 作者 + 点赞/浏览）
  */
 export const HomePage: React.FC = () => {
+  const { t } = useTranslation()
   const [tab, setTab] = useState<'time' | 'hot'>('time')
   const [loadingPosts, setLoadingPosts] = useState(false)
   const [posts, setPosts] = useState<any[]>([])
@@ -62,14 +59,14 @@ export const HomePage: React.FC = () => {
     <div className="wiselearn-feed">
       <div className="wiselearn-feed-header">
         <Typography.Title level={4} style={{ margin: 0 }}>
-          发现
+          {t('home.discover')}
         </Typography.Title>
         <Tabs
           activeKey={tab}
           onChange={(key) => setTab(key as 'time' | 'hot')}
           items={[
-            { key: 'time', label: '最新' },
-            { key: 'hot', label: '热门' }
+            { key: 'time', label: t('home.latest') },
+            { key: 'hot', label: t('home.hot') }
           ]}
           className="wiselearn-feed-tabs"
         />
@@ -77,11 +74,11 @@ export const HomePage: React.FC = () => {
 
       <div className="wiselearn-feed-grid">
         {loadingPosts ? (
-          <div className="wiselearn-feed-loading">加载中...</div>
+          <div className="wiselearn-feed-loading">{t('home.loading')}</div>
         ) : (
           posts.map((item) => {
             const coverUrl = getFirstImageUrl(item)
-            const categoryLabel = categories.find((c) => c.value === item.category)?.label ?? item.category
+            const categoryLabel = t(`home.category.${item.category}` as const) || item.category
             return (
               <div
                 key={item.id}
@@ -95,7 +92,7 @@ export const HomePage: React.FC = () => {
                     <div className="wiselearn-feed-card-cover-placeholder" />
                   )}
                   {item.is_pinned ? (
-                    <span className="wiselearn-feed-card-pin">置顶</span>
+                    <span className="wiselearn-feed-card-pin">{t('home.pinned')}</span>
                   ) : null}
                 </div>
                 <div className="wiselearn-feed-card-body">
@@ -107,9 +104,11 @@ export const HomePage: React.FC = () => {
                   </Typography.Paragraph>
                   <div className="wiselearn-feed-card-meta">
                     <div className="wiselearn-feed-card-author">
-                      <span className="wiselearn-feed-card-avatar">
-                        {(item.author || '?').charAt(0)}
-                      </span>
+                      <Avatar
+                        src={item.author_avatar}
+                        name={item.author}
+                        size={22}
+                      />
                       <span className="wiselearn-feed-card-name">{item.author}</span>
                     </div>
                     <div className="wiselearn-feed-card-stats">
@@ -132,7 +131,7 @@ export const HomePage: React.FC = () => {
             className="wiselearn-feed-load-more"
             onClick={() => void loadPosts(page + 1, tab)}
           >
-            加载更多
+            {t('home.loadMore')}
           </button>
         </div>
       )}

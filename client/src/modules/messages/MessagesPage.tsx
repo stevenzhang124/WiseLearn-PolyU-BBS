@@ -2,7 +2,9 @@ import React, { useEffect, useState, useRef } from 'react'
 import { Card, List, Input, Button, Typography, message, Badge } from 'antd'
 import { SendOutlined } from '@ant-design/icons'
 import { useParams, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
+import { Avatar } from '../shared/Avatar'
 import {
   fetchConversation,
   fetchConversationsList,
@@ -16,20 +18,40 @@ import './MessagesPage.css'
  * 私信：会话列表 + 微信/QQ 风格气泡聊天
  */
 export const MessagesPage: React.FC = () => {
+  const { t, i18n } = useTranslation()
   const { userId: paramUserId } = useParams<{ userId: string }>()
   const navigate = useNavigate()
   const { user } = useAuth()
   const [otherNickname, setOtherNickname] = useState<string | null>(null)
+  const [otherAvatar, setOtherAvatar] = useState<string | null>(null)
   const [content, setContent] = useState('')
   const [messagesList, setMessagesList] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [conversations, setConversations] = useState<
-    Array<{ userId: number; nickname: string; lastMessageAt: string; unreadCount: number }>
+    Array<{ userId: number; nickname: string; avatar?: string | null; lastMessageAt: string; unreadCount: number }>
   >([])
   const [loadingList, setLoadingList] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const otherId = paramUserId ? Number(paramUserId) : null
+  const locale = i18n.language === 'en' ? 'en-US' : 'zh-CN'
+  const TIME_GAP_MS = 5 * 60 * 1000
+
+  /** 是否应在该条消息前显示时间分隔（首条或与上条间隔超过 5 分钟） */
+  const shouldShowTimeBefore = (index: number) => {
+    if (index === 0) return true
+    const prev = messagesList[index - 1]
+    const curr = messagesList[index]
+    return new Date(curr.created_at).getTime() - new Date(prev.created_at).getTime() > TIME_GAP_MS
+  }
+
+  const formatTimeSep = (dateStr: string) =>
+    new Date(dateStr).toLocaleString(locale, {
+      month: 'numeric',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
 
   const loadConversation = async (targetId: number, silent = false) => {
     if (!silent) setLoading(true)
@@ -40,9 +62,11 @@ export const MessagesPage: React.FC = () => {
       ])
       setMessagesList(convRes.messages)
       setOtherNickname(userRes.nickname)
+      setOtherAvatar(userRes.avatar ?? null)
     } catch (err) {
       if (!silent) message.error((err as Error).message)
       setOtherNickname(null)
+      setOtherAvatar(null)
       setMessagesList([])
     } finally {
       if (!silent) setLoading(false)
@@ -54,6 +78,7 @@ export const MessagesPage: React.FC = () => {
       void loadConversation(otherId)
     } else {
       setOtherNickname(null)
+      setOtherAvatar(null)
       setMessagesList([])
     }
   }, [otherId])
@@ -92,11 +117,11 @@ export const MessagesPage: React.FC = () => {
 
   const onSend = async () => {
     if (otherId == null || Number.isNaN(otherId) || !content.trim()) {
-      message.warning('请输入私信内容')
+      message.warning(t('messages.inputRequired'))
       return
     }
     if (otherId === user?.id) {
-      message.warning('不能给自己发私信')
+      message.warning(t('messages.noSelfSend'))
       return
     }
     try {
@@ -112,14 +137,14 @@ export const MessagesPage: React.FC = () => {
     return (
       <div className="wiselearn-messages-list">
         <Typography.Title level={4} style={{ marginBottom: 16 }}>
-          私信
+          {t('messages.title')}
         </Typography.Title>
-        <Card className="wiselearn-card" title="会话列表">
+        <Card className="wiselearn-card" title={t('messages.conversationList')}>
           {loadingList ? (
             <List loading />
           ) : conversations.length === 0 ? (
             <Typography.Paragraph type="secondary">
-              暂无会话。在浏览帖子时点击作者名字即可发起私信；别人给您发消息后，这里也会出现对应会话。
+              {t('messages.noConversations')}
             </Typography.Paragraph>
           ) : (
             <List
@@ -136,15 +161,18 @@ export const MessagesPage: React.FC = () => {
                   }
                 >
                   <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-                    <div className="wiselearn-conv-avatar">
-                      {(c.nickname || '?').charAt(0)}
-                    </div>
+                    <Avatar
+                      src={c.avatar}
+                      name={c.nickname}
+                      size={44}
+                      className="wiselearn-conv-avatar"
+                    />
                     <div className="wiselearn-conv-body">
                       <div className="wiselearn-conv-name">
                         {c.nickname}
                         {c.unreadCount > 0 && (
                           <span className="wiselearn-conv-unread">
-                            {c.unreadCount} 条未读
+                            {t('messages.unreadCount', { count: c.unreadCount })}
                           </span>
                         )}
                       </div>
@@ -165,10 +193,10 @@ export const MessagesPage: React.FC = () => {
   if (otherId === user?.id) {
     return (
       <div>
-        <Typography.Title level={4}>私信</Typography.Title>
+        <Typography.Title level={4}>{t('messages.title')}</Typography.Title>
         <Card className="wiselearn-card">
           <Typography.Paragraph type="secondary">
-            不能给自己发私信。请从帖子中点击其他作者进入私信。
+            {t('messages.noSelfPM')}
           </Typography.Paragraph>
         </Card>
       </div>
@@ -178,9 +206,12 @@ export const MessagesPage: React.FC = () => {
   return (
     <div className="wiselearn-chat">
       <div className="wiselearn-chat-header">
-        <div className="wiselearn-chat-avatar">
-          {(otherNickname || '?').charAt(0)}
-        </div>
+        <Avatar
+          src={otherAvatar}
+          name={otherNickname ?? ''}
+          size={40}
+          className="wiselearn-chat-avatar"
+        />
         <Typography.Title level={5} style={{ margin: 0 }}>
           {otherNickname ?? '...'}
         </Typography.Title>
@@ -188,27 +219,41 @@ export const MessagesPage: React.FC = () => {
 
       <div className="wiselearn-chat-messages">
         {loading ? (
-          <div className="wiselearn-chat-loading">加载中...</div>
+          <div className="wiselearn-chat-loading">{t('messages.loading')}</div>
         ) : (
-          messagesList.map((item) => {
+          messagesList.map((item, index) => {
             const isMe = item.from_user_id === user?.id
             return (
-              <div
-                key={item.id}
-                className={`wiselearn-bubble-wrap ${isMe ? 'is-me' : ''}`}
-              >
-                <div className="wiselearn-bubble">
-                  <div className="wiselearn-bubble-text">{item.content}</div>
-                  <div className="wiselearn-bubble-time">
-                    {new Date(item.created_at).toLocaleString('zh-CN', {
-                      month: 'numeric',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
+              <React.Fragment key={item.id}>
+                {shouldShowTimeBefore(index) && (
+                  <div className="wiselearn-chat-time-sep">
+                    <span>{formatTimeSep(item.created_at)}</span>
                   </div>
+                )}
+                <div
+                  className={`wiselearn-bubble-wrap ${isMe ? 'is-me' : ''}`}
+                >
+                  {!isMe && (
+                    <Avatar
+                      src={otherAvatar}
+                      name={otherNickname ?? ''}
+                      size={36}
+                      className="wiselearn-chat-msg-avatar"
+                    />
+                  )}
+                  <div className="wiselearn-bubble">
+                    <div className="wiselearn-bubble-text">{item.content}</div>
+                  </div>
+                  {isMe && (
+                    <Avatar
+                      src={user?.avatar}
+                      name={user?.nickname ?? ''}
+                      size={36}
+                      className="wiselearn-chat-msg-avatar"
+                    />
+                  )}
                 </div>
-              </div>
+              </React.Fragment>
             )
           })
         )}
@@ -218,7 +263,7 @@ export const MessagesPage: React.FC = () => {
       <div className="wiselearn-chat-input-wrap">
         <Input.TextArea
           className="wiselearn-chat-input"
-          placeholder="输入消息，按 Enter 发送"
+          placeholder={t('messages.inputPlaceholder')}
           value={content}
           onChange={(e) => setContent(e.target.value)}
           onPressEnter={(e) => {
@@ -235,7 +280,7 @@ export const MessagesPage: React.FC = () => {
           onClick={() => void onSend()}
           className="wiselearn-chat-send"
         >
-          发送
+          {t('messages.send')}
         </Button>
       </div>
     </div>

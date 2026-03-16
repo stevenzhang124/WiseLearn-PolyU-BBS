@@ -31,6 +31,7 @@ const upload = multer({
   }
 })
 
+export { upload }
 export const uploadRouter = Router()
 
 uploadRouter.use(authMiddleware)

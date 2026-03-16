@@ -9,19 +9,27 @@ import {
   LogoutOutlined
 } from '@ant-design/icons'
 import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
+import { Avatar } from '../shared/Avatar'
 import { getUnreadCount } from '../shared/api'
 
 const { Header, Content, Sider } = Layout
 
 /**
- * 整体布局：理工红主题 + PolyU Logo + 未读私信数量（仅登录后展示，登录/注册页不包含此布局）
+ * 整体布局：理工红主题 + PolyU Logo + 未读私信数量 + 语言切换
  */
 export const LayoutShell: React.FC = () => {
   const location = useLocation()
   const navigate = useNavigate()
+  const { t, i18n } = useTranslation()
   const { user, logout } = useAuth()
   const [unreadCount, setUnreadCount] = useState(0)
+
+  const setLang = (lng: 'zh' | 'en') => {
+    i18n.changeLanguage(lng)
+    localStorage.setItem('wiselearn_lang', lng)
+  }
 
   const selectedKeys: string[] = []
   if (location.pathname.startsWith('/messages')) selectedKeys.push('messages')
@@ -80,20 +88,40 @@ export const LayoutShell: React.FC = () => {
             }}
           />
           <div className="wiselearn-header-titles">
-            <span className="wiselearn-header-title">WiseLearn · 校园交流</span>
-            <span className="wiselearn-header-subtitle">香港理工大学 Hong Kong Polytechnic University</span>
+            <span className="wiselearn-header-title">{t('nav.headerTitle')}</span>
+            <span className="wiselearn-header-subtitle">{t('nav.headerSubtitle')}</span>
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+          <span className="wiselearn-lang-switch">
+            <button
+              type="button"
+              className={i18n.language === 'zh' ? 'active' : ''}
+              onClick={() => setLang('zh')}
+            >
+              {t('lang.zh')}
+            </button>
+            <span style={{ color: '#ddd', margin: '0 4px' }}>|</span>
+            <button
+              type="button"
+              className={i18n.language === 'en' ? 'active' : ''}
+              onClick={() => setLang('en')}
+            >
+              {t('lang.en')}
+            </button>
+          </span>
           {user && (
-            <Typography.Text style={{ color: 'rgba(0,0,0,0.85)' }}>
-              欢迎，{user.nickname}
-              {user.isAdmin ? '（管理员）' : ''}
-            </Typography.Text>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <Avatar src={user.avatar} name={user.nickname} size={32} />
+              <Typography.Text style={{ color: 'rgba(0,0,0,0.85)' }}>
+                {t('nav.welcome', { name: user.nickname })}
+                {user.isAdmin ? t('nav.adminBadge') : ''}
+              </Typography.Text>
+            </span>
           )}
           {user && (
             <Typography.Link onClick={onLogout} style={{ color: 'rgba(0,0,0,0.65)' }}>
-              <LogoutOutlined /> 退出
+              <LogoutOutlined /> {t('nav.logout')}
             </Typography.Link>
           )}
         </div>
@@ -110,12 +138,12 @@ export const LayoutShell: React.FC = () => {
               {
                 key: 'home',
                 icon: <HomeOutlined />,
-                label: <Link to="/" className="wiselearn-menu-link">首页</Link>
+                label: <Link to="/" className="wiselearn-menu-link">{t('nav.home')}</Link>
               },
               {
                 key: 'create',
                 icon: <EditOutlined />,
-                label: <Link to="/create" className="wiselearn-menu-link">发帖</Link>
+                label: <Link to="/create" className="wiselearn-menu-link">{t('nav.create')}</Link>
               },
               {
                 key: 'messages',
@@ -124,19 +152,19 @@ export const LayoutShell: React.FC = () => {
                     <MessageOutlined style={{ fontSize: 16 }} />
                   </Badge>
                 ),
-                label: <Link to="/messages" className="wiselearn-menu-link">私信</Link>
+                label: <Link to="/messages" className="wiselearn-menu-link">{t('nav.messages')}</Link>
               },
               {
                 key: 'profile',
                 icon: <UserOutlined />,
-                label: <Link to="/profile" className="wiselearn-menu-link">个人中心</Link>
+                label: <Link to="/profile" className="wiselearn-menu-link">{t('nav.profile')}</Link>
               },
               ...(user?.isAdmin
                 ? [
                     {
                       key: 'admin',
                       icon: <DashboardOutlined />,
-                      label: <Link to="/admin" className="wiselearn-menu-link">后台管理</Link>
+                      label: <Link to="/admin" className="wiselearn-menu-link">{t('nav.admin')}</Link>
                     }
                   ]
                 : [])
