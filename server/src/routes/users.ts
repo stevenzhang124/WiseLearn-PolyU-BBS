@@ -292,6 +292,8 @@ usersRouter.get('/:id/posts', async (req: AuthRequest, res) => {
     return
   }
   const limit = Math.min(Number(req.query.limit) || 50, 100)
+  const isAdmin = Boolean(req.user?.isAdmin)
+  const isSelf = req.user?.id === id
 
   try {
     let rows: any[]
@@ -299,14 +301,18 @@ usersRouter.get('/:id/posts', async (req: AuthRequest, res) => {
       const [r] = await pool.query(
         `SELECT p.id, p.title, p.content, p.image_urls, p.created_at, p.view_count, p.like_count,
          u.nickname AS author, u.avatar AS author_avatar
-         FROM posts p JOIN users u ON p.user_id = u.id WHERE p.user_id = ? ORDER BY p.created_at DESC LIMIT ?`,
-        [id, limit]
+         FROM posts p JOIN users u ON p.user_id = u.id WHERE p.user_id = ?
+         ${isAdmin || isSelf ? '' : 'AND p.audit_status = 1'}
+         ORDER BY p.created_at DESC LIMIT ?`,
+        isAdmin || isSelf ? [id, limit] : [id, limit]
       )
       rows = r as any[]
     } catch {
       const [r] = await pool.query(
         `SELECT p.id, p.title, p.content, p.image_urls, p.created_at, p.view_count, p.like_count,
-         u.nickname AS author FROM posts p JOIN users u ON p.user_id = u.id WHERE p.user_id = ? ORDER BY p.created_at DESC LIMIT ?`,
+         u.nickname AS author FROM posts p JOIN users u ON p.user_id = u.id WHERE p.user_id = ?
+         ${isAdmin || isSelf ? '' : 'AND p.audit_status = 1'}
+         ORDER BY p.created_at DESC LIMIT ?`,
         [id, limit]
       )
       rows = (r as any[]).map((p) => ({ ...p, author_avatar: null }))
@@ -394,3 +400,30 @@ usersRouter.put(
     res.status(400).json({ message: err.message || '上传失败' })
   }
 )
+
+/**
+ * 设置用户界面语言（用于管理员私信通知）
+ * PUT /api/users/me/language
+ * body: { lang: 'zh' | 'en' }
+ */
+usersRouter.put('/me/language', async (req: AuthRequest, res) => {
+  if (!req.user) {
+    res.status(401).json({ message: '未登录' })
+    return
+  }
+
+  const { lang } = req.body as { lang?: string }
+  const normalized = lang === 'en' ? 'en' : 'zh'
+
+  try {
+    await pool.query('UPDATE users SET ui_lang = ? WHERE id = ?', [
+      normalized,
+      req.user.id
+    ])
+    res.json({ message: '语言更新成功', lang: normalized })
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('Update language error', err)
+    res.status(500).json({ message: '语言更新失败' })
+  }
+})

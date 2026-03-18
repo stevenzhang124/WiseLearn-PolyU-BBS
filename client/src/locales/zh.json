@@ -84,7 +84,7 @@
     "publish": "发布帖子",
     "cancel": "取消",
     "contentRequired": "请输入帖子内容",
-    "createSuccess": "发帖成功",
+    "createSuccess": "发帖成功，等待管理员审核",
     "invalidId": "无效的帖子 ID",
     "author": "作者",
     "me": "（我）",
@@ -110,7 +110,7 @@
     "deleteSuccess": "删除成功",
     "edit": "编辑",
     "saveUpdate": "保存修改",
-    "updateSuccess": "修改已保存",
+    "updateSuccess": "修改已保存，等待管理员再次审核",
     "editNotAuthor": "只能编辑自己的帖子",
     "authorLabel": "作者"
   },
@@ -173,7 +173,10 @@
     "viewProfile": "查看主页",
     "noFollowing": "暂无关注",
     "noFollowers": "暂无粉丝",
-    "backToProfile": "返回个人中心"
+    "backToProfile": "返回个人中心",
+    "postStatusPublished": "已发表",
+    "postStatusPending": "待审核",
+    "postStatusRevision": "待修改"
   },
   "admin": {
     "totalUsers": "总用户数",
@@ -196,7 +199,17 @@
     "deleteSuccess": "帖子已删除",
     "dataDesc": "数据说明",
     "dataDescLabel": "统计说明",
-    "dataDescText": "本页面展示 WiseLearn 平台核心数据概览，帮助管理员了解站点活跃度和内容质量。"
+    "dataDescText": "本页面展示 WiseLearn 平台核心数据概览，帮助管理员了解站点活跃度和内容质量。",
+    "pendingPostsTitle": "待审核帖子",
+    "pending": "待审核",
+    "approve": "审核通过",
+    "reject": "驳回并反馈",
+    "reason": "整改意见",
+    "reasonPlaceholder": "请输入需要用户整改的具体意见",
+    "submitAudit": "提交审核结果",
+    "approveSuccess": "已通过审核",
+    "rejectSuccess": "已驳回并通知用户",
+    "reasonRequired": "请输入整改意见"
   },
   "user": {
     "selfLabel": "（我）",

@@ -12,7 +12,7 @@ import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
 import { Avatar } from '../shared/Avatar'
-import { getUnreadCount, getNotificationsUnreadCount } from '../shared/api'
+import { getUnreadCount, getNotificationsUnreadCount, updateUserLanguageApi } from '../shared/api'
 
 const { Header, Content, Sider } = Layout
 
@@ -29,7 +29,18 @@ export const LayoutShell: React.FC = () => {
   const setLang = (lng: 'zh' | 'en') => {
     i18n.changeLanguage(lng)
     localStorage.setItem('wiselearn_lang', lng)
+    void updateUserLanguageApi(lng).catch(() => {
+      // ignore: language persistence is best-effort
+    })
   }
+
+  useEffect(() => {
+    if (!user) return
+    const lng = i18n.language === 'en' ? 'en' : 'zh'
+    void updateUserLanguageApi(lng).catch(() => {
+      // ignore: language persistence is best-effort
+    })
+  }, [user, i18n.language])
 
   const selectedKeys: string[] = []
   if (location.pathname.startsWith('/messages')) selectedKeys.push('messages')

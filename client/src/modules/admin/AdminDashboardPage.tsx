@@ -11,14 +11,18 @@ import {
   Table,
   Tag,
   Button,
-  message
+  message,
+  Modal
 } from 'antd'
 import { useTranslation } from 'react-i18next'
 import {
   fetchAdminStats,
   searchAdminPosts,
   pinPost,
-  deletePostAdmin
+  deletePostAdmin,
+  fetchAdminPendingPosts,
+  approvePostAdmin,
+  rejectPostAdmin
 } from '../shared/api'
 
 /**
@@ -30,6 +34,11 @@ export const AdminDashboardPage: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [keyword, setKeyword] = useState('')
   const [searchResult, setSearchResult] = useState<any[]>([])
+  const [pendingPosts, setPendingPosts] = useState<any[]>([])
+  const [pendingLoading, setPendingLoading] = useState(false)
+  const [rejectModalOpen, setRejectModalOpen] = useState(false)
+  const [rejectPostId, setRejectPostId] = useState<number | null>(null)
+  const [rejectReason, setRejectReason] = useState('')
   const locale = i18n.language === 'en' ? 'en-US' : 'zh-CN'
 
   const loadStats = async () => {
@@ -46,6 +55,22 @@ export const AdminDashboardPage: React.FC = () => {
 
   useEffect(() => {
     void loadStats()
+  }, [])
+
+  const loadPending = async () => {
+    setPendingLoading(true)
+    try {
+      const data = await fetchAdminPendingPosts()
+      setPendingPosts(data.list ?? [])
+    } catch (err) {
+      message.error((err as Error).message)
+    } finally {
+      setPendingLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    void loadPending()
   }, [])
 
   const onSearch = async () => {
@@ -74,6 +99,42 @@ export const AdminDashboardPage: React.FC = () => {
       message.success(t('admin.deleteSuccess'))
       await loadStats()
       await onSearch()
+    } catch (err) {
+      message.error((err as Error).message)
+    }
+  }
+
+  const onApprove = async (id: number) => {
+    try {
+      await approvePostAdmin(id)
+      message.success(t('admin.approveSuccess'))
+      await loadPending()
+      await loadStats()
+    } catch (err) {
+      message.error((err as Error).message)
+    }
+  }
+
+  const openReject = (id: number) => {
+    setRejectPostId(id)
+    setRejectReason('')
+    setRejectModalOpen(true)
+  }
+
+  const confirmReject = async () => {
+    if (!rejectPostId) return
+    if (!rejectReason.trim()) {
+      message.warning(t('admin.reasonRequired'))
+      return
+    }
+    try {
+      await rejectPostAdmin(rejectPostId, rejectReason.trim())
+      message.success(t('admin.rejectSuccess'))
+      setRejectModalOpen(false)
+      setRejectPostId(null)
+      setRejectReason('')
+      await loadPending()
+      await loadStats()
     } catch (err) {
       message.error((err as Error).message)
     }
@@ -193,6 +254,47 @@ export const AdminDashboardPage: React.FC = () => {
         </Col>
       </Row>
 
+      <Card title={t('admin.pendingPostsTitle')} style={{ marginBottom: 16 }}>
+        <Table
+          rowKey="id"
+          loading={pendingLoading}
+          size="small"
+          dataSource={pendingPosts}
+          columns={[
+            { title: t('admin.id'), dataIndex: 'id', width: 60 },
+            { title: t('admin.title'), dataIndex: 'title' },
+            { title: t('post.author'), dataIndex: 'author', width: 140 },
+            {
+              title: t('admin.time'),
+              dataIndex: 'created_at',
+              width: 180,
+              render: (v: string) => new Date(v).toLocaleString(locale)
+            },
+            {
+              title: t('admin.reason'),
+              dataIndex: 'audit_reason',
+              render: (v: string | null) => (v ? v : '--'),
+              width: 260
+            },
+            {
+              title: t('admin.actions'),
+              key: 'actions',
+              width: 220,
+              render: (_: any, record: any) => (
+                <Space>
+                  <Button size="small" onClick={() => onApprove(record.id)}>
+                    {t('admin.approve')}
+                  </Button>
+                  <Button size="small" danger onClick={() => openReject(record.id)}>
+                    {t('admin.reject')}
+                  </Button>
+                </Space>
+              )
+            }
+          ]}
+        />
+      </Card>
+
       <Card title={t('admin.dataDesc')}>
         <Descriptions column={1}>
           <Descriptions.Item label={t('admin.dataDescLabel')}>
@@ -200,6 +302,23 @@ export const AdminDashboardPage: React.FC = () => {
           </Descriptions.Item>
         </Descriptions>
       </Card>
+
+      <Modal
+        open={rejectModalOpen}
+        title={t('admin.reject')}
+        okText={t('admin.submitAudit')}
+        cancelText={t('post.cancel')}
+        onCancel={() => setRejectModalOpen(false)}
+        onOk={confirmReject}
+        destroyOnClose
+      >
+        <Input.TextArea
+          rows={4}
+          value={rejectReason}
+          onChange={(e) => setRejectReason(e.target.value)}
+          placeholder={t('admin.reasonPlaceholder')}
+        />
+      </Modal>
     </div>
   )
 }

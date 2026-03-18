@@ -8,7 +8,8 @@ import {
   Tabs,
   List,
   message,
-  Typography
+  Typography,
+  Tag
 } from 'antd'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
@@ -213,17 +214,33 @@ export const ProfilePage: React.FC = () => {
                   loading={loading}
                   dataSource={activities.posts}
                   className="wiselearn-profile-list"
-                  renderItem={(item) => (
-                    <List.Item
-                      key={item.id}
-                      className="wiselearn-profile-list-item"
-                      onClick={() => navigate(`/posts/${item.id}`)}
-                    >
-                      <span className="wiselearn-profile-list-text">
-                        {item.title}（{new Date(item.created_at).toLocaleString(locale)}）
-                      </span>
-                    </List.Item>
-                  )}
+                  renderItem={(item) => {
+                    const status =
+                      item.audit_status === 1
+                        ? 'published'
+                        : item.audit_reason
+                          ? 'revision'
+                          : 'pending'
+                    const statusLabel =
+                      status === 'published'
+                        ? t('profile.postStatusPublished')
+                        : status === 'pending'
+                          ? t('profile.postStatusPending')
+                          : t('profile.postStatusRevision')
+                    const tagColor = status === 'published' ? 'green' : status === 'pending' ? 'orange' : 'red'
+                    return (
+                      <List.Item
+                        key={item.id}
+                        className="wiselearn-profile-list-item"
+                        onClick={() => navigate(`/posts/${item.id}`)}
+                      >
+                        <span className="wiselearn-profile-list-text">
+                          {item.title}（{new Date(item.created_at).toLocaleString(locale)}）
+                        </span>
+                        <Tag color={tagColor}>{statusLabel}</Tag>
+                      </List.Item>
+                    )
+                  }}
                 />
               )
             },

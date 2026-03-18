@@ -31,8 +31,8 @@ postRouter.post('/', async (req: AuthRequest, res) => {
   try {
     const images = Array.isArray(imageUrls) ? imageUrls.join(',') : null
     await pool.query(
-      'INSERT INTO posts (user_id, title, content, category, image_urls) VALUES (?, ?, ?, ?, ?)',
-      [req.user.id, title, content, category, images]
+      'INSERT INTO posts (user_id, title, content, category, image_urls, audit_status, audit_reason) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [req.user.id, title, content, category, images, 0, null]
     )
     res.json({ message: '发帖成功' })
   } catch (err) {
@@ -58,6 +58,8 @@ postRouter.get('/', async (req: AuthRequest, res) => {
   }
 
   try {
+    const isAdmin = Boolean(req.user?.isAdmin)
+    const whereSql = isAdmin ? '' : 'WHERE p.audit_status = 1'
     const [listRows] = await pool.query(
       `
       SELECT
@@ -75,6 +77,7 @@ postRouter.get('/', async (req: AuthRequest, res) => {
         u.avatar AS author_avatar
       FROM posts p
       JOIN users u ON p.user_id = u.id
+      ${whereSql}
       ORDER BY ${orderBy}
       LIMIT ? OFFSET ?
     `,
@@ -86,7 +89,11 @@ postRouter.get('/', async (req: AuthRequest, res) => {
       author_avatar: p.author_avatar ? `${listBaseUrl}${p.author_avatar}` : null
     }))
 
-    const [countRows] = await pool.query('SELECT COUNT(*) as total FROM posts')
+    const [countRows] = await pool.query(
+      isAdmin
+        ? 'SELECT COUNT(*) as total FROM posts'
+        : 'SELECT COUNT(*) as total FROM posts WHERE audit_status = 1'
+    )
     const total = (countRows as any[])[0]?.total ?? 0
 
     res.json({
@@ -144,7 +151,7 @@ postRouter.put('/:id', async (req: AuthRequest, res) => {
     }
     const images = Array.isArray(imageUrls) ? imageUrls.join(',') : null
     await pool.query(
-      'UPDATE posts SET title = ?, content = ?, category = ?, image_urls = ? WHERE id = ?',
+      'UPDATE posts SET title = ?, content = ?, category = ?, image_urls = ?, audit_status = 0, audit_reason = NULL WHERE id = ?',
       [title, content, category, images, id]
     )
     res.json({ message: '更新成功' })
@@ -166,7 +173,11 @@ postRouter.get('/:id', async (req: AuthRequest, res) => {
   }
 
   try {
-    await pool.query('UPDATE posts SET view_count = view_count + 1 WHERE id = ?', [id])
+    const isAdmin = Boolean(req.user?.isAdmin)
+    await pool.query(
+      'UPDATE posts SET view_count = view_count + 1 WHERE id = ? AND (audit_status = 1 OR user_id = ? OR ? = 1)',
+      [id, req.user!.id, isAdmin ? 1 : 0]
+    )
 
     const baseUrl = process.env.API_BASE_URL || 'http://localhost:4000'
     const [rows] = await pool.query(
@@ -177,9 +188,9 @@ postRouter.get('/:id', async (req: AuthRequest, res) => {
         u.avatar AS author_avatar
       FROM posts p
       JOIN users u ON p.user_id = u.id
-      WHERE p.id = ?
+      WHERE p.id = ? AND (p.audit_status = 1 OR p.user_id = ? OR ? = 1)
     `,
-      [id]
+      [id, req.user!.id, isAdmin ? 1 : 0]
     )
     const post = (rows as any[])[0]
     if (post && post.author_avatar) {
@@ -243,6 +254,15 @@ postRouter.post('/:id/comments', async (req: AuthRequest, res) => {
   }
 
   try {
+    const isAdmin = Boolean(req.user?.isAdmin)
+    const [pRows] = await pool.query(
+      'SELECT id FROM posts WHERE id = ? AND (audit_status = 1 OR user_id = ? OR ? = 1)',
+      [postId, req.user!.id, isAdmin ? 1 : 0]
+    )
+    if ((pRows as any[]).length === 0) {
+      res.status(403).json({ message: '该帖子未通过审核，无法评论' })
+      return
+    }
     await pool.query(
       'INSERT INTO comments (post_id, user_id, content, parent_comment_id) VALUES (?, ?, ?, ?)',
       [postId, req.user.id, content, parentCommentId ?? null]
@@ -304,6 +324,15 @@ postRouter.post('/:id/like', async (req: AuthRequest, res) => {
   }
 
   try {
+    const isAdmin = Boolean(req.user?.isAdmin)
+    const [pRows] = await pool.query(
+      'SELECT id FROM posts WHERE id = ? AND (audit_status = 1 OR user_id = ? OR ? = 1)',
+      [postId, req.user!.id, isAdmin ? 1 : 0]
+    )
+    if ((pRows as any[]).length === 0) {
+      res.status(403).json({ message: '该帖子未通过审核，无法点赞' })
+      return
+    }
     const [rows] = await pool.query(
       'SELECT id FROM likes WHERE post_id = ? AND user_id = ?',
       [postId, req.user.id]
@@ -364,7 +393,7 @@ postRouter.get('/me/activities', async (req: AuthRequest, res) => {
 
   try {
     const [posts] = await pool.query(
-      'SELECT id, title, created_at FROM posts WHERE user_id = ? ORDER BY created_at DESC LIMIT 100',
+      'SELECT id, title, created_at, audit_status, audit_reason FROM posts WHERE user_id = ? ORDER BY created_at DESC LIMIT 100',
       [req.user.id]
     )
 

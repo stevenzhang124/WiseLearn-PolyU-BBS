@@ -10,6 +10,8 @@ import {
   fetchConversationsList,
   sendMessage,
   getUserApi,
+  getUnreadCount,
+  getNotificationsUnreadCount,
   getNotificationsLikes,
   getNotificationsFollows,
   getNotificationsComments,
@@ -47,6 +49,7 @@ export const MessagesPage: React.FC = () => {
   const [loadingLikes, setLoadingLikes] = useState(false)
   const [loadingFollows, setLoadingFollows] = useState(false)
   const [loadingComments, setLoadingComments] = useState(false)
+  const [unreadCounts, setUnreadCounts] = useState({ likes: 0, follows: 0, comments: 0, dm: 0 })
 
   const otherId = paramUserId ? Number(paramUserId) : null
   const locale = i18n.language === 'en' ? 'en-US' : 'zh-CN'
@@ -118,6 +121,24 @@ export const MessagesPage: React.FC = () => {
       setLoadingList(false)
     }
   }
+
+  const fetchUnreadCounts = () => {
+    if (!user) return
+    Promise.all([getUnreadCount(), getNotificationsUnreadCount()])
+      .then(([msg, notif]) =>
+        setUnreadCounts({
+          likes: notif.likes,
+          follows: notif.follows,
+          comments: notif.comments,
+          dm: msg.count
+        })
+      )
+      .catch(() => setUnreadCounts({ likes: 0, follows: 0, comments: 0, dm: 0 }))
+  }
+
+  useEffect(() => {
+    fetchUnreadCounts()
+  }, [user])
 
   useEffect(() => {
     if (activeTab === 'dm') void loadConversationsList()
@@ -193,11 +214,12 @@ export const MessagesPage: React.FC = () => {
     setActiveTab(k)
     if (k === 'dm') {
       if (otherId) { /* stay on /messages/:id */ } else navigate('/messages')
+      fetchUnreadCounts()
     } else {
       if (otherId) navigate('/messages')
-      if (k === 'likes') markNotificationsRead('like').then(() => loadLikes(true)).catch(() => {})
-      if (k === 'follows') markNotificationsRead('follow').then(() => loadFollows(true)).catch(() => {})
-      if (k === 'comments') markNotificationsRead('comment').then(() => loadComments(true)).catch(() => {})
+      if (k === 'likes') markNotificationsRead('like').then(() => { loadLikes(true); fetchUnreadCounts() }).catch(() => {})
+      if (k === 'follows') markNotificationsRead('follow').then(() => { loadFollows(true); fetchUnreadCounts() }).catch(() => {})
+      if (k === 'comments') markNotificationsRead('comment').then(() => { loadComments(true); fetchUnreadCounts() }).catch(() => {})
     }
   }
 
@@ -461,6 +483,7 @@ export const MessagesPage: React.FC = () => {
             label: (
               <span>
                 <LikeOutlined /> {t('notifications.likes')}
+                <Badge count={unreadCounts.likes} size="small" style={{ marginLeft: 6 }} />
               </span>
             ),
             children: <Card className="wiselearn-card">{renderLikes()}</Card>
@@ -470,6 +493,7 @@ export const MessagesPage: React.FC = () => {
             label: (
               <span>
                 <UserAddOutlined /> {t('notifications.follows')}
+                <Badge count={unreadCounts.follows} size="small" style={{ marginLeft: 6 }} />
               </span>
             ),
             children: <Card className="wiselearn-card">{renderFollows()}</Card>
@@ -479,6 +503,7 @@ export const MessagesPage: React.FC = () => {
             label: (
               <span>
                 <CommentOutlined /> {t('notifications.comments')}
+                <Badge count={unreadCounts.comments} size="small" style={{ marginLeft: 6 }} />
               </span>
             ),
             children: <Card className="wiselearn-card">{renderComments()}</Card>
@@ -488,6 +513,7 @@ export const MessagesPage: React.FC = () => {
             label: (
               <span>
                 <MessageOutlined /> {t('notifications.dm')}
+                <Badge count={unreadCounts.dm} size="small" style={{ marginLeft: 6 }} />
               </span>
             ),
             children: (

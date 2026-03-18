@@ -7,8 +7,12 @@ export function setApiToken(token: string | null): void {
   inMemoryToken = token
 }
 
+const apiBaseURL =
+  (import.meta.env.VITE_API_BASE_URL as string)?.trim() ||
+  'http://localhost:4000/api'
+
 const api = axios.create({
-  baseURL: 'http://localhost:4000/api',
+  baseURL: apiBaseURL,
   timeout: 10000
 })
 
@@ -24,10 +28,15 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (resp) => resp,
   (error) => {
-    const msg =
-      error.response?.data?.message ??
-      error.message ??
-      '请求失败，请稍后重试'
+    const isNetworkError =
+      error.message === 'Network Error' ||
+      error.code === 'ERR_NETWORK' ||
+      !error.response
+    const msg = isNetworkError
+      ? '无法连接服务器，请确认后端已启动（默认 http://localhost:4000）'
+      : (error.response?.data?.message ??
+          error.message ??
+          '请求失败，请稍后重试')
     return Promise.reject(new Error(msg))
   }
 )
@@ -340,5 +349,22 @@ export async function pinPost(
 
 export async function deletePostAdmin(id: number): Promise<void> {
   await api.delete(`/admin/posts/${id}`)
+}
+
+export async function fetchAdminPendingPosts(limit = 50): Promise<any> {
+  const res = await api.get('/admin/posts/pending', { params: { limit } })
+  return res.data
+}
+
+export async function approvePostAdmin(id: number): Promise<void> {
+  await api.post(`/admin/posts/${id}/approve`)
+}
+
+export async function rejectPostAdmin(id: number, reason: string): Promise<void> {
+  await api.post(`/admin/posts/${id}/reject`, { reason })
+}
+
+export async function updateUserLanguageApi(lang: 'zh' | 'en'): Promise<void> {
+  await api.put('/users/me/language', { lang })
 }
 

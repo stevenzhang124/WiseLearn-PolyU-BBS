@@ -84,7 +84,7 @@
     "publish": "Publish",
     "cancel": "Cancel",
     "contentRequired": "Please enter post content",
-    "createSuccess": "Post published",
+    "createSuccess": "Post submitted, waiting for admin review",
     "invalidId": "Invalid post ID",
     "author": "Author",
     "me": " (me)",
@@ -110,7 +110,7 @@
     "deleteSuccess": "Deleted",
     "edit": "Edit",
     "saveUpdate": "Save",
-    "updateSuccess": "Updated",
+    "updateSuccess": "Update saved, waiting for admin review again",
     "editNotAuthor": "You can only edit your own post",
     "authorLabel": "Author"
   },
@@ -173,7 +173,10 @@
     "viewProfile": "View profile",
     "noFollowing": "No following",
     "noFollowers": "No followers",
-    "backToProfile": "Back to profile"
+    "backToProfile": "Back to profile",
+    "postStatusPublished": "Published",
+    "postStatusPending": "Pending review",
+    "postStatusRevision": "Needs revision"
   },
   "admin": {
     "totalUsers": "Total users",
@@ -196,7 +199,17 @@
     "deleteSuccess": "Post deleted",
     "dataDesc": "About",
     "dataDescLabel": "Description",
-    "dataDescText": "This page shows WiseLearn platform statistics for admins."
+    "dataDescText": "This page shows WiseLearn platform statistics for admins.",
+    "pendingPostsTitle": "Posts pending review",
+    "pending": "Pending",
+    "approve": "Approve",
+    "reject": "Reject with feedback",
+    "reason": "Feedback / Reason",
+    "reasonPlaceholder": "Please provide specific feedback so the user can revise",
+    "submitAudit": "Submit audit result",
+    "approveSuccess": "Approved",
+    "rejectSuccess": "Rejected and notified the user",
+    "reasonRequired": "Please enter the revision feedback"
   },
   "user": {
     "selfLabel": " (me)",

@@ -3,7 +3,7 @@ import cors from 'cors'
 import path from 'path'
 import { json, urlencoded } from 'express'
 import { config } from './config'
-import { testConnection } from './db'
+import { ensurePostsAuditColumns, ensureUsersUiLangColumn, testConnection } from './db'
 import { authRouter } from './routes/auth'
 import { postRouter } from './routes/posts'
 import { messageRouter } from './routes/messages'
@@ -54,11 +54,15 @@ app.use(
 async function bootstrap(): Promise<void> {
   try {
     await testConnection()
+    await ensurePostsAuditColumns()
+    await ensureUsersUiLangColumn()
     app.listen(config.port, () => {
       // eslint-disable-next-line no-console
       console.log(`WiseLearn API listening on port ${config.port}`)
     })
-  } catch {
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('Server startup failed:', err)
     process.exit(1)
   }
 }

@@ -81,6 +81,8 @@ npm run dev
 
 浏览器访问 Vite 提示的地址（通常是 `http://localhost:5173`）。
 
+若登录时出现「无法连接服务器」或 Network Error，请先确认**后端已启动**（`cd server && npm run dev`，默认端口 4000）。若后端运行在其他地址，可在 `client` 目录下新建 `.env` 并设置 `VITE_API_BASE_URL=http://你的后端地址:端口/api`（可参考 `client/.env.example`）。
+
 ### 6. 管理员登录与后台
 
 1. **创建管理员账号**（在 `server` 目录下执行，邮箱须为 `@polyu.edu.hk` 或 `@connect.polyu.edu.hk`）：
