@@ -22,6 +22,8 @@ import './MessagesPage.css'
 
 type TabKey = 'likes' | 'follows' | 'comments' | 'dm'
 
+const UNREAD_CHANGED_EVENT = 'wiselearn:unread-changed'
+
 /**
  * 消息中心（参考小红书）：点赞、关注、评论/回复 + 私信
  */
@@ -86,6 +88,9 @@ export const MessagesPage: React.FC = () => {
       setMessagesList([])
     } finally {
       if (!silent) setLoading(false)
+      if (!silent) {
+        window.dispatchEvent(new Event(UNREAD_CHANGED_EVENT))
+      }
     }
   }
 
@@ -122,22 +127,25 @@ export const MessagesPage: React.FC = () => {
     }
   }
 
-  const fetchUnreadCounts = () => {
+  const fetchUnreadCounts = async () => {
     if (!user) return
-    Promise.all([getUnreadCount(), getNotificationsUnreadCount()])
-      .then(([msg, notif]) =>
-        setUnreadCounts({
-          likes: notif.likes,
-          follows: notif.follows,
-          comments: notif.comments,
-          dm: msg.count
-        })
-      )
-      .catch(() => setUnreadCounts({ likes: 0, follows: 0, comments: 0, dm: 0 }))
+    try {
+      const [msg, notif] = await Promise.all([getUnreadCount(), getNotificationsUnreadCount()])
+      setUnreadCounts({
+        likes: notif.likes,
+        follows: notif.follows,
+        comments: notif.comments,
+        dm: msg.count
+      })
+    } catch {
+      setUnreadCounts({ likes: 0, follows: 0, comments: 0, dm: 0 })
+    } finally {
+      window.dispatchEvent(new Event(UNREAD_CHANGED_EVENT))
+    }
   }
 
   useEffect(() => {
-    fetchUnreadCounts()
+    void fetchUnreadCounts()
   }, [user])
 
   useEffect(() => {
@@ -214,12 +222,21 @@ export const MessagesPage: React.FC = () => {
     setActiveTab(k)
     if (k === 'dm') {
       if (otherId) { /* stay on /messages/:id */ } else navigate('/messages')
-      fetchUnreadCounts()
+      void fetchUnreadCounts()
     } else {
       if (otherId) navigate('/messages')
-      if (k === 'likes') markNotificationsRead('like').then(() => { loadLikes(true); fetchUnreadCounts() }).catch(() => {})
-      if (k === 'follows') markNotificationsRead('follow').then(() => { loadFollows(true); fetchUnreadCounts() }).catch(() => {})
-      if (k === 'comments') markNotificationsRead('comment').then(() => { loadComments(true); fetchUnreadCounts() }).catch(() => {})
+      if (k === 'likes')
+        markNotificationsRead('like')
+          .then(() => { loadLikes(true); void fetchUnreadCounts() })
+          .catch(() => {})
+      if (k === 'follows')
+        markNotificationsRead('follow')
+          .then(() => { loadFollows(true); void fetchUnreadCounts() })
+          .catch(() => {})
+      if (k === 'comments')
+        markNotificationsRead('comment')
+          .then(() => { loadComments(true); void fetchUnreadCounts() })
+          .catch(() => {})
     }
   }
 

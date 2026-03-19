@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import {
   Card,
   Col,
@@ -36,10 +36,17 @@ export const AdminDashboardPage: React.FC = () => {
   const [searchResult, setSearchResult] = useState<any[]>([])
   const [pendingPosts, setPendingPosts] = useState<any[]>([])
   const [pendingLoading, setPendingLoading] = useState(false)
+  const pendingCountRef = useRef(0)
+  const initializedPendingRef = useRef(false)
   const [rejectModalOpen, setRejectModalOpen] = useState(false)
   const [rejectPostId, setRejectPostId] = useState<number | null>(null)
   const [rejectReason, setRejectReason] = useState('')
   const locale = i18n.language === 'en' ? 'en-US' : 'zh-CN'
+
+  const ADMIN_PENDING_CHANGED_EVENT = 'wiselearn:admin-pending-changed'
+  const notifyAdminPendingChanged = () => {
+    window.dispatchEvent(new Event(ADMIN_PENDING_CHANGED_EVENT))
+  }
 
   const loadStats = async () => {
     setLoading(true)
@@ -57,20 +64,37 @@ export const AdminDashboardPage: React.FC = () => {
     void loadStats()
   }, [])
 
-  const loadPending = async () => {
-    setPendingLoading(true)
+  const loadPending = async (silent = false) => {
+    if (!silent) setPendingLoading(true)
     try {
       const data = await fetchAdminPendingPosts()
-      setPendingPosts(data.list ?? [])
+      const list = data.list ?? []
+      setPendingPosts(list)
+
+      if (!initializedPendingRef.current) {
+        pendingCountRef.current = list.length
+        initializedPendingRef.current = true
+      } else if (list.length > pendingCountRef.current) {
+        message.warning(t('admin.pendingNew', { count: list.length - pendingCountRef.current }))
+        pendingCountRef.current = list.length
+      } else {
+        pendingCountRef.current = list.length
+      }
     } catch (err) {
       message.error((err as Error).message)
     } finally {
-      setPendingLoading(false)
+      if (!silent) setPendingLoading(false)
     }
   }
 
   useEffect(() => {
-    void loadPending()
+    void loadPending(false)
+  }, [])
+
+  // 后台定时轮询待审核数量：用于提示“新帖子需要审核”
+  useEffect(() => {
+    const timer = setInterval(() => void loadPending(true), 30000)
+    return () => clearInterval(timer)
   }, [])
 
   const onSearch = async () => {
@@ -110,6 +134,7 @@ export const AdminDashboardPage: React.FC = () => {
       message.success(t('admin.approveSuccess'))
       await loadPending()
       await loadStats()
+      notifyAdminPendingChanged()
     } catch (err) {
       message.error((err as Error).message)
     }
@@ -135,6 +160,7 @@ export const AdminDashboardPage: React.FC = () => {
       setRejectReason('')
       await loadPending()
       await loadStats()
+      notifyAdminPendingChanged()
     } catch (err) {
       message.error((err as Error).message)
     }

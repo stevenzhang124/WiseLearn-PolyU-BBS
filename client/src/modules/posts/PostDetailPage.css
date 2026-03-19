@@ -3,6 +3,7 @@
   max-width: 720px;
   margin: 0 auto;
   padding: 0 16px 32px;
+  text-align: left;
 }
 .wiselearn-detail-loading {
   text-align: center;
@@ -57,6 +58,7 @@
 }
 .wiselearn-detail-content {
   margin-bottom: 20px;
+  text-align: left !important;
 }
 .wiselearn-detail-actions {
   display: flex;
@@ -64,6 +66,16 @@
   gap: 24px;
   padding-top: 16px;
   border-top: 1px solid #f0f0f0;
+}
+
+.wiselearn-detail-cover {
+  width: 100%;
+  height: auto;
+  max-height: 360px;
+  object-fit: cover;
+  border-radius: 16px;
+  margin: 0 0 16px;
+  display: block;
 }
 .wiselearn-detail-action {
   display: inline-flex;
@@ -93,6 +105,7 @@
   border-radius: 16px;
   padding: 24px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  text-align: left;
 }
 .wiselearn-detail-comments-title {
   margin: 0 0 16px !important;
@@ -173,6 +186,12 @@
   font-size: 12px;
   color: rgba(0, 0, 0, 0.45);
 }
+
+.wiselearn-comment-replyto {
+  margin-left: 6px;
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.45);
+}
 .wiselearn-comment-text {
   margin: 0 0 8px;
   font-size: 14px;
@@ -180,6 +199,7 @@
   color: rgba(0, 0, 0, 0.85);
   white-space: pre-wrap;
   word-break: break-word;
+  text-align: left;
 }
 .wiselearn-comment-actions {
   display: flex;

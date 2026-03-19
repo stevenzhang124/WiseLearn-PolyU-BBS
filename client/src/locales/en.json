@@ -209,7 +209,8 @@
     "submitAudit": "Submit audit result",
     "approveSuccess": "Approved",
     "rejectSuccess": "Rejected and notified the user",
-    "reasonRequired": "Please enter the revision feedback"
+    "reasonRequired": "Please enter the revision feedback",
+    "pendingNew": "New pending posts: {{count}}"
   },
   "user": {
     "selfLabel": " (me)",

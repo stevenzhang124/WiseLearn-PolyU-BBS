@@ -12,9 +12,12 @@ import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
 import { Avatar } from '../shared/Avatar'
-import { getUnreadCount, getNotificationsUnreadCount, updateUserLanguageApi } from '../shared/api'
+import { fetchAdminPendingPosts, getUnreadCount, getNotificationsUnreadCount, updateUserLanguageApi } from '../shared/api'
 
 const { Header, Content, Sider } = Layout
+
+const UNREAD_CHANGED_EVENT = 'wiselearn:unread-changed'
+const ADMIN_PENDING_CHANGED_EVENT = 'wiselearn:admin-pending-changed'
 
 /**
  * 整体布局：理工红主题 + PolyU Logo + 未读私信数量 + 语言切换
@@ -25,6 +28,7 @@ export const LayoutShell: React.FC = () => {
   const { t, i18n } = useTranslation()
   const { user, logout } = useAuth()
   const [unreadCount, setUnreadCount] = useState(0)
+  const [adminPendingCount, setAdminPendingCount] = useState(0)
 
   const setLang = (lng: 'zh' | 'en') => {
     i18n.changeLanguage(lng)
@@ -58,14 +62,42 @@ export const LayoutShell: React.FC = () => {
       .catch(() => setUnreadCount(0))
   }
 
+  const fetchAdminPending = () => {
+    if (!user?.isAdmin) return
+    void fetchAdminPendingPosts(100)
+      .then((data) => setAdminPendingCount(data.list?.length ?? 0))
+      .catch(() => setAdminPendingCount(0))
+  }
+
   useEffect(() => {
     fetchUnread()
+    fetchAdminPending()
     const timer = setInterval(fetchUnread, 25000)
-    return () => clearInterval(timer)
+    const timer2 = setInterval(fetchAdminPending, 25000)
+    return () => {
+      clearInterval(timer)
+      clearInterval(timer2)
+    }
+  }, [user])
+
+  // 事件驱动：避免“处理完消息/待审核后角标更新延迟”
+  useEffect(() => {
+    if (!user) return
+    const onUnreadChanged = () => fetchUnread()
+    const onAdminPendingChanged = () => fetchAdminPending()
+    window.addEventListener(UNREAD_CHANGED_EVENT, onUnreadChanged)
+    window.addEventListener(ADMIN_PENDING_CHANGED_EVENT, onAdminPendingChanged)
+    return () => {
+      window.removeEventListener(UNREAD_CHANGED_EVENT, onUnreadChanged)
+      window.removeEventListener(ADMIN_PENDING_CHANGED_EVENT, onAdminPendingChanged)
+    }
   }, [user])
 
   useEffect(() => {
-    const onFocus = () => fetchUnread()
+    const onFocus = () => {
+      fetchUnread()
+      fetchAdminPending()
+    }
     window.addEventListener('focus', onFocus)
     return () => window.removeEventListener('focus', onFocus)
   }, [user])
@@ -177,7 +209,16 @@ export const LayoutShell: React.FC = () => {
                     {
                       key: 'admin',
                       icon: <DashboardOutlined />,
-                      label: <Link to="/admin" className="wiselearn-menu-link">{t('nav.admin')}</Link>
+                      label:
+                        adminPendingCount > 0 ? (
+                          <Badge count={adminPendingCount} size="small" offset={[4, 0]}>
+                            <Link to="/admin" className="wiselearn-menu-link">
+                              {t('nav.admin')}
+                            </Link>
+                          </Badge>
+                        ) : (
+                          <Link to="/admin" className="wiselearn-menu-link">{t('nav.admin')}</Link>
+                        )
                     }
                   ]
                 : [])

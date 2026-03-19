@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Tabs, Typography, message } from 'antd'
 import { useTranslation } from 'react-i18next'
 import './HomePage.css'
 import { HeartOutlined, EyeOutlined } from '@ant-design/icons'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { Avatar } from '../shared/Avatar'
 import { fetchPosts } from '../shared/api'
 
@@ -31,7 +31,9 @@ export const HomePage: React.FC = () => {
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
   const pageSize = 20
+  const location = useLocation()
   const navigate = useNavigate()
+  const lastRefreshAt = useRef(0)
 
   const loadPosts = async (pageNo = 1, sort: 'time' | 'hot' = tab) => {
     setLoadingPosts(true)
@@ -54,6 +56,35 @@ export const HomePage: React.FC = () => {
   useEffect(() => {
     void loadPosts(1, tab)
   }, [tab])
+
+  const refreshIfOnHome = () => {
+    if (location.pathname !== '/') return
+    if (loadingPosts) return
+    const now = Date.now()
+    // 防止短时间内重复触发
+    if (now - lastRefreshAt.current < 8000) return
+    lastRefreshAt.current = now
+    void loadPosts(1, tab)
+  }
+
+  // 当从其他栏目返回首页 / 或窗口重新获得焦点时，刷新最新内容
+  useEffect(() => {
+    refreshIfOnHome()
+  }, [location.pathname, tab])
+
+  useEffect(() => {
+    const onFocus = () => refreshIfOnHome()
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') refreshIfOnHome()
+    }
+    window.addEventListener('focus', onFocus)
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => {
+      window.removeEventListener('focus', onFocus)
+      document.removeEventListener('visibilitychange', onVisibility)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, location.pathname])
 
   return (
     <div className="wiselearn-feed">

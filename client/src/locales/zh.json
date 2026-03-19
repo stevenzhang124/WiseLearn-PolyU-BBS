@@ -209,7 +209,8 @@
     "submitAudit": "提交审核结果",
     "approveSuccess": "已通过审核",
     "rejectSuccess": "已驳回并通知用户",
-    "reasonRequired": "请输入整改意见"
+    "reasonRequired": "请输入整改意见",
+    "pendingNew": "有新的待审核帖子：{{count}}"
   },
   "user": {
     "selfLabel": "（我）",
