@@ -8,7 +8,7 @@ dotenv.config()
 export const config = {
   port: Number(process.env.PORT) || 4000,
   jwtSecret: process.env.JWT_SECRET || 'changeme-wiselearn-secret',
-  jwtExpiresIn: '7d',
+  jwtExpiresIn: '7d' as const,
   db: {
     host: process.env.DB_HOST || 'localhost',
     port: Number(process.env.DB_PORT) || 3306,

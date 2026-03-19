@@ -43,7 +43,7 @@ uploadRouter.use(authMiddleware)
 uploadRouter.post(
   '/image',
   upload.single('file'),
-  (req: AuthRequest, res) => {
+  (req: AuthRequest, res: express.Response) => {
     if (!req.file) {
       res.status(400).json({ message: '请选择要上传的图片' })
       return

@@ -1,4 +1,4 @@
-FROM node:18-bullseye AS build
+FROM node:22-bullseye AS build
 
 WORKDIR /app
 COPY client/package.json client/package-lock.json ./client/
