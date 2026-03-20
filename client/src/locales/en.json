@@ -29,6 +29,7 @@
     "nicknameRequired": "Please enter nickname",
     "nicknameInvalid": "2–20 characters: Chinese, letters or numbers only",
     "titleTooLong": "Title cannot exceed 20 characters",
+    "imageTooLarge": "Image size cannot exceed 10MB",
     "nicknameTaken": "This nickname is already taken. Please choose another.",
     "nicknamePlaceholder": "Your nickname",
     "remember": "Remember me (auto login for 7 days)",

@@ -114,7 +114,7 @@ npm run dev
 
 ## 五、图片上传说明
 
-- 发帖时在富文本中点击「图片」或粘贴/拖拽图片即可上传（接口 `POST /api/upload/image`，保存至 `server/uploads`，单张限 5MB，格式 JPEG/PNG/GIF/WEBP）。
+- 发帖时在富文本中点击「图片」或粘贴/拖拽图片即可上传（接口 `POST /api/upload/image`，保存至 `server/uploads`，单张限 10MB，格式 JPEG/PNG/GIF/WEBP）。
 - 图片通过 `http://localhost:4000/uploads/文件名` 访问，前端需能访问后端域名；生产环境请配置 `API_BASE_URL` 并保证静态目录可访问。
 
 ## 六、Docker 打包与上线

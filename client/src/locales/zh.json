@@ -29,6 +29,7 @@
     "nicknameRequired": "请输入昵称",
     "nicknameInvalid": "2-20 位中英文或数字，禁止特殊符号",
     "titleTooLong": "标题不能超过 20 个字",
+    "imageTooLarge": "图片大小不能超过 10MB",
     "nicknameTaken": "该昵称已被使用，请更换",
     "nicknamePlaceholder": "你的昵称",
     "remember": "记住我（7 天内自动登录）",
