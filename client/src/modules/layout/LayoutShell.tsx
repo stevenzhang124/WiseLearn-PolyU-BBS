@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react'
-import { Layout, Menu, Badge, Typography } from 'antd'
+import { Layout, Menu, Badge, Typography, Drawer, Button } from 'antd'
 import {
   MessageOutlined,
   HomeOutlined,
   EditOutlined,
   UserOutlined,
   DashboardOutlined,
-  LogoutOutlined
+  LogoutOutlined,
+  MenuOutlined
 } from '@ant-design/icons'
 import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -29,6 +30,7 @@ export const LayoutShell: React.FC = () => {
   const { user, logout } = useAuth()
   const [unreadCount, setUnreadCount] = useState(0)
   const [adminPendingCount, setAdminPendingCount] = useState(0)
+  const [mobileNavOpen, setMobileNavOpen] = useState(false)
 
   const setLang = (lng: 'zh' | 'en') => {
     i18n.changeLanguage(lng)
@@ -107,6 +109,51 @@ export const LayoutShell: React.FC = () => {
     navigate('/login')
   }
 
+  const navMenuItems = [
+    {
+      key: 'home',
+      icon: <HomeOutlined />,
+      label: <Link to="/" className="wiselearn-menu-link" onClick={() => setMobileNavOpen(false)}>{t('nav.home')}</Link>
+    },
+    {
+      key: 'create',
+      icon: <EditOutlined />,
+      label: <Link to="/create" className="wiselearn-menu-link" onClick={() => setMobileNavOpen(false)}>{t('nav.create')}</Link>
+    },
+    {
+      key: 'messages',
+      icon: (
+        <Badge count={unreadCount} size="small" offset={[4, 0]}>
+          <MessageOutlined style={{ fontSize: 16 }} />
+        </Badge>
+      ),
+      label: <Link to="/messages" className="wiselearn-menu-link" onClick={() => setMobileNavOpen(false)}>{t('nav.messages')}</Link>
+    },
+    {
+      key: 'profile',
+      icon: <UserOutlined />,
+      label: <Link to="/profile" className="wiselearn-menu-link" onClick={() => setMobileNavOpen(false)}>{t('nav.profile')}</Link>
+    },
+    ...(user?.isAdmin
+      ? [
+          {
+            key: 'admin',
+            icon: <DashboardOutlined />,
+            label:
+              adminPendingCount > 0 ? (
+                <Badge count={adminPendingCount} size="small" offset={[4, 0]}>
+                  <Link to="/admin" className="wiselearn-menu-link" onClick={() => setMobileNavOpen(false)}>
+                    {t('nav.admin')}
+                  </Link>
+                </Badge>
+              ) : (
+                <Link to="/admin" className="wiselearn-menu-link" onClick={() => setMobileNavOpen(false)}>{t('nav.admin')}</Link>
+              )
+          }
+        ]
+      : [])
+  ]
+
   return (
     <Layout style={{ minHeight: '100vh' }}>
       <Header
@@ -115,18 +162,27 @@ export const LayoutShell: React.FC = () => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          paddingInline: 24,
+          paddingInline: 16,
           background: '#fff',
-          borderBottom: '1px solid #f0f0f0'
+          borderBottom: '1px solid #f0f0f0',
+          height: 56,
+          lineHeight: '56px'
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Button
+            type="text"
+            icon={<MenuOutlined />}
+            className="wiselearn-mobile-ham"
+            onClick={() => setMobileNavOpen(true)}
+            style={{ marginRight: 4 }}
+          />
           <img
             src="/polyu-logo.png"
             alt="香港理工大学 The Hong Kong Polytechnic University"
             className="wiselearn-header-logo"
             style={{
-              height: 48,
+              height: 40,
               width: 'auto',
               objectFit: 'contain',
               display: 'block'
@@ -137,104 +193,94 @@ export const LayoutShell: React.FC = () => {
             <span className="wiselearn-header-subtitle">{t('nav.headerSubtitle')}</span>
           </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <span className="wiselearn-lang-switch">
             <button
               type="button"
               className={i18n.language === 'zh' ? 'active' : ''}
               onClick={() => setLang('zh')}
             >
-              {t('lang.zh')}
+              <span className="wiselearn-lang-full">{t('lang.zh')}</span>
+              <span className="wiselearn-lang-abbr">中</span>
             </button>
-            <span style={{ color: '#ddd', margin: '0 4px' }}>|</span>
+            <span style={{ color: '#ddd', margin: '0 2px' }}>|</span>
             <button
               type="button"
               className={i18n.language === 'en' ? 'active' : ''}
               onClick={() => setLang('en')}
             >
-              {t('lang.en')}
+              <span className="wiselearn-lang-full">{t('lang.en')}</span>
+              <span className="wiselearn-lang-abbr">EN</span>
             </button>
           </span>
           {user && (
-            <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <Avatar src={user.avatar} name={user.nickname} size={32} />
-              <Typography.Text style={{ color: 'rgba(0,0,0,0.85)' }}>
+            <span className="wiselearn-header-user" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Avatar src={user.avatar} name={user.nickname} size={28} />
+              <Typography.Text className="wiselearn-header-username" style={{ color: 'rgba(0,0,0,0.85)', fontSize: 14 }}>
                 {t('nav.welcome', { name: user.nickname })}
                 {user.isAdmin ? t('nav.adminBadge') : ''}
               </Typography.Text>
             </span>
           )}
           {user && (
-            <Typography.Link onClick={onLogout} style={{ color: 'rgba(0,0,0,0.65)' }}>
-              <LogoutOutlined /> {t('nav.logout')}
+            <Typography.Link onClick={onLogout} style={{ color: 'rgba(0,0,0,0.65)', display: 'flex', alignItems: 'center', gap: 4 }}>
+              <LogoutOutlined />
+              <span className="wiselearn-header-logout-text">{t('nav.logout')}</span>
             </Typography.Link>
           )}
         </div>
       </Header>
+
+      {/* Mobile navigation drawer */}
+      <Drawer
+        open={mobileNavOpen}
+        placement="left"
+        onClose={() => setMobileNavOpen(false)}
+        width={220}
+        styles={{ body: { padding: 0 }, header: { padding: '12px 16px' } }}
+        title={
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <img src="/polyu-logo.png" alt="PolyU" style={{ height: 28, objectFit: 'contain' }} />
+          </div>
+        }
+        className="wiselearn-mobile-nav-drawer"
+      >
+        <Menu
+          theme="light"
+          mode="inline"
+          selectedKeys={selectedKeys}
+          style={{ borderRight: 0, paddingTop: 8 }}
+          className="wiselearn-side-menu"
+          items={navMenuItems}
+        />
+        {user && (
+          <div style={{ padding: '16px', borderTop: '1px solid #f0f0f0', marginTop: 'auto' }}>
+            <Typography.Link onClick={() => { setMobileNavOpen(false); onLogout() }} style={{ color: 'rgba(0,0,0,0.65)' }}>
+              <LogoutOutlined /> {t('nav.logout')}
+            </Typography.Link>
+          </div>
+        )}
+      </Drawer>
+
       <Layout>
-        <Sider breakpoint="lg" collapsedWidth="0" className="wiselearn-sider-white" style={{ background: '#fff', borderRight: '1px solid #f0f0f0' }}>
+        <Sider
+          breakpoint="lg"
+          collapsedWidth="0"
+          trigger={null}
+          className="wiselearn-sider-white"
+          style={{ background: '#fff', borderRight: '1px solid #f0f0f0' }}
+        >
           <Menu
             theme="light"
             mode="inline"
             selectedKeys={selectedKeys}
             style={{ borderRight: 0 }}
             className="wiselearn-side-menu"
-            items={[
-              {
-                key: 'home',
-                icon: <HomeOutlined />,
-                label: <Link to="/" className="wiselearn-menu-link">{t('nav.home')}</Link>
-              },
-              {
-                key: 'create',
-                icon: <EditOutlined />,
-                label: <Link to="/create" className="wiselearn-menu-link">{t('nav.create')}</Link>
-              },
-              {
-                key: 'messages',
-                icon: (
-                  <Badge count={unreadCount} size="small" offset={[4, 0]}>
-                    <MessageOutlined style={{ fontSize: 16 }} />
-                  </Badge>
-                ),
-                label: <Link to="/messages" className="wiselearn-menu-link">{t('nav.messages')}</Link>
-              },
-              {
-                key: 'profile',
-                icon: <UserOutlined />,
-                label: <Link to="/profile" className="wiselearn-menu-link">{t('nav.profile')}</Link>
-              },
-              ...(user?.isAdmin
-                ? [
-                    {
-                      key: 'admin',
-                      icon: <DashboardOutlined />,
-                      label:
-                        adminPendingCount > 0 ? (
-                          <Badge count={adminPendingCount} size="small" offset={[4, 0]}>
-                            <Link to="/admin" className="wiselearn-menu-link">
-                              {t('nav.admin')}
-                            </Link>
-                          </Badge>
-                        ) : (
-                          <Link to="/admin" className="wiselearn-menu-link">{t('nav.admin')}</Link>
-                        )
-                    }
-                  ]
-                : [])
-            ]}
+            items={navMenuItems}
           />
         </Sider>
         <Layout>
-          <Content
-            style={{
-              margin: 20,
-              background: '#f7f7f8',
-              padding: 24,
-              borderRadius: 16,
-              minHeight: 280
-            }}
-          >
+          <Content className="wiselearn-content-area">
             <Outlet />
           </Content>
         </Layout>

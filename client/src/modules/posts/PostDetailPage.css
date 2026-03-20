@@ -235,3 +235,29 @@
 .wiselearn-reply-inline .ant-input {
   border-radius: 8px;
 }
+
+/* 移动端适配 */
+@media (max-width: 767px) {
+  .wiselearn-detail {
+    padding: 0 4px 16px;
+  }
+  .wiselearn-detail-article {
+    padding: 14px 12px;
+    border-radius: 10px;
+  }
+  .wiselearn-detail-title {
+    font-size: 18px;
+  }
+  .wiselearn-detail-comments {
+    padding: 14px 12px;
+    border-radius: 10px;
+  }
+  .wiselearn-comment-children {
+    margin-left: 24px;
+    padding-left: 8px;
+  }
+  .wiselearn-detail-cover {
+    max-height: 260px;
+    border-radius: 10px;
+  }
+}

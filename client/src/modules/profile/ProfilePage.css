@@ -36,3 +36,13 @@
   text-align: left;
   width: 100%;
 }
+
+/* 移动端适配 */
+@media (max-width: 767px) {
+  .wiselearn-profile-stats {
+    gap: 10px 16px;
+  }
+  .wiselearn-profile-activity-card .ant-card-body {
+    padding: 12px;
+  }
+}

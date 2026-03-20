@@ -401,3 +401,92 @@ code {
   color: #C8102E;
   font-weight: 600;
 }
+
+/* 主内容区域 */
+.wiselearn-content-area {
+  margin: 20px;
+  background: #f7f7f8;
+  padding: 24px;
+  border-radius: 16px;
+  min-height: 280px;
+  box-sizing: border-box;
+}
+
+/* 移动端汉堡按钮：桌面端隐藏 */
+.wiselearn-mobile-ham {
+  display: none !important;
+}
+
+/* 语言简称：默认隐藏，手机端显示 */
+.wiselearn-lang-abbr {
+  display: none;
+}
+.wiselearn-lang-full {
+  display: inline;
+}
+
+/* ≥992px: 正常桌面布局 */
+@media (min-width: 992px) {
+  .wiselearn-header-logo {
+    height: 44px !important;
+  }
+}
+
+/* <992px: 侧边栏隐藏，显示汉堡按钮 */
+@media (max-width: 991px) {
+  .wiselearn-mobile-ham {
+    display: inline-flex !important;
+  }
+  .wiselearn-content-area {
+    margin: 8px;
+    padding: 12px;
+    border-radius: 8px;
+  }
+  .wiselearn-header-logo {
+    height: 32px !important;
+  }
+  .wiselearn-header-subtitle {
+    display: none !important;
+  }
+}
+
+/* <767px: 手机端隐藏 logo，语言缩写 */
+@media (max-width: 767px) {
+  .wiselearn-header-logo {
+    display: none !important;
+  }
+  .wiselearn-lang-full {
+    display: none;
+  }
+  .wiselearn-lang-abbr {
+    display: inline;
+  }
+  .wiselearn-lang-switch button {
+    padding: 4px 8px;
+    font-size: 13px;
+  }
+}
+
+/* <640px: 小手机 */
+@media (max-width: 639px) {
+  .wiselearn-content-area {
+    margin: 4px;
+    padding: 8px;
+    border-radius: 6px;
+  }
+  .wiselearn-header-username {
+    display: none !important;
+  }
+  .wiselearn-header-logout-text {
+    display: none !important;
+  }
+  .wiselearn-header-white .wiselearn-header-title {
+    font-size: 14px;
+  }
+}
+
+/* 登录/注册卡片移动端自适应 */
+.wiselearn-auth-card {
+  width: 100% !important;
+  max-width: 400px !important;
+}

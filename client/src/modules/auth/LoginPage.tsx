@@ -173,7 +173,8 @@ export const LoginPage: React.FC = () => {
         title={t('auth.loginTitle')}
         className="wiselearn-auth-card"
         style={{
-          width: 400,
+          width: '100%',
+          maxWidth: 400,
           borderRadius: 16,
           boxShadow: '0 8px 24px rgba(200, 16, 46, 0.12)',
           border: '1px solid rgba(200, 16, 46, 0.2)'
