@@ -2,8 +2,9 @@ import React, { useState } from 'react'
 import { Button, Form, Input, Select, Card, Typography, message } from 'antd'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { createPost } from '../shared/api'
+import { createPost, uploadImageApi } from '../shared/api'
 import { RichTextEditor } from './RichTextEditor'
+import { generateTitleCoverFile } from './generateTitleCover'
 
 /**
  * 发帖页：富文本编辑 + 图片上传
@@ -11,7 +12,9 @@ import { RichTextEditor } from './RichTextEditor'
 const categoryValues = [
   { value: 'teaching' },
   { value: 'campus' },
-  { value: 'career' }
+  { value: 'career' },
+  { value: 'news' },
+  { value: 'mutual' }
 ]
 
 export const CreatePostPage: React.FC = () => {
@@ -36,10 +39,21 @@ export const CreatePostPage: React.FC = () => {
     }
     setCreating(true)
     try {
+      const hasImages = /<img\\b[^>]*>/i.test(contentHtml)
+      let imageUrls: string[] | undefined = undefined
+
+      // 如果正文没有图片，则生成“标题封面图”并作为 image_urls
+      if (!hasImages) {
+        const coverFile = await generateTitleCoverFile(values.title)
+        const { url } = await uploadImageApi(coverFile)
+        imageUrls = [url]
+      }
+
       await createPost({
         title: values.title,
         category: values.category,
-        content: contentHtml
+        content: contentHtml,
+        imageUrls
       })
       message.success(t('post.createSuccess'))
       form.resetFields()
@@ -60,9 +74,12 @@ export const CreatePostPage: React.FC = () => {
           <Form.Item
             label={t('post.title')}
             name="title"
-            rules={[{ required: true, message: t('post.titleRequired') }]}
+            rules={[
+              { required: true, message: t('post.titleRequired') },
+              { max: 20, message: t('auth.titleTooLong') }
+            ]}
           >
-            <Input maxLength={100} showCount placeholder={t('post.titlePlaceholder')} />
+            <Input maxLength={20} showCount placeholder={t('post.titlePlaceholder')} />
           </Form.Item>
           <Form.Item
             label={t('post.category')}

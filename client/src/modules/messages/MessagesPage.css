@@ -199,3 +199,29 @@
   border-radius: 20px;
   flex-shrink: 0;
 }
+
+/* 移动端适配 */
+@media (max-width: 767px) {
+  .wiselearn-chat {
+    /* 视口高度 - 顶栏 - 底部导航 - content padding */
+    height: calc(100dvh - 56px - 56px - 48px);
+    max-height: none;
+    border-radius: 10px;
+  }
+  .wiselearn-chat-messages {
+    padding: 10px;
+    gap: 8px;
+  }
+  .wiselearn-chat-input-wrap {
+    padding: 8px 10px;
+  }
+  .wiselearn-notif-item {
+    padding: 10px 8px;
+  }
+  .wiselearn-conv-item {
+    padding: 10px 8px !important;
+  }
+  .wiselearn-bubble-wrap .wiselearn-bubble {
+    max-width: 85%;
+  }
+}

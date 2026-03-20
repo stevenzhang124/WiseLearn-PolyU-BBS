@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import {
   Card,
   Col,
@@ -36,10 +36,17 @@ export const AdminDashboardPage: React.FC = () => {
   const [searchResult, setSearchResult] = useState<any[]>([])
   const [pendingPosts, setPendingPosts] = useState<any[]>([])
   const [pendingLoading, setPendingLoading] = useState(false)
+  const pendingCountRef = useRef(0)
+  const initializedPendingRef = useRef(false)
   const [rejectModalOpen, setRejectModalOpen] = useState(false)
   const [rejectPostId, setRejectPostId] = useState<number | null>(null)
   const [rejectReason, setRejectReason] = useState('')
   const locale = i18n.language === 'en' ? 'en-US' : 'zh-CN'
+
+  const ADMIN_PENDING_CHANGED_EVENT = 'wiselearn:admin-pending-changed'
+  const notifyAdminPendingChanged = () => {
+    window.dispatchEvent(new Event(ADMIN_PENDING_CHANGED_EVENT))
+  }
 
   const loadStats = async () => {
     setLoading(true)
@@ -57,20 +64,37 @@ export const AdminDashboardPage: React.FC = () => {
     void loadStats()
   }, [])
 
-  const loadPending = async () => {
-    setPendingLoading(true)
+  const loadPending = async (silent = false) => {
+    if (!silent) setPendingLoading(true)
     try {
       const data = await fetchAdminPendingPosts()
-      setPendingPosts(data.list ?? [])
+      const list = data.list ?? []
+      setPendingPosts(list)
+
+      if (!initializedPendingRef.current) {
+        pendingCountRef.current = list.length
+        initializedPendingRef.current = true
+      } else if (list.length > pendingCountRef.current) {
+        message.warning(t('admin.pendingNew', { count: list.length - pendingCountRef.current }))
+        pendingCountRef.current = list.length
+      } else {
+        pendingCountRef.current = list.length
+      }
     } catch (err) {
       message.error((err as Error).message)
     } finally {
-      setPendingLoading(false)
+      if (!silent) setPendingLoading(false)
     }
   }
 
   useEffect(() => {
-    void loadPending()
+    void loadPending(false)
+  }, [])
+
+  // 后台定时轮询待审核数量：用于提示“新帖子需要审核”
+  useEffect(() => {
+    const timer = setInterval(() => void loadPending(true), 30000)
+    return () => clearInterval(timer)
   }, [])
 
   const onSearch = async () => {
@@ -110,6 +134,7 @@ export const AdminDashboardPage: React.FC = () => {
       message.success(t('admin.approveSuccess'))
       await loadPending()
       await loadStats()
+      notifyAdminPendingChanged()
     } catch (err) {
       message.error((err as Error).message)
     }
@@ -135,6 +160,7 @@ export const AdminDashboardPage: React.FC = () => {
       setRejectReason('')
       await loadPending()
       await loadStats()
+      notifyAdminPendingChanged()
     } catch (err) {
       message.error((err as Error).message)
     }
@@ -142,8 +168,8 @@ export const AdminDashboardPage: React.FC = () => {
 
   return (
     <div>
-      <Row gutter={16} style={{ marginBottom: 16 }}>
-        <Col span={6}>
+      <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+        <Col xs={12} sm={6}>
           <Card loading={loading}>
             <Statistic
               title={t('admin.totalUsers')}
@@ -151,7 +177,7 @@ export const AdminDashboardPage: React.FC = () => {
             />
           </Card>
         </Col>
-        <Col span={6}>
+        <Col xs={12} sm={6}>
           <Card>
             <Statistic
               title={t('admin.totalPosts')}
@@ -159,9 +185,9 @@ export const AdminDashboardPage: React.FC = () => {
             />
           </Card>
         </Col>
-        <Col span={12}>
+        <Col xs={24} sm={12}>
           <Card title={t('admin.recentNewUsers')}>
-            <Space>
+            <Space wrap>
               {(stats?.dailyNewUsers ?? []).map((item: any) => (
                 <Tag key={item.date}>
                   {item.date} +{item.count}
@@ -172,14 +198,14 @@ export const AdminDashboardPage: React.FC = () => {
         </Col>
       </Row>
 
-      <Row gutter={16} style={{ marginBottom: 16 }}>
-        <Col span={12}>
+      <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+        <Col xs={24} md={12}>
           <Card title={t('admin.hotPostsTop10')}>
             <List
               dataSource={stats?.hotPostsTop10 ?? []}
               renderItem={(item: any) => (
                 <List.Item key={item.id}>
-                  <Space>
+                  <Space wrap>
                     <span>#{item.id}</span>
                     <span>{item.title}</span>
                     <Tag color="blue">{t('admin.views')} {item.view_count}</Tag>
@@ -189,7 +215,7 @@ export const AdminDashboardPage: React.FC = () => {
             />
           </Card>
         </Col>
-        <Col span={12}>
+        <Col xs={24} md={12}>
           <Card title={t('admin.postSearch')}>
             <Space direction="vertical" style={{ width: '100%' }}>
               <Input.Search
@@ -203,30 +229,33 @@ export const AdminDashboardPage: React.FC = () => {
                 rowKey="id"
                 size="small"
                 dataSource={searchResult}
+                scroll={{ x: 600 }}
                 columns={[
                   { title: t('admin.id'), dataIndex: 'id', width: 60 },
-                  { title: t('admin.title'), dataIndex: 'title' },
+                  { title: t('admin.title'), dataIndex: 'title', ellipsis: true },
                   {
                     title: t('admin.views'),
                     dataIndex: 'view_count',
-                    width: 80
+                    width: 70
                   },
                   {
                     title: t('post.likes'),
                     dataIndex: 'like_count',
-                    width: 80
+                    width: 70
                   },
                   {
                     title: t('admin.time'),
                     dataIndex: 'created_at',
                     render: (v: string) =>
                       new Date(v).toLocaleString(locale),
-                    width: 180
+                    width: 160,
+                    responsive: ['md'] as any
                   },
                   {
                     title: t('admin.actions'),
                     key: 'actions',
-                    width: 200,
+                    width: 140,
+                    fixed: 'right' as const,
                     render: (_: any, record: any) => (
                       <Space>
                         <Button
@@ -260,26 +289,30 @@ export const AdminDashboardPage: React.FC = () => {
           loading={pendingLoading}
           size="small"
           dataSource={pendingPosts}
+          scroll={{ x: 700 }}
           columns={[
             { title: t('admin.id'), dataIndex: 'id', width: 60 },
-            { title: t('admin.title'), dataIndex: 'title' },
-            { title: t('post.author'), dataIndex: 'author', width: 140 },
+            { title: t('admin.title'), dataIndex: 'title', ellipsis: true },
+            { title: t('post.author'), dataIndex: 'author', width: 120 },
             {
               title: t('admin.time'),
               dataIndex: 'created_at',
-              width: 180,
+              width: 160,
+              responsive: ['md'] as any,
               render: (v: string) => new Date(v).toLocaleString(locale)
             },
             {
               title: t('admin.reason'),
               dataIndex: 'audit_reason',
               render: (v: string | null) => (v ? v : '--'),
-              width: 260
+              width: 200,
+              responsive: ['lg'] as any
             },
             {
               title: t('admin.actions'),
               key: 'actions',
-              width: 220,
+              width: 160,
+              fixed: 'right' as const,
               render: (_: any, record: any) => (
                 <Space>
                   <Button size="small" onClick={() => onApprove(record.id)}>

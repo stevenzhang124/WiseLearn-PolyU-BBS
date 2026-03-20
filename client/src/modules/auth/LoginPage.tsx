@@ -173,7 +173,8 @@ export const LoginPage: React.FC = () => {
         title={t('auth.loginTitle')}
         className="wiselearn-auth-card"
         style={{
-          width: 400,
+          width: '100%',
+          maxWidth: 400,
           borderRadius: 16,
           boxShadow: '0 8px 24px rgba(200, 16, 46, 0.12)',
           border: '1px solid rgba(200, 16, 46, 0.2)'
@@ -244,6 +245,13 @@ export const LoginPage: React.FC = () => {
           </Typography.Text>
         </Form>
       </Card>
+
+      <Typography.Text
+        type="secondary"
+        style={{ marginTop: 24, fontSize: 12, color: 'rgba(0,0,0,0.4)', textAlign: 'center' }}
+      >
+        The Hong Kong Polytechnic University. 2026
+      </Typography.Text>
 
       <Modal
         title={t('auth.resetPasswordTitle')}

@@ -3,6 +3,7 @@
   max-width: 720px;
   margin: 0 auto;
   padding: 0 16px 32px;
+  text-align: left;
 }
 .wiselearn-detail-loading {
   text-align: center;
@@ -57,6 +58,7 @@
 }
 .wiselearn-detail-content {
   margin-bottom: 20px;
+  text-align: left !important;
 }
 .wiselearn-detail-actions {
   display: flex;
@@ -64,6 +66,16 @@
   gap: 24px;
   padding-top: 16px;
   border-top: 1px solid #f0f0f0;
+}
+
+.wiselearn-detail-cover {
+  width: 100%;
+  height: auto;
+  max-height: 360px;
+  object-fit: cover;
+  border-radius: 16px;
+  margin: 0 0 16px;
+  display: block;
 }
 .wiselearn-detail-action {
   display: inline-flex;
@@ -93,6 +105,7 @@
   border-radius: 16px;
   padding: 24px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  text-align: left;
 }
 .wiselearn-detail-comments-title {
   margin: 0 0 16px !important;
@@ -149,41 +162,52 @@
 .wiselearn-comment-meta {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 4px;
+  gap: 6px;
+  margin-bottom: 2px;
 }
 .wiselearn-comment-author {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
-  color: rgba(0, 0, 0, 0.85);
+  color: rgba(0, 0, 0, 0.65);
   cursor: pointer;
 }
 .wiselearn-comment-author:hover {
   color: #C8102E;
 }
 .wiselearn-comment-author-tag {
-  margin-left: 6px;
-  font-size: 12px;
+  font-size: 11px;
   color: #C8102E;
   background: rgba(200, 16, 46, 0.08);
-  padding: 1px 6px;
+  padding: 1px 5px;
   border-radius: 4px;
+  flex-shrink: 0;
 }
 .wiselearn-comment-time {
-  font-size: 12px;
+  font-size: 11px;
+  color: rgba(0, 0, 0, 0.35);
+  flex-shrink: 0;
+}
+
+/* 回复目标：内联在内容 <p> 里 */
+.wiselearn-comment-replyto {
+  font-size: 14px;
   color: rgba(0, 0, 0, 0.45);
+  margin-right: 2px;
 }
 .wiselearn-comment-text {
-  margin: 0 0 8px;
+  margin: 2px 0 6px;
   font-size: 14px;
-  line-height: 1.5;
+  line-height: 1.6;
   color: rgba(0, 0, 0, 0.85);
   white-space: pre-wrap;
   word-break: break-word;
+  text-align: left;
 }
+/* 第三行：时间 + 操作按钮 */
 .wiselearn-comment-actions {
   display: flex;
-  gap: 16px;
+  align-items: center;
+  gap: 14px;
 }
 .wiselearn-comment-reply-btn,
 .wiselearn-comment-delete-btn {
@@ -214,4 +238,30 @@
 }
 .wiselearn-reply-inline .ant-input {
   border-radius: 8px;
+}
+
+/* 移动端适配 */
+@media (max-width: 767px) {
+  .wiselearn-detail {
+    padding: 0 4px 16px;
+  }
+  .wiselearn-detail-article {
+    padding: 14px 12px;
+    border-radius: 10px;
+  }
+  .wiselearn-detail-title {
+    font-size: 18px;
+  }
+  .wiselearn-detail-comments {
+    padding: 14px 12px;
+    border-radius: 10px;
+  }
+  .wiselearn-comment-children {
+    margin-left: 24px;
+    padding-left: 8px;
+  }
+  .wiselearn-detail-cover {
+    max-height: 260px;
+    border-radius: 10px;
+  }
 }

@@ -8,7 +8,7 @@
     "logout": "退出",
     "welcome": "欢迎，{{name}}",
     "adminBadge": "（管理员）",
-    "headerTitle": "WiseLearn · 校园交流",
+    "headerTitle": "RedBrick · 校园交流",
     "headerSubtitle": "香港理工大学 Hong Kong Polytechnic University"
   },
   "lang": {
@@ -16,8 +16,8 @@
     "en": "English"
   },
   "auth": {
-    "loginTitle": "WiseLearn 登录",
-    "registerTitle": "WiseLearn 注册",
+    "loginTitle": "RedBrick 登录",
+    "registerTitle": "RedBrick 注册",
     "email": "PolyU 邮箱",
     "emailPlaceholder": "yourid@polyu.edu.hk",
     "emailRequired": "请输入邮箱",
@@ -28,6 +28,7 @@
     "nickname": "昵称",
     "nicknameRequired": "请输入昵称",
     "nicknameInvalid": "2-20 位中英文或数字，禁止特殊符号",
+    "titleTooLong": "标题不能超过 20 个字",
     "nicknameTaken": "该昵称已被使用，请更换",
     "nicknamePlaceholder": "你的昵称",
     "remember": "记住我（7 天内自动登录）",
@@ -67,7 +68,9 @@
     "category": {
       "teaching": "教学交流",
       "campus": "校园生活",
-      "career": "求职分享"
+      "career": "求职分享",
+      "news": "新鲜事",
+      "mutual": "校园互助"
     }
   },
   "post": {
@@ -199,7 +202,7 @@
     "deleteSuccess": "帖子已删除",
     "dataDesc": "数据说明",
     "dataDescLabel": "统计说明",
-    "dataDescText": "本页面展示 WiseLearn 平台核心数据概览，帮助管理员了解站点活跃度和内容质量。",
+    "dataDescText": "本页面展示 RedBrick 平台核心数据概览，帮助管理员了解站点活跃度和内容质量。",
     "pendingPostsTitle": "待审核帖子",
     "pending": "待审核",
     "approve": "审核通过",
@@ -209,7 +212,8 @@
     "submitAudit": "提交审核结果",
     "approveSuccess": "已通过审核",
     "rejectSuccess": "已驳回并通知用户",
-    "reasonRequired": "请输入整改意见"
+    "reasonRequired": "请输入整改意见",
+    "pendingNew": "有新的待审核帖子：{{count}}"
   },
   "user": {
     "selfLabel": "（我）",

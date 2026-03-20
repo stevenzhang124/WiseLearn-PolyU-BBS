@@ -24,6 +24,8 @@ CREATE TABLE IF NOT EXISTS posts (
   -- 0=待审核/驳回，1=已通过。默认 1 以兼容旧数据：避免升级后所有历史帖子都不可见
   audit_status TINYINT(1) NOT NULL DEFAULT 1,
   audit_reason TEXT NULL,
+  -- 管理员审核通过的时间，用于"最新"排序（编辑后重审通过时刷新此字段）
+  published_at TIMESTAMP NULL DEFAULT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id)
 );
