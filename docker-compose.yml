@@ -4,7 +4,7 @@ services:
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: root_password
-      MYSQL_DATABASE: wiselearn
+      MYSQL_DATABASE: redbrick
       MYSQL_USER: root
       MYSQL_PASSWORD: root_password
     volumes:
@@ -22,7 +22,7 @@ services:
       DB_PORT: 3306
       DB_USER: root
       DB_PASSWORD: root_password
-      DB_NAME: wiselearn
+      DB_NAME: redbrick
       JWT_SECRET: replace_with_strong_secret
       API_BASE_URL: http://localhost:8080
     volumes:

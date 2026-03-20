@@ -7,7 +7,8 @@ import {
   UserOutlined,
   DashboardOutlined,
   LogoutOutlined,
-  MenuOutlined
+  MenuOutlined,
+  PlusOutlined
 } from '@ant-design/icons'
 import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -177,6 +178,7 @@ export const LayoutShell: React.FC = () => {
             onClick={() => setMobileNavOpen(true)}
             style={{ marginRight: 4 }}
           />
+          {/* 桌面端：完整 PolyU logo */}
           <img
             src="/polyu-logo.png"
             alt="香港理工大学 The Hong Kong Polytechnic University"
@@ -187,6 +189,12 @@ export const LayoutShell: React.FC = () => {
               objectFit: 'contain',
               display: 'block'
             }}
+          />
+          {/* 移动端：仅中国结图标 */}
+          <img
+            src="/polyu-knot.png"
+            alt="PolyU"
+            className="wiselearn-header-knot"
           />
           <div className="wiselearn-header-titles">
             <span className="wiselearn-header-title">{t('nav.headerTitle')}</span>
@@ -285,6 +293,37 @@ export const LayoutShell: React.FC = () => {
           </Content>
         </Layout>
       </Layout>
+
+      {/* 移动端底部导航栏（小红书风格） */}
+      <nav className="wiselearn-bottom-nav">
+        <Link to="/" className={`wiselearn-bottom-nav-item${selectedKeys.includes('home') ? ' active' : ''}`}>
+          <HomeOutlined className="wiselearn-bottom-nav-icon" />
+          <span className="wiselearn-bottom-nav-label">{t('nav.home')}</span>
+        </Link>
+        <Link to="/create" className={`wiselearn-bottom-nav-item${selectedKeys.includes('create') ? ' active' : ''}`}>
+          <div className="wiselearn-bottom-nav-plus">
+            <PlusOutlined />
+          </div>
+        </Link>
+        <Link to="/messages" className={`wiselearn-bottom-nav-item${selectedKeys.includes('messages') ? ' active' : ''}`}>
+          <Badge count={unreadCount} size="small" offset={[8, 0]}>
+            <MessageOutlined className="wiselearn-bottom-nav-icon" />
+          </Badge>
+          <span className="wiselearn-bottom-nav-label">{t('nav.messages')}</span>
+        </Link>
+        <Link to="/profile" className={`wiselearn-bottom-nav-item${selectedKeys.includes('profile') ? ' active' : ''}`}>
+          <UserOutlined className="wiselearn-bottom-nav-icon" />
+          <span className="wiselearn-bottom-nav-label">{t('nav.profile')}</span>
+        </Link>
+        {user?.isAdmin && (
+          <Link to="/admin" className={`wiselearn-bottom-nav-item${selectedKeys.includes('admin') ? ' active' : ''}`}>
+            <Badge count={adminPendingCount} size="small" offset={[8, 0]}>
+              <DashboardOutlined className="wiselearn-bottom-nav-icon" />
+            </Badge>
+            <span className="wiselearn-bottom-nav-label">{t('nav.admin')}</span>
+          </Link>
+        )}
+      </nav>
     </Layout>
   )
 }

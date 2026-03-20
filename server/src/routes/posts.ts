@@ -27,6 +27,10 @@ postRouter.post('/', async (req: AuthRequest, res) => {
     res.status(400).json({ message: '标题、内容和分类为必填' })
     return
   }
+  if ([...title].length > 20) {
+    res.status(400).json({ message: '标题不能超过 20 个字' })
+    return
+  }
 
   try {
     const images = Array.isArray(imageUrls) ? imageUrls.join(',') : null
@@ -52,9 +56,10 @@ postRouter.get('/', async (req: AuthRequest, res) => {
 
   const offset = (page - 1) * pageSize
 
-  let orderBy = 'p.created_at DESC'
+  // 置顶帖子始终排在最前；"最新"按审核通过时间倒序（回退到创建时间）；"热门"按热度倒序
+  let orderBy = 'p.is_pinned DESC, COALESCE(p.published_at, p.created_at) DESC'
   if (sort === 'hot') {
-    orderBy = ' (p.view_count + p.like_count * 2) DESC, p.created_at DESC'
+    orderBy = 'p.is_pinned DESC, (p.view_count + p.like_count * 2) DESC, COALESCE(p.published_at, p.created_at) DESC'
   }
 
   try {
@@ -133,6 +138,10 @@ postRouter.put('/:id', async (req: AuthRequest, res) => {
   }
   if (!title || !content || !category) {
     res.status(400).json({ message: '标题、内容和分类为必填' })
+    return
+  }
+  if ([...title].length > 20) {
+    res.status(400).json({ message: '标题不能超过 20 个字' })
     return
   }
   try {

@@ -38,6 +38,17 @@ function buildCommentTree(comments: any[]): CommentNode[] {
   return roots
 }
 
+/** 时间格式化到分钟（不显示秒） */
+const fmtTime = (s: string) =>
+  new Date(s).toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  })
+
 /**
  * 帖子详情页：小红书风格 + 评论回复树
  */
@@ -276,78 +287,81 @@ export const PostDetailPage: React.FC = () => {
 
         <div className="wiselearn-comment-list">
           {commentTree.map(({ root, children }) => {
-            const renderReplyItem = (
-              n: CommentNode,
-              replyTargetAuthor?: string
+            /** 渲染单条评论/回复，replyTargetAuthor 传入时显示"回复 B：" */
+            const renderCommentBody = (
+              c: any,
+              replyTargetAuthor?: string,
+              extraClass = ''
             ) => (
-              <div key={n.root.id} className="wiselearn-comment-item is-reply">
+              <div key={c.id} className={`wiselearn-comment-item${extraClass ? ` ${extraClass}` : ''}`}>
                 <span
                   className="wiselearn-comment-avatar-wrap"
                   role="button"
                   tabIndex={0}
-                  onClick={() => n.root.user_id && navigate(`/users/${n.root.user_id}`)}
+                  onClick={() => c.user_id && navigate(`/users/${c.user_id}`)}
                   onKeyDown={(e) =>
-                    e.key === 'Enter' && n.root.user_id && navigate(`/users/${n.root.user_id}`)
+                    e.key === 'Enter' && c.user_id && navigate(`/users/${c.user_id}`)
                   }
                 >
                   <Avatar
-                    src={n.root.author_avatar}
-                    name={n.root.author}
+                    src={c.author_avatar}
+                    name={c.author}
                     size={32}
                     className="wiselearn-comment-avatar"
                   />
                 </span>
                 <div className="wiselearn-comment-body">
+                  {/* 第一行：作者名 + 作者标签 */}
                   <div className="wiselearn-comment-meta">
                     <span
                       className="wiselearn-comment-author"
                       role="button"
                       tabIndex={0}
-                      onClick={() => n.root.user_id && navigate(`/users/${n.root.user_id}`)}
+                      onClick={() => c.user_id && navigate(`/users/${c.user_id}`)}
                       onKeyDown={(e) =>
-                        e.key === 'Enter' && n.root.user_id && navigate(`/users/${n.root.user_id}`)
+                        e.key === 'Enter' && c.user_id && navigate(`/users/${c.user_id}`)
                       }
                     >
-                      {n.root.author}
+                      {c.author}
                     </span>
-                    {n.root.is_author && (
+                    {c.is_author && (
                       <span className="wiselearn-comment-author-tag">{t('post.authorLabel')}</span>
                     )}
-                    <span className="wiselearn-comment-time">
-                      {new Date(n.root.created_at).toLocaleString('zh-CN')}
-                    </span>
-                    {replyTargetAuthor && (
-                      <span className="wiselearn-comment-replyto">
-                        {n.root.author} 回复 {replyTargetAuthor}
-                      </span>
-                    )}
                   </div>
-                  <p className="wiselearn-comment-text">{n.root.content}</p>
+                  {/* 第二行：（回复 B：）内容 */}
+                  <p className="wiselearn-comment-text">
+                    {replyTargetAuthor && (
+                      <span className="wiselearn-comment-replyto">回复 {replyTargetAuthor}：</span>
+                    )}
+                    {c.content}
+                  </p>
+                  {/* 第三行：时间 + 操作 */}
                   <div className="wiselearn-comment-actions">
+                    <span className="wiselearn-comment-time">{fmtTime(c.created_at)}</span>
                     <button
                       type="button"
                       className="wiselearn-comment-reply-btn"
                       onClick={() =>
                         setReplyingTo(
-                          replyingTo?.commentId === n.root.id
+                          replyingTo?.commentId === c.id
                             ? null
-                            : { commentId: n.root.id, author: n.root.author }
+                            : { commentId: c.id, author: c.author }
                         )
                       }
                     >
                       {t('post.reply')}
                     </button>
-                    {n.root.author === user?.nickname && (
+                    {c.author === user?.nickname && (
                       <button
                         type="button"
                         className="wiselearn-comment-delete-btn"
-                        onClick={() => handleDeleteComment(n.root.id)}
+                        onClick={() => handleDeleteComment(c.id)}
                       >
                         {t('post.delete')}
                       </button>
                     )}
                   </div>
-                  {replyingTo?.commentId === n.root.id && (
+                  {replyingTo?.commentId === c.id && (
                     <div className="wiselearn-reply-inline">
                       <Input.TextArea
                         rows={2}
@@ -377,118 +391,25 @@ export const PostDetailPage: React.FC = () => {
               </div>
             )
 
+            const renderReplyFlat = (
+              n: CommentNode,
+              replyTargetAuthor?: string
+            ): React.ReactNode => (
+              <React.Fragment key={n.root.id}>
+                {renderCommentBody(n.root, replyTargetAuthor, 'is-reply')}
+                {n.children.map((child) => renderReplyFlat(child, n.root.author))}
+              </React.Fragment>
+            )
+
             return (
               <div key={root.id} className="wiselearn-comment-block">
-                {/* 1st level: comment */}
-                <div className="wiselearn-comment-item">
-                  <span
-                    className="wiselearn-comment-avatar-wrap"
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => root.user_id && navigate(`/users/${root.user_id}`)}
-                    onKeyDown={(e) =>
-                      e.key === 'Enter' && root.user_id && navigate(`/users/${root.user_id}`)
-                    }
-                  >
-                    <Avatar
-                      src={root.author_avatar}
-                      name={root.author}
-                      size={32}
-                      className="wiselearn-comment-avatar"
-                    />
-                  </span>
-                  <div className="wiselearn-comment-body">
-                    <div className="wiselearn-comment-meta">
-                      <span
-                        className="wiselearn-comment-author"
-                        role="button"
-                        tabIndex={0}
-                        onClick={() => root.user_id && navigate(`/users/${root.user_id}`)}
-                        onKeyDown={(e) =>
-                          e.key === 'Enter' && root.user_id && navigate(`/users/${root.user_id}`)
-                        }
-                      >
-                        {root.author}
-                      </span>
-                      {root.is_author && (
-                        <span className="wiselearn-comment-author-tag">{t('post.authorLabel')}</span>
-                      )}
-                      <span className="wiselearn-comment-time">
-                        {new Date(root.created_at).toLocaleString('zh-CN')}
-                      </span>
-                    </div>
-                    <p className="wiselearn-comment-text">{root.content}</p>
-                    <div className="wiselearn-comment-actions">
-                      <button
-                        type="button"
-                        className="wiselearn-comment-reply-btn"
-                        onClick={() =>
-                          setReplyingTo(
-                            replyingTo?.commentId === root.id
-                              ? null
-                              : { commentId: root.id, author: root.author }
-                          )
-                        }
-                      >
-                        {t('post.reply')}
-                      </button>
-                      {root.author === user?.nickname && (
-                        <button
-                          type="button"
-                          className="wiselearn-comment-delete-btn"
-                          onClick={() => handleDeleteComment(root.id)}
-                        >
-                          {t('post.delete')}
-                        </button>
-                      )}
-                    </div>
-                    {replyingTo?.commentId === root.id && (
-                      <div className="wiselearn-reply-inline">
-                        <Input.TextArea
-                          rows={2}
-                          placeholder={t('post.replyTo', { name: replyingTo!.author })}
-                          value={replyContent}
-                          onChange={(e) => setReplyContent(e.target.value)}
-                          maxLength={500}
-                        />
-                        <Space style={{ marginTop: 8 }}>
-                          <Button
-                            type="primary"
-                            size="small"
-                            loading={submitting}
-                            onClick={() => {
-                              if (replyContent.trim()) handleReply()
-                            }}
-                          >
-                            {t('post.send')}
-                          </Button>
-                          <Button size="small" onClick={cancelReply}>
-                            {t('post.cancel')}
-                          </Button>
-                        </Space>
-                      </div>
-                    )}
-                  </div>
-                </div>
+                {/* 第一层：根评论 */}
+                {renderCommentBody(root)}
 
-                {/* 2nd level: replies (includes reply-reply, but flattened here) */}
+                {/* 第二层：所有回复（含嵌套），展平显示 */}
                 {children.length > 0 && (
                   <div className="wiselearn-comment-children">
-                    {children.map((reply) => {
-                      const renderReplyFlat = (
-                        n: CommentNode,
-                        replyTargetAuthor?: string
-                      ): React.ReactNode => (
-                        <React.Fragment key={n.root.id}>
-                          {renderReplyItem(n, replyTargetAuthor)}
-                          {n.children.map((child) =>
-                            renderReplyFlat(child, n.root.author)
-                          )}
-                        </React.Fragment>
-                      )
-
-                      return renderReplyFlat(reply, root.author)
-                    })}
+                    {children.map((reply) => renderReplyFlat(reply, root.author))}
                   </div>
                 )}
               </div>

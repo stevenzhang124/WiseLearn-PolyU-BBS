@@ -12,7 +12,9 @@ import { generateTitleCoverFile } from './generateTitleCover'
 const categoryValues = [
   { value: 'teaching' },
   { value: 'campus' },
-  { value: 'career' }
+  { value: 'career' },
+  { value: 'news' },
+  { value: 'mutual' }
 ]
 
 export const CreatePostPage: React.FC = () => {
@@ -72,9 +74,12 @@ export const CreatePostPage: React.FC = () => {
           <Form.Item
             label={t('post.title')}
             name="title"
-            rules={[{ required: true, message: t('post.titleRequired') }]}
+            rules={[
+              { required: true, message: t('post.titleRequired') },
+              { max: 20, message: t('auth.titleTooLong') }
+            ]}
           >
-            <Input maxLength={100} showCount placeholder={t('post.titlePlaceholder')} />
+            <Input maxLength={20} showCount placeholder={t('post.titlePlaceholder')} />
           </Form.Item>
           <Form.Item
             label={t('post.category')}

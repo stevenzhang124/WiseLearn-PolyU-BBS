@@ -193,7 +193,7 @@ export const ProfilePage: React.FC = () => {
               }
             ]}
           >
-            <Input />
+            <Input maxLength={20} showCount />
           </Form.Item>
           <Form.Item>
             <Button type="primary" htmlType="submit">

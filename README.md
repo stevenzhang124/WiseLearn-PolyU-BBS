@@ -1,6 +1,6 @@
-# WiseLearn - PolyU 校园交流平台
+# RedBrick - PolyU 校园交流平台
 
-本项目为香港理工大学（PolyU）校园内部交流平台 **WiseLearn** 的示例实现，包括前端（React + TypeScript）和后端（Node.js + Express + MySQL）。
+本项目为香港理工大学（PolyU）校园内部交流平台 **RedBrick** 的示例实现，包括前端（React + TypeScript）和后端（Node.js + Express + MySQL）。
 
 ## 一、技术栈
 
@@ -21,13 +21,13 @@
 1. 在 MySQL 中创建数据库，例如：
 
    ```sql
-   CREATE DATABASE wiselearn CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+   CREATE DATABASE redbrick CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
    ```
 
 2. 执行后端目录下的 `schema.sql`：
 
    ```bash
-   mysql -u root -p wiselearn < server/schema.sql
+   mysql -u root -p redbrick < server/schema.sql
    ```
 
 3. 执行迁移（按需）：`server/migrations/add-users-avatar.sql`、`add-follows-table.sql`、`add-user-notification-read.sql`（消息中心点赞/关注/评论未读用）。
@@ -44,7 +44,7 @@ DB_HOST=localhost
 DB_PORT=3306
 DB_USER=root
 DB_PASSWORD=你的数据库密码
-DB_NAME=wiselearn
+DB_NAME=redbrick
 JWT_SECRET=请替换为随机生成的安全字符串
 API_BASE_URL=http://localhost:4000
 ```
@@ -81,7 +81,7 @@ npm run dev
 
 浏览器访问 Vite 提示的地址（通常是 `http://localhost:5173`）。
 
-若登录时出现「无法连接服务器」或 Network Error，请先确认**后端已启动**（`cd server && npm run dev`，默认端口 4000）。若后端运行在其他地址，可在 `client` 目录下新建 `.env` 并设置 `VITE_API_BASE_URL=http://你的后端地址:端口/api`（可参考 `client/.env.example`）。
+若登录时出现网络连接失败，请先确认**后端已启动**（`cd server && npm run dev`，默认端口 4000）。若后端运行在其他地址，可在 `client` 目录下新建 `.env` 并设置 `VITE_API_BASE_URL=http://你的后端地址:端口/api`（可参考 `client/.env.example`）。
 
 ### 6. 管理员登录与后台
 

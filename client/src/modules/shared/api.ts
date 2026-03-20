@@ -33,7 +33,9 @@ api.interceptors.response.use(
       error.code === 'ERR_NETWORK' ||
       !error.response
     const msg = isNetworkError
-      ? '无法连接服务器，请确认后端已启动（默认 http://localhost:4000）'
+      ? (localStorage.getItem('wiselearn_lang') === 'en'
+          ? 'Network error. Please check your connection and try again.'
+          : '网络连接失败，请检查网络后重试')
       : (error.response?.data?.message ??
           error.message ??
           '请求失败，请稍后重试')

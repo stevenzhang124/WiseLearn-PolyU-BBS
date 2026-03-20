@@ -8,7 +8,7 @@
     "logout": "Logout",
     "welcome": "Welcome, {{name}}",
     "adminBadge": " (Admin)",
-    "headerTitle": "WiseLearn · Campus",
+    "headerTitle": "RedBrick · Campus",
     "headerSubtitle": "The Hong Kong Polytechnic University"
   },
   "lang": {
@@ -16,8 +16,8 @@
     "en": "English"
   },
   "auth": {
-    "loginTitle": "WiseLearn Login",
-    "registerTitle": "WiseLearn Register",
+    "loginTitle": "RedBrick Login",
+    "registerTitle": "RedBrick Register",
     "email": "PolyU Email",
     "emailPlaceholder": "yourid@polyu.edu.hk",
     "emailRequired": "Please enter email",
@@ -28,6 +28,7 @@
     "nickname": "Nickname",
     "nicknameRequired": "Please enter nickname",
     "nicknameInvalid": "2–20 characters: Chinese, letters or numbers only",
+    "titleTooLong": "Title cannot exceed 20 characters",
     "nicknameTaken": "This nickname is already taken. Please choose another.",
     "nicknamePlaceholder": "Your nickname",
     "remember": "Remember me (auto login for 7 days)",
@@ -67,7 +68,9 @@
     "category": {
       "teaching": "Teaching",
       "campus": "Campus Life",
-      "career": "Career"
+      "career": "Career",
+      "news": "Campus News",
+      "mutual": "Mutual Aid"
     }
   },
   "post": {
@@ -199,7 +202,7 @@
     "deleteSuccess": "Post deleted",
     "dataDesc": "About",
     "dataDescLabel": "Description",
-    "dataDescText": "This page shows WiseLearn platform statistics for admins.",
+    "dataDescText": "This page shows RedBrick platform statistics for admins.",
     "pendingPostsTitle": "Posts pending review",
     "pending": "Pending",
     "approve": "Approve",

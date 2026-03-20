@@ -215,7 +215,7 @@ export const RegisterPage: React.FC = () => {
               }
             ]}
           >
-            <Input placeholder={t('auth.nicknamePlaceholder')} size="large" />
+            <Input placeholder={t('auth.nicknamePlaceholder')} size="large" maxLength={20} showCount />
           </Form.Item>
           <Form.Item>
             <Button

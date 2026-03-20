@@ -246,6 +246,13 @@ export const LoginPage: React.FC = () => {
         </Form>
       </Card>
 
+      <Typography.Text
+        type="secondary"
+        style={{ marginTop: 24, fontSize: 12, color: 'rgba(0,0,0,0.4)', textAlign: 'center' }}
+      >
+        The Hong Kong Polytechnic University. 2026
+      </Typography.Text>
+
       <Modal
         title={t('auth.resetPasswordTitle')}
         open={resetModalOpen}

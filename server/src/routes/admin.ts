@@ -128,7 +128,7 @@ adminRouter.get('/posts/search', async (req: AuthRequest, res) => {
     const like = `%${keyword}%`
     const [rows] = await pool.query(
       `
-      SELECT id, title, view_count, like_count, created_at
+      SELECT id, title, view_count, like_count, is_pinned, created_at
       FROM posts
       WHERE title LIKE ? OR content LIKE ?
       ORDER BY created_at DESC
@@ -201,7 +201,7 @@ adminRouter.post('/posts/:id/approve', async (req: AuthRequest, res) => {
     }
 
     await conn.query(
-      'UPDATE posts SET audit_status = 1, audit_reason = NULL WHERE id = ?',
+      'UPDATE posts SET audit_status = 1, audit_reason = NULL, published_at = NOW() WHERE id = ?',
       [id]
     )
 
