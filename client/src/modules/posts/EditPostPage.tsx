@@ -80,11 +80,13 @@ export const EditPostPage: React.FC = () => {
     }
     setSaving(true)
     try {
-      const hasImages = /<img\\b[^>]*>/i.test(contentHtml)
-      let imageUrls: string[] | undefined = undefined
+      const firstImgMatch = contentHtml.match(/<img[^>]+src=["'][^"']+["'][^>]*>/i)
+      const firstImgSrc = firstImgMatch ? firstImgMatch[0].match(/src=["']([^"']+)["']/i)?.[1] : null
+      let imageUrls: string[]
 
-      // 如果正文没有图片，则生成“标题封面图”并作为 image_urls
-      if (!hasImages) {
+      if (firstImgSrc) {
+        imageUrls = [firstImgSrc]
+      } else {
         const coverFile = await generateTitleCoverFile(values.title)
         const { url } = await uploadImageApi(coverFile)
         imageUrls = [url]

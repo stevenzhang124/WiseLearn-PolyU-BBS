@@ -167,7 +167,7 @@ export const PostDetailPage: React.FC = () => {
   const commentTree = buildCommentTree(comments)
   const coverUrl = post?.image_urls ? String(post.image_urls).split(',')[0]?.trim() : null
   const hasImageInContent = Boolean(
-    post?.content && /<img\\b[^>]*>/i.test(String(post.content))
+    post?.content && /<img[^>]*>/i.test(String(post.content))
   )
 
   if (loading && !detail) {

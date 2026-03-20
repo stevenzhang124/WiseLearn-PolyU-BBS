@@ -3,11 +3,14 @@ import { useEditor, EditorContent, type Editor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Image from '@tiptap/extension-image'
 import Placeholder from '@tiptap/extension-placeholder'
-import { Button, Space } from 'antd'
+import { Button, Space, message as antMessage } from 'antd'
 import { PictureOutlined } from '@ant-design/icons'
 import { uploadImageApi } from '../shared/api'
+import { useTranslation } from 'react-i18next'
 
 import './RichTextEditor.css'
+
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024 // 10MB
 
 interface RichTextEditorProps {
   value?: string
@@ -25,6 +28,16 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   placeholder = '写点什么…',
   minHeight = 200
 }) => {
+  const { t } = useTranslation()
+
+  const checkSize = useCallback((file: File): boolean => {
+    if (file.size > MAX_IMAGE_SIZE) {
+      antMessage.error(t('auth.imageTooLarge'))
+      return false
+    }
+    return true
+  }, [t])
+
   const handleUploadImage = useCallback(async (editor: Editor) => {
     const input = document.createElement('input')
     input.type = 'file'
@@ -32,6 +45,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     input.onchange = async (e) => {
       const file = (e.target as HTMLInputElement).files?.[0]
       if (!file) return
+      if (!checkSize(file)) return
       try {
         const { url } = await uploadImageApi(file)
         editor.chain().focus().setImage({ src: url }).run()
@@ -40,7 +54,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       }
     }
     input.click()
-  }, [])
+  }, [checkSize])
 
   const editor = useEditor({
     extensions: [
@@ -56,6 +70,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         if (!files?.length) return false
         const file = files[0]
         if (!file.type.startsWith('image/')) return false
+        if (!checkSize(file)) return true
         uploadImageApi(file).then(({ url }) => {
           const { schema } = view.state
           const coordinates = view.posAtCoords({
@@ -77,6 +92,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
           if (item.type.indexOf('image') !== -1) {
             const file = item.getAsFile()
             if (file) {
+              if (!checkSize(file)) return true
               uploadImageApi(file).then(({ url }) => {
                 const node = view.state.schema.nodes.image.create({ src: url })
                 const transaction = view.state.tr.replaceSelectionWith(node)
