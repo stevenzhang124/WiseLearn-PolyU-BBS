@@ -66,6 +66,21 @@
   margin-bottom: 12px;
 }
 
+.wiselearn-feed-item-header--time-only {
+  min-height: 24px;
+}
+
+.wiselearn-feed-item-time-only {
+  font-size: 13px;
+  color: rgba(0, 0, 0, 0.45);
+  line-height: 1.4;
+}
+
+/* 资料页流：与主内容区灰底上的独立卡片一致，无额外容器背景 */
+.wiselearn-feed-item--profile {
+  text-align: left;
+}
+
 .wiselearn-feed-item-author {
   display: flex;
   align-items: center;

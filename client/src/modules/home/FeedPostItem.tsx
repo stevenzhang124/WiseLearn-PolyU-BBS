@@ -20,6 +20,8 @@ export interface FeedPostItemProps {
     category: string
   }
   onNavigate: (path: string) => void
+  /** 资料页等场景：不展示头像与昵称，仅展示时间 */
+  headerMode?: 'full' | 'timeOnly'
 }
 
 /**
@@ -48,7 +50,11 @@ function getImageUrls(post: FeedPostItemProps['post']): string[] {
  * Weibo-style feed post item
  * Horizontal layout with author row, content preview, image gallery, and action bar
  */
-export const FeedPostItem: React.FC<FeedPostItemProps> = ({ post, onNavigate }) => {
+export const FeedPostItem: React.FC<FeedPostItemProps> = ({
+  post,
+  onNavigate,
+  headerMode = 'full'
+}) => {
   const { t, i18n } = useTranslation()
   const imageUrls = getImageUrls(post)
   const locale = i18n.language === 'en' ? 'en-US' : 'zh-CN'
@@ -74,31 +80,41 @@ export const FeedPostItem: React.FC<FeedPostItemProps> = ({ post, onNavigate }) 
     return 'multiple'
   }
 
+  const pinned = Boolean(post.is_pinned)
+
   return (
-    <div className="wiselearn-feed-item">
+    <div className={`wiselearn-feed-item${headerMode === 'timeOnly' ? ' wiselearn-feed-item--profile' : ''}`}>
       {/* Author row */}
-      <div className="wiselearn-feed-item-header">
-        <div
-          className="wiselearn-feed-item-author"
-          role="button"
-          tabIndex={0}
-          onClick={() => onNavigate(`/users/${post.user_id}`)}
-          onKeyDown={(e) => e.key === 'Enter' && onNavigate(`/users/${post.user_id}`)}
-        >
-          <Avatar
-            src={post.author_avatar}
-            name={post.author}
-            size={44}
-            className="wiselearn-feed-item-avatar"
-          />
-          <div className="wiselearn-feed-item-author-info">
-            <span className="wiselearn-feed-item-author-name">{post.author}</span>
-            <span className="wiselearn-feed-item-date">{formatTime(post.created_at)}</span>
+      <div
+        className={
+          headerMode === 'timeOnly'
+            ? 'wiselearn-feed-item-header wiselearn-feed-item-header--time-only'
+            : 'wiselearn-feed-item-header'
+        }
+      >
+        {headerMode === 'timeOnly' ? (
+          <span className="wiselearn-feed-item-time-only">{formatTime(post.created_at)}</span>
+        ) : (
+          <div
+            className="wiselearn-feed-item-author"
+            role="button"
+            tabIndex={0}
+            onClick={() => onNavigate(`/users/${post.user_id}`)}
+            onKeyDown={(e) => e.key === 'Enter' && onNavigate(`/users/${post.user_id}`)}
+          >
+            <Avatar
+              src={post.author_avatar}
+              name={post.author}
+              size={44}
+              className="wiselearn-feed-item-avatar"
+            />
+            <div className="wiselearn-feed-item-author-info">
+              <span className="wiselearn-feed-item-author-name">{post.author}</span>
+              <span className="wiselearn-feed-item-date">{formatTime(post.created_at)}</span>
+            </div>
           </div>
-        </div>
-        {post.is_pinned && (
-          <span className="wiselearn-feed-item-pin">{t('home.pinned')}</span>
         )}
+        {pinned ? <span className="wiselearn-feed-item-pin">{t('home.pinned')}</span> : null}
       </div>
 
       {/* Title */}

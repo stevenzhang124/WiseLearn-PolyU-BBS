@@ -300,8 +300,8 @@ usersRouter.get('/:id/posts', async (req: AuthRequest, res) => {
     let rows: any[]
     try {
       const [r] = await pool.query(
-        `SELECT p.id, p.title, p.content, p.image_urls, p.created_at, p.view_count, p.like_count,
-         u.nickname AS author, u.avatar AS author_avatar
+        `SELECT p.id, p.user_id, p.title, p.content, p.category, p.image_urls, p.created_at, p.view_count, p.like_count,
+         p.is_pinned, u.nickname AS author, u.avatar AS author_avatar
          FROM posts p JOIN users u ON p.user_id = u.id WHERE p.user_id = ?
          ${isAdmin || isSelf ? '' : 'AND p.audit_status = 1'}
          ORDER BY p.created_at DESC LIMIT ?`,
@@ -310,8 +310,8 @@ usersRouter.get('/:id/posts', async (req: AuthRequest, res) => {
       rows = r as any[]
     } catch {
       const [r] = await pool.query(
-        `SELECT p.id, p.title, p.content, p.image_urls, p.created_at, p.view_count, p.like_count,
-         u.nickname AS author FROM posts p JOIN users u ON p.user_id = u.id WHERE p.user_id = ?
+        `SELECT p.id, p.user_id, p.title, p.content, p.category, p.image_urls, p.created_at, p.view_count, p.like_count,
+         p.is_pinned, u.nickname AS author FROM posts p JOIN users u ON p.user_id = u.id WHERE p.user_id = ?
          ${isAdmin || isSelf ? '' : 'AND p.audit_status = 1'}
          ORDER BY p.created_at DESC LIMIT ?`,
         [id, limit]
