@@ -118,18 +118,6 @@ export const RightBar: React.FC = () => {
           ))}
         </div>
       </div>
-
-      {/* Quick Links Module */}
-      <div className="wiselearn-sidebar-module">
-        <div className="wiselearn-sidebar-module-header">
-          <h4 className="wiselearn-sidebar-title-main">{t('rightBar.quickLinks')}</h4>
-        </div>
-        <div className="wiselearn-sidebar-links">
-          <a href="/create" className="wiselearn-sidebar-link">{t('rightBar.createPost')}</a>
-          <a href="/profile" className="wiselearn-sidebar-link">{t('rightBar.myProfile')}</a>
-          <a href="/messages" className="wiselearn-sidebar-link">{t('rightBar.messages')}</a>
-        </div>
-      </div>
     </div>
   )
 }
