@@ -437,13 +437,45 @@ code {
 /* Right sidebar */
 .wiselearn-right-sider {
   overflow: hidden;
-  transition: all 0.3s ease;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   background: transparent !important;
   margin-right: 16px;
 }
 
 .wiselearn-right-sider .ant-layout-sider-children {
-  transition: opacity 0.3s ease;
+  height: 100%;
+}
+
+/* 热点面板：离开首页时淡出并向右滑出 */
+.wiselearn-right-sider-panel {
+  min-height: 100%;
+  transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1), transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: opacity, transform;
+}
+
+.wiselearn-right-sider--open .wiselearn-right-sider-panel {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.wiselearn-right-sider--closed .wiselearn-right-sider-panel {
+  opacity: 0;
+  transform: translateX(28px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wiselearn-right-sider {
+    transition: none !important;
+  }
+
+  .wiselearn-right-sider-panel {
+    transition: none;
+    transform: none !important;
+  }
+
+  .wiselearn-right-sider--closed .wiselearn-right-sider-panel {
+    opacity: 0;
+  }
 }
 
 /* 汉堡按钮：底部导航栏替代了汉堡菜单，始终隐藏 */

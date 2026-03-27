@@ -55,7 +55,11 @@ export const LayoutShell: React.FC = () => {
   else if (location.pathname === '/create') selectedKeys.push('create')
   else if (location.pathname.startsWith('/profile')) selectedKeys.push('profile')
   else if (location.pathname.startsWith('/admin')) selectedKeys.push('admin')
+  else if (location.pathname.startsWith('/users/')) selectedKeys.push('userDetail')
   else selectedKeys.push('home')
+
+  /** 仅首页信息流展示右侧热点；其它路由与「用户详情」等均收起 */
+  const showRightHotBar = location.pathname === '/'
 
   const fetchUnread = () => {
     if (!user) return
@@ -247,14 +251,16 @@ export const LayoutShell: React.FC = () => {
           <Outlet />
         </Content>
 
-        {/* Right sidebar - Only visible on home page */}
+        {/* Right sidebar - Only visible on home feed */}
         <Sider
           width={280}
           collapsedWidth={0}
-          collapsed={!selectedKeys.includes('home')}
-          className="wiselearn-right-sider"
+          collapsed={!showRightHotBar}
+          className={`wiselearn-right-sider${showRightHotBar ? ' wiselearn-right-sider--open' : ' wiselearn-right-sider--closed'}`}
         >
-          <RightBar />
+          <div className="wiselearn-right-sider-panel">
+            <RightBar />
+          </div>
         </Sider>
       </Layout>
 
