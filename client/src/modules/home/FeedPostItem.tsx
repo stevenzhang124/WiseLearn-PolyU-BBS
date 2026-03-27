@@ -1,7 +1,15 @@
-import React from 'react'
-import { LikeOutlined, MessageOutlined, ShareAltOutlined, EyeOutlined } from '@ant-design/icons'
+import React, { useEffect, useState } from 'react'
+import {
+  LikeOutlined,
+  LikeFilled,
+  MessageOutlined,
+  ShareAltOutlined,
+  EyeOutlined
+} from '@ant-design/icons'
+import { Button, Input, Modal, message } from 'antd'
 import { useTranslation } from 'react-i18next'
 import { Avatar } from '../shared/Avatar'
+import { getShareLink, toggleLike } from '../shared/api'
 import './FeedList.css'
 
 export interface FeedPostItemProps {
@@ -18,6 +26,8 @@ export interface FeedPostItemProps {
     created_at: string
     is_pinned?: number
     category: string
+    /** 当前登录用户是否已赞（列表接口返回） */
+    user_liked?: boolean
   }
   onNavigate: (path: string) => void
   /** 资料页等场景：不展示头像与昵称，仅展示时间 */
@@ -56,6 +66,27 @@ export const FeedPostItem: React.FC<FeedPostItemProps> = ({
   headerMode = 'full'
 }) => {
   const { t, i18n } = useTranslation()
+  const [likeCount, setLikeCount] = useState(post.like_count)
+  const [liked, setLiked] = useState(Boolean(post.user_liked))
+  const [likeLoading, setLikeLoading] = useState(false)
+  /** 点赞成功瞬间触发的图标动画 */
+  const [likePop, setLikePop] = useState(false)
+  const likePopTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [shareOpen, setShareOpen] = useState(false)
+  const [shareUrl, setShareUrl] = useState('')
+  const [shareLoading, setShareLoading] = useState(false)
+
+  useEffect(() => {
+    setLikeCount(post.like_count)
+    setLiked(Boolean(post.user_liked))
+  }, [post.id, post.like_count, post.user_liked])
+
+  useEffect(() => {
+    return () => {
+      if (likePopTimerRef.current) clearTimeout(likePopTimerRef.current)
+    }
+  }, [])
+
   const imageUrls = getImageUrls(post)
   const locale = i18n.language === 'en' ? 'en-US' : 'zh-CN'
 
@@ -81,6 +112,66 @@ export const FeedPostItem: React.FC<FeedPostItemProps> = ({
   }
 
   const pinned = Boolean(post.is_pinned)
+
+  const handleLike = async (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (likeLoading) return
+    const wasLiked = liked
+    setLikeLoading(true)
+    try {
+      const res = await toggleLike(post.id)
+      setLiked(res.liked)
+      setLikeCount((c) => (res.liked ? c + 1 : Math.max(0, c - 1)))
+      if (res.liked && !wasLiked) {
+        if (likePopTimerRef.current) clearTimeout(likePopTimerRef.current)
+        setLikePop(false)
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            setLikePop(true)
+            likePopTimerRef.current = setTimeout(() => {
+              setLikePop(false)
+              likePopTimerRef.current = null
+            }, 700)
+          })
+        })
+      }
+    } catch (err) {
+      message.error((err as Error).message)
+    } finally {
+      setLikeLoading(false)
+    }
+  }
+
+  const handleComment = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    onNavigate(`/posts/${post.id}#comments`)
+  }
+
+  const openShare = async (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setShareLoading(true)
+    try {
+      const { link } = await getShareLink(post.id)
+      setShareUrl(link)
+      setShareOpen(true)
+    } catch (err) {
+      message.error((err as Error).message)
+    } finally {
+      setShareLoading(false)
+    }
+  }
+
+  const copyShareLink = async () => {
+    try {
+      await navigator.clipboard.writeText(shareUrl)
+      message.success(t('post.linkCopied'))
+    } catch {
+      message.error(t('post.copyFailed'))
+    }
+  }
 
   return (
     <div className={`wiselearn-feed-item${headerMode === 'timeOnly' ? ' wiselearn-feed-item--profile' : ''}`}>
@@ -153,19 +244,27 @@ export const FeedPostItem: React.FC<FeedPostItemProps> = ({
       <div className="wiselearn-feed-item-actions">
         <button
           type="button"
-          className="wiselearn-feed-item-action"
-          onClick={() => onNavigate(`/posts/${post.id}`)}
+          className={`wiselearn-feed-item-action wiselearn-feed-item-action--like${liked ? ' active' : ''}`}
+          onClick={handleLike}
+          disabled={likeLoading}
         >
-          <LikeOutlined /> {post.like_count}
+          <span
+            className={`wiselearn-feed-item-like-wrap${likePop ? ' wiselearn-feed-item-like-wrap--pop' : ''}`}
+            aria-hidden
+          >
+            {liked ? <LikeFilled className="wiselearn-feed-item-like-icon" /> : <LikeOutlined />}
+          </span>
+          <span className={likePop ? 'wiselearn-feed-item-like-count--pop' : undefined}>{likeCount}</span>
+        </button>
+        <button type="button" className="wiselearn-feed-item-action" onClick={handleComment}>
+          <MessageOutlined /> {t('post.comment')}
         </button>
         <button
           type="button"
           className="wiselearn-feed-item-action"
-          onClick={() => onNavigate(`/posts/${post.id}`)}
+          onClick={openShare}
+          disabled={shareLoading}
         >
-          <MessageOutlined /> {t('post.comment')}
-        </button>
-        <button type="button" className="wiselearn-feed-item-action">
           <ShareAltOutlined /> {t('post.share')}
         </button>
         <span className="wiselearn-feed-item-stat">
@@ -173,6 +272,21 @@ export const FeedPostItem: React.FC<FeedPostItemProps> = ({
         </span>
         <span className="wiselearn-feed-item-tag">{getCategoryLabel(post.category)}</span>
       </div>
+
+      <Modal
+        title={t('post.share')}
+        open={shareOpen}
+        onCancel={() => setShareOpen(false)}
+        footer={null}
+        destroyOnClose
+      >
+        <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+          <Input readOnly value={shareUrl} />
+          <Button type="primary" onClick={() => void copyShareLink()}>
+            {t('post.copyLink')}
+          </Button>
+        </div>
+      </Modal>
     </div>
   )
 }

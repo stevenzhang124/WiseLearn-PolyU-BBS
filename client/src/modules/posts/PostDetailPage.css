@@ -106,6 +106,7 @@
   padding: 24px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
   text-align: left;
+  scroll-margin-top: 88px;
 }
 .wiselearn-detail-comments-title {
   margin: 0 0 16px !important;

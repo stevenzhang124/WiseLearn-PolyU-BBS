@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import DOMPurify from 'dompurify'
 import { Button, Form, Input, Space, Typography, message } from 'antd'
 import { LikeOutlined, ShareAltOutlined, MessageOutlined, EditOutlined } from '@ant-design/icons'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
   deleteComment,
@@ -64,6 +64,7 @@ export const PostDetailPage: React.FC = () => {
   const [replyContent, setReplyContent] = useState('')
   const { user } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
   const [form] = Form.useForm()
 
   const loadDetail = async () => {
@@ -82,6 +83,18 @@ export const PostDetailPage: React.FC = () => {
   useEffect(() => {
     void loadDetail()
   }, [postId])
+
+  useEffect(() => {
+    if (location.hash !== '#comments') return
+    if (loading || !detail) return
+    const timer = window.setTimeout(() => {
+      document.getElementById('wiselearn-post-comments')?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      })
+    }, 120)
+    return () => clearTimeout(timer)
+  }, [location.hash, loading, detail])
 
   const handleComment = async (values: { content: string }) => {
     if (!postId) return
@@ -261,7 +274,7 @@ export const PostDetailPage: React.FC = () => {
         </article>
       )}
 
-      <section className="wiselearn-detail-comments">
+      <section id="wiselearn-post-comments" className="wiselearn-detail-comments">
         <Typography.Title level={5} className="wiselearn-detail-comments-title">
           {t('post.comments')} {comments.length > 0 && `(${comments.length})`}
         </Typography.Title>

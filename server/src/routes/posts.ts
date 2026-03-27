@@ -92,6 +92,7 @@ postRouter.get('/', async (req: AuthRequest, res) => {
     }
     const whereSql = conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''
 
+    const uid = req.user!.id
     const [listRows] = await pool.query(
       `
       SELECT
@@ -106,19 +107,21 @@ postRouter.get('/', async (req: AuthRequest, res) => {
         p.view_count,
         p.like_count,
         u.nickname AS author,
-        u.avatar AS author_avatar
+        u.avatar AS author_avatar,
+        EXISTS(SELECT 1 FROM likes lk WHERE lk.post_id = p.id AND lk.user_id = ?) AS user_liked
       FROM posts p
       JOIN users u ON p.user_id = u.id
       ${whereSql}
       ORDER BY ${orderBy}
       LIMIT ? OFFSET ?
     `,
-      [...listParams, pageSize, offset]
+      [uid, ...listParams, pageSize, offset]
     )
     const listBaseUrl = process.env.API_BASE_URL || 'http://localhost:4000'
     const list = (listRows as any[]).map((p) => ({
       ...p,
-      author_avatar: p.author_avatar ? `${listBaseUrl}${p.author_avatar}` : null
+      author_avatar: p.author_avatar ? `${listBaseUrl}${p.author_avatar}` : null,
+      user_liked: Boolean(p.user_liked)
     }))
 
     const countConditions: string[] = []

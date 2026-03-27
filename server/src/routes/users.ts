@@ -297,31 +297,36 @@ usersRouter.get('/:id/posts', async (req: AuthRequest, res) => {
   const isSelf = req.user?.id === id
 
   try {
+    const viewerId = req.user!.id
     let rows: any[]
     try {
       const [r] = await pool.query(
         `SELECT p.id, p.user_id, p.title, p.content, p.category, p.image_urls, p.created_at, p.view_count, p.like_count,
-         p.is_pinned, u.nickname AS author, u.avatar AS author_avatar
+         p.is_pinned, u.nickname AS author, u.avatar AS author_avatar,
+         EXISTS(SELECT 1 FROM likes lk WHERE lk.post_id = p.id AND lk.user_id = ?) AS user_liked
          FROM posts p JOIN users u ON p.user_id = u.id WHERE p.user_id = ?
          ${isAdmin || isSelf ? '' : 'AND p.audit_status = 1'}
          ORDER BY p.created_at DESC LIMIT ?`,
-        isAdmin || isSelf ? [id, limit] : [id, limit]
+        [viewerId, id, limit]
       )
       rows = r as any[]
     } catch {
       const [r] = await pool.query(
         `SELECT p.id, p.user_id, p.title, p.content, p.category, p.image_urls, p.created_at, p.view_count, p.like_count,
-         p.is_pinned, u.nickname AS author FROM posts p JOIN users u ON p.user_id = u.id WHERE p.user_id = ?
+         p.is_pinned, u.nickname AS author,
+         EXISTS(SELECT 1 FROM likes lk WHERE lk.post_id = p.id AND lk.user_id = ?) AS user_liked
+         FROM posts p JOIN users u ON p.user_id = u.id WHERE p.user_id = ?
          ${isAdmin || isSelf ? '' : 'AND p.audit_status = 1'}
          ORDER BY p.created_at DESC LIMIT ?`,
-        [id, limit]
+        [viewerId, id, limit]
       )
       rows = (r as any[]).map((p) => ({ ...p, author_avatar: null }))
     }
     const listBaseUrl = baseUrl()
     const list = rows.map((p) => ({
       ...p,
-      author_avatar: p.author_avatar ? `${listBaseUrl}${p.author_avatar}` : null
+      author_avatar: p.author_avatar ? `${listBaseUrl}${p.author_avatar}` : null,
+      user_liked: Boolean(p.user_liked)
     }))
     res.json({ list })
   } catch (err) {
