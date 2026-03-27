@@ -251,14 +251,12 @@ export const LayoutShell: React.FC = () => {
         {/* Right sidebar - Only visible on home page */}
         <Sider
           width={300}
+          collapsedWidth={0}
+          collapsed={!selectedKeys.includes('home')}
           className="wiselearn-right-sider"
           style={{
             background: '#f7f7f8',
-            borderLeft: '1px solid #f0f0f0',
-            opacity: selectedKeys.includes('home') ? 1 : 0,
-            transform: selectedKeys.includes('home') ? 'translateX(0)' : 'translateX(20px)',
-            transition: 'opacity 0.3s ease, transform 0.3s ease',
-            pointerEvents: selectedKeys.includes('home') ? 'auto' : 'none'
+            borderLeft: '1px solid #f0f0f0'
           }}
         >
           <RightBar />

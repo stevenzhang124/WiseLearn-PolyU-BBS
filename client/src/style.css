@@ -432,6 +432,11 @@ code {
 /* Right sidebar */
 .wiselearn-right-sider {
   overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.wiselearn-right-sider .ant-layout-sider-children {
+  transition: opacity 0.3s ease;
 }
 
 /* 汉堡按钮：底部导航栏替代了汉堡菜单，始终隐藏 */
