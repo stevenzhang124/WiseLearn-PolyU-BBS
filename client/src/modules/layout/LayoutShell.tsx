@@ -119,11 +119,11 @@ export const LayoutShell: React.FC = () => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          paddingInline: 16,
+          padding: '16px 32px',
           background: '#fff',
           borderBottom: '1px solid #f0f0f0',
-          height: 56,
-          lineHeight: '56px'
+          height: 72,
+          lineHeight: '40px'
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -249,7 +249,7 @@ export const LayoutShell: React.FC = () => {
 
         {/* Right sidebar - Only visible on home page */}
         <Sider
-          width={300}
+          width={280}
           collapsedWidth={0}
           collapsed={!selectedKeys.includes('home')}
           className="wiselearn-right-sider"

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Typography, message } from 'antd'
+import { message } from 'antd'
 import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { fetchPosts } from '../shared/api'
@@ -79,12 +79,6 @@ export const HomePage: React.FC = () => {
 
   return (
     <div className="wiselearn-feed">
-      <div className="wiselearn-feed-header">
-        <Typography.Title level={4} style={{ margin: 0 }}>
-          {t('home.discover')}
-        </Typography.Title>
-      </div>
-
       {/* Category tabs - Campus Living, Class Q&A, etc. */}
       <FeedTabs
         activeCategory={category}
