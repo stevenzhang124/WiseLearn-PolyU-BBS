@@ -130,3 +130,17 @@ export async function ensureUsersUiLangColumn(): Promise<void> {
   }
 }
 
+/**
+ * 通知「已读」游标表：未执行过 migrations/add-user-notification-read.sql 时由启动自动补齐。
+ */
+export async function ensureUserNotificationReadTable(): Promise<void> {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS user_notification_read (
+      user_id INT NOT NULL,
+      notification_type VARCHAR(20) NOT NULL,
+      last_read_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (user_id, notification_type),
+      FOREIGN KEY (user_id) REFERENCES users(id)
+    )
+  `)
+}

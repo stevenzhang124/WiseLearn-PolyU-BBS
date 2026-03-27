@@ -3,7 +3,13 @@ import cors from 'cors'
 import path from 'path'
 import { json, urlencoded } from 'express'
 import { config } from './config'
-import { ensurePostsAuditColumns, ensurePostsPublishedAtColumn, ensureUsersUiLangColumn, testConnection } from './db'
+import {
+  ensurePostsAuditColumns,
+  ensurePostsPublishedAtColumn,
+  ensureUserNotificationReadTable,
+  ensureUsersUiLangColumn,
+  testConnection
+} from './db'
 import { authRouter } from './routes/auth'
 import { postRouter } from './routes/posts'
 import { messageRouter } from './routes/messages'
@@ -57,6 +63,7 @@ async function bootstrap(): Promise<void> {
     await ensurePostsAuditColumns()
     await ensurePostsPublishedAtColumn()
     await ensureUsersUiLangColumn()
+    await ensureUserNotificationReadTable()
     app.listen(config.port, () => {
       // eslint-disable-next-line no-console
       console.log(`RedBrick API listening on port ${config.port}`)
