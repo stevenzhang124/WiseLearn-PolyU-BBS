@@ -5,14 +5,9 @@ import { BlockNoteEditor } from '@blocknote/core'
 import { uploadImageApi } from '../shared/api'
 import { MAX_IMAGE_UPLOAD_BYTES } from '../shared/imageUploadLimits'
 import { useTranslation } from 'react-i18next'
+import { EmojiMartInlinePicker } from './EmojiMartInlinePicker'
 
 import './EditorToolbar.css'
-
-// Common emojis for quick access
-const COMMON_EMOJIS = [
-  '😀', '😂', '🥰', '😎', '🤔', '👍', '👏', '🎉',
-  '❤️', '🔥', '✨', '🌟', '💯', '🙏', '💪', '😊'
-]
 
 // Common hashtags for quick access
 const COMMON_HASHTAGS = [
@@ -29,7 +24,7 @@ interface EditorToolbarProps {
  * Rendered inside the editor footer bar
  */
 export const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const [showHashtagPicker, setShowHashtagPicker] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -144,17 +139,11 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
             <span>{t('post.emoji')}</span>
           </button>
           {showEmojiPicker && (
-            <div className="wiselearn-emoji-picker">
-              {COMMON_EMOJIS.map((emoji) => (
-                <button
-                  key={emoji}
-                  type="button"
-                  className="wiselearn-emoji-item"
-                  onClick={() => handleEmojiInsert(emoji)}
-                >
-                  {emoji}
-                </button>
-              ))}
+            <div className="wiselearn-emoji-mart-popover">
+              <EmojiMartInlinePicker
+                locale={i18n.language}
+                onEmojiSelect={(native) => handleEmojiInsert(native)}
+              />
             </div>
           )}
         </div>

@@ -54,40 +54,31 @@
   position: relative;
 }
 
-/* Emoji picker popup */
-.wiselearn-emoji-picker {
+/* emoji-mart（与 BlockNote 同款数据/组件库） */
+.wiselearn-emoji-mart-popover {
   position: absolute;
   bottom: 100%;
   left: 0;
   margin-bottom: 8px;
-  background: #fff;
+  z-index: 1000;
+  width: min(100vw - 32px, 352px);
+  max-height: min(70vh, 420px);
+  overflow: hidden;
   border: 1px solid #e8e8e8;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  padding: 8px;
-  display: grid;
-  grid-template-columns: repeat(8, 1fr);
-  gap: 4px;
-  z-index: 1000;
-  min-width: 280px;
+  background: #fff;
 }
 
-.wiselearn-emoji-item {
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
-  background: transparent;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background 0.2s;
+.wiselearn-emoji-mart-root {
+  width: 100%;
+  max-height: min(70vh, 420px);
 }
 
-.wiselearn-emoji-item:hover {
-  background: #f5f5f5;
+.wiselearn-emoji-mart-root em-emoji-picker {
+  width: 100%;
+  height: min(70vh, 420px);
+  --rgb-background: 255, 255, 255;
 }
 
 /* Hashtag picker popup */

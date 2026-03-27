@@ -10,12 +10,6 @@ import { useTranslation } from 'react-i18next'
 import '@blocknote/mantine/style.css'
 import './RichTextEditor.css'
 
-// Common emojis for quick access
-export const COMMON_EMOJIS = [
-  '😀', '😂', '🥰', '😎', '🤔', '👍', '👏', '🎉',
-  '❤️', '🔥', '✨', '🌟', '💯', '🙏', '💪', '😊'
-]
-
 // Common hashtags for quick access
 export const COMMON_HASHTAGS = [
   '#校园生活', '#求职分享', '#课程问答', '#学习经验',
