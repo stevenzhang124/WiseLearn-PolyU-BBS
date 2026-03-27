@@ -7,7 +7,7 @@
 .wiselearn-user-profile-empty {
   text-align: center;
   padding: 24px 16px 48px;
-  color: #999;
+  color: #666;
   font-size: 14px;
 }
 
@@ -15,10 +15,7 @@
   display: flex;
   gap: 24px;
   padding: 24px;
-  background: #fff;
-  border-radius: 16px;
-  margin-bottom: 24px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  margin-bottom: 12px;
 }
 .wiselearn-user-profile-avatar {
   flex-shrink: 0;
@@ -68,8 +65,7 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
-    padding: 16px;
-    border-radius: 10px;
+    padding: 12px;
     margin-bottom: 12px;
   }
   .wiselearn-user-profile-stats {

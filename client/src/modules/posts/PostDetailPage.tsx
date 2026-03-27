@@ -186,7 +186,7 @@ export const PostDetailPage: React.FC = () => {
   if (loading && !detail) {
     return (
       <div className="wiselearn-detail">
-        <div className="wiselearn-detail-loading">{t('common.loading')}</div>
+        <div className="wiselearn-detail-loading wiselearn-feed-card-frame">{t('common.loading')}</div>
       </div>
     )
   }
@@ -194,7 +194,7 @@ export const PostDetailPage: React.FC = () => {
   return (
     <div className="wiselearn-detail">
       {post && (
-        <article className="wiselearn-detail-article">
+        <article className="wiselearn-detail-article wiselearn-feed-card-frame wiselearn-feed-card-frame--interactive">
           <h1 className="wiselearn-detail-title">{post.title}</h1>
           <div className="wiselearn-detail-author-row">
             <span
@@ -274,7 +274,10 @@ export const PostDetailPage: React.FC = () => {
         </article>
       )}
 
-      <section id="wiselearn-post-comments" className="wiselearn-detail-comments">
+      <section
+        id="wiselearn-post-comments"
+        className="wiselearn-detail-comments wiselearn-feed-card-frame wiselearn-feed-card-frame--interactive"
+      >
         <Typography.Title level={5} className="wiselearn-detail-comments-title">
           {t('post.comments')} {comments.length > 0 && `(${comments.length})`}
         </Typography.Title>

@@ -7,16 +7,14 @@
 }
 .wiselearn-detail-loading {
   text-align: center;
-  padding: 48px;
-  color: #999;
+  padding: 40px 20px;
+  color: #666;
+  font-size: 14px;
 }
 
 .wiselearn-detail-article {
-  background: #fff;
-  border-radius: 16px;
-  padding: 24px;
-  margin-bottom: 24px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  padding: 20px;
+  margin-bottom: 12px;
 }
 .wiselearn-detail-title {
   font-size: 22px;
@@ -73,7 +71,7 @@
   height: auto;
   max-height: 360px;
   object-fit: cover;
-  border-radius: 16px;
+  border-radius: 8px;
   margin: 0 0 16px;
   display: block;
 }
@@ -101,10 +99,7 @@
 
 /* 评论区 */
 .wiselearn-detail-comments {
-  background: #fff;
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  padding: 20px;
   text-align: left;
   scroll-margin-top: 88px;
 }
@@ -247,15 +242,13 @@
     padding: 0 4px 16px;
   }
   .wiselearn-detail-article {
-    padding: 14px 12px;
-    border-radius: 10px;
+    padding: 12px;
   }
   .wiselearn-detail-title {
     font-size: 18px;
   }
   .wiselearn-detail-comments {
-    padding: 14px 12px;
-    border-radius: 10px;
+    padding: 12px;
   }
   .wiselearn-comment-children {
     margin-left: 24px;
@@ -263,6 +256,5 @@
   }
   .wiselearn-detail-cover {
     max-height: 260px;
-    border-radius: 10px;
   }
 }

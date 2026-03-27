@@ -419,6 +419,19 @@ code {
   box-sizing: border-box;
 }
 
+/* 与首页 .wiselearn-feed-item 外框一致（帖子详情、用户资料等白卡片复用） */
+.wiselearn-feed-card-frame {
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #e8e8e8;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.2s;
+}
+
+.wiselearn-feed-card-frame--interactive:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
 /* Main layout with 3 columns */
 .wiselearn-main-layout {
   flex: 1;

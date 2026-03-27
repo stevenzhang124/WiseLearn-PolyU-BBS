@@ -79,7 +79,7 @@ export const UserProfilePage: React.FC = () => {
   if (loading && !profile) {
     return (
       <div className="wiselearn-user-profile">
-        <div className="wiselearn-user-profile-loading">{t('common.loading')}</div>
+        <div className="wiselearn-user-profile-loading wiselearn-feed-card-frame">{t('common.loading')}</div>
       </div>
     )
   }
@@ -90,7 +90,7 @@ export const UserProfilePage: React.FC = () => {
 
   return (
     <div className="wiselearn-user-profile">
-      <div className="wiselearn-user-profile-header">
+      <div className="wiselearn-user-profile-header wiselearn-feed-card-frame wiselearn-feed-card-frame--interactive">
         <Avatar
           src={profile.avatar}
           name={profile.nickname}
@@ -135,7 +135,7 @@ export const UserProfilePage: React.FC = () => {
       </div>
 
       {posts.length === 0 ? (
-        <div className="wiselearn-user-profile-empty">{t('user.noPosts')}</div>
+        <div className="wiselearn-user-profile-empty wiselearn-feed-card-frame">{t('user.noPosts')}</div>
       ) : (
         <div className="wiselearn-user-profile-feed wiselearn-feed-list">
           {posts.map((item) => (
