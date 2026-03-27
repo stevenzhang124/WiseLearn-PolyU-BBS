@@ -1,10 +1,13 @@
-import React, { useState } from 'react'
-import { Button, Form, Input, Select, Card, Typography, message } from 'antd'
+import React, { useState, useRef, useCallback } from 'react'
+import { Button, Form, Input, Select, message } from 'antd'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { createPost, uploadImageApi } from '../shared/api'
 import { RichTextEditor } from './RichTextEditor'
+import type { RichTextEditorRef } from './RichTextEditor'
+import { EditorToolbar } from './EditorToolbar'
 import { generateTitleCoverFile } from './generateTitleCover'
+import './CreatePostPage.css'
 
 /**
  * 发帖页：富文本编辑 + 图片上传
@@ -22,12 +25,20 @@ export const CreatePostPage: React.FC = () => {
   const [form] = Form.useForm()
   const [creating, setCreating] = useState(false)
   const [contentHtml, setContentHtml] = useState('')
+  const [titleValue, setTitleValue] = useState('')
+  const [editorReady, setEditorReady] = useState(false)
   const navigate = useNavigate()
+  const editorRef = useRef<RichTextEditorRef>(null)
 
   const categories = categoryValues.map((c) => ({
     label: t(`home.category.${c.value}` as const),
     value: c.value
   }))
+
+  // Callback when editor is ready - triggers re-render so toolbar gets the editor
+  const handleEditorReady = useCallback(() => {
+    setEditorReady(true)
+  }, [])
 
   const onCreatePost = async (values: {
     title: string
@@ -60,6 +71,7 @@ export const CreatePostPage: React.FC = () => {
       message.success(t('post.createSuccess'))
       form.resetFields()
       setContentHtml('')
+      setTitleValue('')
       navigate('/')
     } catch (err) {
       message.error((err as Error).message)
@@ -69,10 +81,11 @@ export const CreatePostPage: React.FC = () => {
   }
 
   return (
-    <div>
-      <Typography.Title level={3}>{t('post.create')}</Typography.Title>
-      <Card className="wiselearn-card">
+    <div className="wiselearn-create-post">
+      {/* Form section */}
+      <div className="wiselearn-create-post-body">
         <Form form={form} layout="vertical" onFinish={onCreatePost}>
+          {/* Title input */}
           <Form.Item
             label={t('post.title')}
             name="title"
@@ -81,37 +94,70 @@ export const CreatePostPage: React.FC = () => {
               { max: 20, message: t('auth.titleTooLong') }
             ]}
           >
-            <Input maxLength={20} showCount placeholder={t('post.titlePlaceholder')} />
+            <div className="wiselearn-input-wrapper">
+              <Input
+                maxLength={20}
+                placeholder={t('post.titlePlaceholder')}
+                className="wiselearn-input"
+                onChange={(e) => setTitleValue(e.target.value)}
+              />
+              <span className="wiselearn-char-count">
+                {titleValue.length} / 20
+              </span>
+            </div>
           </Form.Item>
+
+          {/* Category select */}
           <Form.Item
             label={t('post.category')}
             name="category"
             rules={[{ required: true, message: t('post.categoryRequired') }]}
           >
-            <Select options={categories} placeholder={t('post.categoryPlaceholder')} />
+            <Select
+              options={categories}
+              placeholder={t('post.categoryPlaceholder')}
+              className="wiselearn-select"
+            />
           </Form.Item>
+
+          {/* Content editor - using Form.Item for consistent label styling */}
           <Form.Item
             label={t('post.content')}
             required
-            help={t('post.contentHelp')}
+            className="wiselearn-content-form-item"
           >
-            <RichTextEditor
-              value={contentHtml}
-              onChange={setContentHtml}
-              placeholder={t('post.contentPlaceholder')}
-              minHeight={260}
-            />
-          </Form.Item>
-          <Form.Item>
-            <Button type="primary" htmlType="submit" loading={creating}>
-              {t('post.publish')}
-            </Button>
-            <Button style={{ marginLeft: 8 }} onClick={() => navigate('/')}>
-              {t('post.cancel')}
-            </Button>
+            <div className="wiselearn-editor-wrapper">
+              <RichTextEditor
+                ref={editorRef}
+                value={contentHtml}
+                onChange={setContentHtml}
+                placeholder={t('post.contentPlaceholder')}
+                minHeight={280}
+                onReady={handleEditorReady}
+              />
+              <EditorToolbar editor={editorReady ? editorRef.current?.editor ?? null : null} />
+            </div>
           </Form.Item>
         </Form>
-      </Card>
+      </div>
+
+      {/* Footer with action buttons */}
+      <div className="wiselearn-create-post-footer">
+        <Button
+          className="wiselearn-btn-cancel"
+          onClick={() => navigate('/')}
+        >
+          {t('post.cancel')}
+        </Button>
+        <Button
+          type="primary"
+          className="wiselearn-btn-publish"
+          loading={creating}
+          onClick={() => form.submit()}
+        >
+          {t('post.publish')}
+        </Button>
+      </div>
     </div>
   )
 }

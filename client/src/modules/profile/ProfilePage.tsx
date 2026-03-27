@@ -117,7 +117,7 @@ export const ProfilePage: React.FC = () => {
   const locale = i18n.language === 'en' ? 'en-US' : 'zh-CN'
   return (
     <div>
-      <Card title={t('profile.basicInfo')} style={{ marginBottom: 24 }}>
+      <Card title={t('profile.basicInfo')} className="wiselearn-profile-card" style={{ marginBottom: 24 }}>
         <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 16 }}>
           <input
             ref={fileInputRef}

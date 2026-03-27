@@ -120,7 +120,11 @@
     "saveUpdate": "Save",
     "updateSuccess": "Update saved, waiting for admin review again",
     "editNotAuthor": "You can only edit your own post",
-    "authorLabel": "Author"
+    "authorLabel": "Author",
+    "picture": "Picture",
+    "emoji": "Emoji",
+    "hashtag": "Hashtag",
+    "toolbarHelp": "Supports Ctrl+B for bold, lists, images (paste or drag to upload)"
   },
   "notifications": {
     "title": "Messages",

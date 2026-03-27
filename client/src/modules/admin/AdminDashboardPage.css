@@ -1,0 +1,7 @@
+/* AdminDashboardPage Styles */
+
+.wiselearn-admin-card {
+  border-radius: 8px !important;
+  border: 1px solid #e8e8e8 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+}
