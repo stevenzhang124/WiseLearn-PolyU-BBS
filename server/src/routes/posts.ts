@@ -74,9 +74,14 @@ postRouter.get('/', async (req: AuthRequest, res) => {
   const offset = (page - 1) * pageSize
 
   // 置顶帖子始终排在最前；"最新"按审核通过时间倒序（回退到创建时间）；"热门"按热度倒序
+  // views / recent：侧栏「热门帖子」「最新帖子」专用，不按置顶插行，纯浏览量或纯时间
   let orderBy = 'p.is_pinned DESC, COALESCE(p.published_at, p.created_at) DESC'
   if (sort === 'hot') {
     orderBy = 'p.is_pinned DESC, (p.view_count + p.like_count * 2) DESC, COALESCE(p.published_at, p.created_at) DESC'
+  } else if (sort === 'views') {
+    orderBy = 'p.view_count DESC, COALESCE(p.published_at, p.created_at) DESC'
+  } else if (sort === 'recent') {
+    orderBy = 'COALESCE(p.published_at, p.created_at) DESC'
   }
 
   try {
@@ -104,6 +109,7 @@ postRouter.get('/', async (req: AuthRequest, res) => {
         p.image_urls,
         p.is_pinned,
         p.created_at,
+        p.published_at,
         p.view_count,
         p.like_count,
         u.nickname AS author,

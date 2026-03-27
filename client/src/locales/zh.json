@@ -246,10 +246,11 @@
     "loading": "加载中..."
   },
   "rightBar": {
-    "trending": "热门话题",
-    "latest": "最新话题",
-    "activePosters": "活跃发帖",
-    "activeLikers": "活跃点赞",
+    "trending": "热门帖子",
+    "latest": "最新帖子",
+    "viewCount": "{{count}} 浏览",
+    "empty": "暂无帖子",
+    "loadFailed": "加载失败",
     "quickLinks": "快捷链接",
     "createPost": "发布帖子",
     "myProfile": "个人中心",

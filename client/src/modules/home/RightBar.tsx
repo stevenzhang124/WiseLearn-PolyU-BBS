@@ -1,121 +1,147 @@
-import React, { useState } from 'react'
-import { FireOutlined, ClockCircleOutlined, TrophyOutlined } from '@ant-design/icons'
+import React, { useCallback, useEffect, useState } from 'react'
+import { FireOutlined, ClockCircleOutlined } from '@ant-design/icons'
+import { Typography } from 'antd'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
+import { fetchPosts } from '../shared/api'
 import './RightBar.css'
 
-interface TrendingItem {
-  rank: number
+interface SidebarPost {
+  id: number
   title: string
-  count: number
+  view_count: number
+  created_at: string
+  published_at: string | null
 }
 
-interface ActiveUser {
-  id: number
-  name: string
-  avatar: string | null
-  posts: number
-}
+const TOP = 10
 
 /**
- * RightBar - Right sidebar with tabbed lists
- * Contains trending topics, active users, etc.
- * Only visible on home page
+ * RightBar - 热门帖子（按浏览量）/ 最新帖子（按时间），各取前 10
  */
 export const RightBar: React.FC = () => {
-  const { t } = useTranslation()
-  const [trendingTab, setTrendingTab] = useState<'hot' | 'new'>('hot')
-  const [activeTab, setActiveTab] = useState<'posts' | 'likes'>('posts')
+  const { t, i18n } = useTranslation()
+  const navigate = useNavigate()
+  const [tab, setTab] = useState<'views' | 'recent'>('views')
+  const [byViews, setByViews] = useState<SidebarPost[]>([])
+  const [byRecent, setByRecent] = useState<SidebarPost[]>([])
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
 
-  // Mock data for trending topics
-  const trendingTopics: TrendingItem[] = [
-    { rank: 1, title: '期末考试经验分享', count: 128 },
-    { rank: 2, title: '宿舍生活分享', count: 89 },
-    { rank: 3, title: '求职经验交流', count: 67 },
-    { rank: 4, title: '校园美食推荐', count: 54 },
-    { rank: 5, title: '社团活动分享', count: 45 }
-  ]
+  const locale = i18n.language === 'en' ? 'en-US' : 'zh-CN'
 
-  // Mock data for active users
-  const activeUsers: ActiveUser[] = [
-    { id: 1, name: '张三', avatar: null, posts: 42 },
-    { id: 2, name: '李四', avatar: null, posts: 38 },
-    { id: 3, name: '王五', avatar: null, posts: 35 },
-    { id: 4, name: '赵六', avatar: null, posts: 28 },
-    { id: 5, name: '钱七', avatar: null, posts: 22 }
-  ]
+  const load = useCallback(async () => {
+    setLoading(true)
+    setLoadError(false)
+    try {
+      const [viewsRes, recentRes] = await Promise.all([
+        fetchPosts({ page: 1, pageSize: TOP, sort: 'views' }),
+        fetchPosts({ page: 1, pageSize: TOP, sort: 'recent' })
+      ])
+      const mapRow = (p: {
+        id: number
+        title: string
+        view_count: number
+        created_at: string
+        published_at?: string | null
+      }): SidebarPost => ({
+        id: p.id,
+        title: p.title,
+        view_count: Number(p.view_count) || 0,
+        created_at: p.created_at,
+        published_at: p.published_at ?? null
+      })
+      setByViews((viewsRes.list ?? []).map(mapRow))
+      setByRecent((recentRes.list ?? []).map(mapRow))
+    } catch {
+      setLoadError(true)
+      setByViews([])
+      setByRecent([])
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    void load()
+  }, [load])
+
+  const list = tab === 'views' ? byViews : byRecent
+
+  const trailing = (post: SidebarPost) => {
+    if (tab === 'views') {
+      return t('rightBar.viewCount', { count: post.view_count })
+    }
+    const at = post.published_at || post.created_at
+    return new Date(at).toLocaleString(locale, {
+      month: 'numeric',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  }
+
+  const goPost = (id: number) => {
+    navigate(`/posts/${id}`)
+  }
 
   return (
     <div className="wiselearn-right-bar">
-      {/* Trending Topics Module */}
       <div className="wiselearn-sidebar-module">
         <div className="wiselearn-sidebar-module-header">
           <div className="wiselearn-sidebar-tabs">
             <button
               type="button"
-              className={`wiselearn-sidebar-tab ${trendingTab === 'hot' ? 'active' : ''}`}
-              onClick={() => setTrendingTab('hot')}
+              className={`wiselearn-sidebar-tab ${tab === 'views' ? 'active' : ''}`}
+              onClick={() => setTab('views')}
             >
               <FireOutlined /> {t('rightBar.trending')}
             </button>
             <button
               type="button"
-              className={`wiselearn-sidebar-tab ${trendingTab === 'new' ? 'active' : ''}`}
-              onClick={() => setTrendingTab('new')}
+              className={`wiselearn-sidebar-tab ${tab === 'recent' ? 'active' : ''}`}
+              onClick={() => setTab('recent')}
             >
               <ClockCircleOutlined /> {t('rightBar.latest')}
             </button>
           </div>
         </div>
         <div className="wiselearn-sidebar-list">
-          {trendingTopics.map((item) => (
-            <div key={item.rank} className="wiselearn-sidebar-item">
-              <span className={`wiselearn-sidebar-rank ${item.rank <= 3 ? 'top' : ''}`}>
-                {item.rank}
-              </span>
-              <span className="wiselearn-sidebar-title">{item.title}</span>
-              <span className="wiselearn-sidebar-count">{item.count}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Active Users Module */}
-      <div className="wiselearn-sidebar-module">
-        <div className="wiselearn-sidebar-module-header">
-          <div className="wiselearn-sidebar-tabs">
-            <button
-              type="button"
-              className={`wiselearn-sidebar-tab ${activeTab === 'posts' ? 'active' : ''}`}
-              onClick={() => setActiveTab('posts')}
-            >
-              <TrophyOutlined /> {t('rightBar.activePosters')}
-            </button>
-            <button
-              type="button"
-              className={`wiselearn-sidebar-tab ${activeTab === 'likes' ? 'active' : ''}`}
-              onClick={() => setActiveTab('likes')}
-            >
-              <TrophyOutlined /> {t('rightBar.activeLikers')}
-            </button>
-          </div>
-        </div>
-        <div className="wiselearn-sidebar-list">
-          {activeUsers.map((user, index) => (
-            <div key={user.id} className="wiselearn-sidebar-item wiselearn-sidebar-user-item">
-              <span className={`wiselearn-sidebar-rank ${index < 3 ? 'top' : ''}`}>
-                {index + 1}
-              </span>
-              <div className="wiselearn-sidebar-user-avatar">
-                {user.avatar ? (
-                  <img src={user.avatar} alt={user.name} />
-                ) : (
-                  <span>{user.name[0]}</span>
-                )}
+          {loading ? (
+            <Typography.Text type="secondary" className="wiselearn-sidebar-status">
+              {t('common.loading')}
+            </Typography.Text>
+          ) : loadError ? (
+            <Typography.Text type="danger" className="wiselearn-sidebar-status">
+              {t('rightBar.loadFailed')}
+            </Typography.Text>
+          ) : list.length === 0 ? (
+            <Typography.Text type="secondary" className="wiselearn-sidebar-status">
+              {t('rightBar.empty')}
+            </Typography.Text>
+          ) : (
+            list.map((post, index) => (
+              <div
+                key={post.id}
+                className="wiselearn-sidebar-item wiselearn-sidebar-post-item"
+                role="button"
+                tabIndex={0}
+                onClick={() => goPost(post.id)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    goPost(post.id)
+                  }
+                }}
+              >
+                <span className={`wiselearn-sidebar-rank ${index < 3 ? 'top' : ''}`}>{index + 1}</span>
+                <span className="wiselearn-sidebar-title" title={post.title}>
+                  {post.title}
+                </span>
+                <span className="wiselearn-sidebar-count wiselearn-sidebar-count--muted">{trailing(post)}</span>
               </div>
-              <span className="wiselearn-sidebar-username">{user.name}</span>
-              <span className="wiselearn-sidebar-count">{user.posts}</span>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
     </div>

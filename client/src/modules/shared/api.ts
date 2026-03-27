@@ -100,7 +100,7 @@ export async function updateNicknameApi(nickname: string): Promise<void> {
 export async function fetchPosts(params: {
   page: number
   pageSize: number
-  sort: 'time' | 'hot'
+  sort: 'time' | 'hot' | 'views' | 'recent'
   /** 不传或 all 表示全部分类 */
   category?: string
 }): Promise<any> {

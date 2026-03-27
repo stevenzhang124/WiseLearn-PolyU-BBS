@@ -246,10 +246,11 @@
     "loading": "Loading..."
   },
   "rightBar": {
-    "trending": "Trending",
-    "latest": "Latest",
-    "activePosters": "Active Posters",
-    "activeLikers": "Active Likers",
+    "trending": "Hot posts",
+    "latest": "Latest posts",
+    "viewCount": "{{count}} views",
+    "empty": "No posts yet",
+    "loadFailed": "Failed to load",
     "quickLinks": "Quick Links",
     "createPost": "Create Post",
     "myProfile": "My Profile",
