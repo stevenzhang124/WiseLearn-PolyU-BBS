@@ -14,10 +14,11 @@ import './CreatePostPage.css'
  * 发帖页：富文本编辑 + 图片上传
  */
 const categoryValues = [
-  { value: 'teaching' },
   { value: 'campus' },
-  { value: 'career' },
+  { value: 'teaching' },
   { value: 'news' },
+  { value: 'trading' },
+  { value: 'career' },
   { value: 'mutual' }
 ]
 

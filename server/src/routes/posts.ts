@@ -4,6 +4,16 @@ import { AuthRequest, authMiddleware } from '../middleware/auth'
 
 export const postRouter = Router()
 
+/** 与前端 FeedTabs / 发帖分类一致 */
+const FEED_CATEGORIES = [
+  'campus',
+  'teaching',
+  'news',
+  'trading',
+  'career',
+  'mutual'
+] as const
+
 // 所有帖子接口均需要登录
 postRouter.use(authMiddleware)
 
@@ -53,6 +63,13 @@ postRouter.get('/', async (req: AuthRequest, res) => {
   const page = Number(req.query.page) || 1
   const pageSize = Math.min(Number(req.query.pageSize) || 20, 50)
   const sort = (req.query.sort as string) || 'time'
+  const rawCategory = typeof req.query.category === 'string' ? req.query.category : undefined
+  const categoryFilter =
+    rawCategory &&
+    rawCategory !== 'all' &&
+    (FEED_CATEGORIES as readonly string[]).includes(rawCategory)
+      ? rawCategory
+      : undefined
 
   const offset = (page - 1) * pageSize
 
@@ -64,7 +81,17 @@ postRouter.get('/', async (req: AuthRequest, res) => {
 
   try {
     const isAdmin = Boolean(req.user?.isAdmin)
-    const whereSql = isAdmin ? '' : 'WHERE p.audit_status = 1'
+    const conditions: string[] = []
+    const listParams: (number | string)[] = []
+    if (!isAdmin) {
+      conditions.push('p.audit_status = 1')
+    }
+    if (categoryFilter) {
+      conditions.push('p.category = ?')
+      listParams.push(categoryFilter)
+    }
+    const whereSql = conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''
+
     const [listRows] = await pool.query(
       `
       SELECT
@@ -86,7 +113,7 @@ postRouter.get('/', async (req: AuthRequest, res) => {
       ORDER BY ${orderBy}
       LIMIT ? OFFSET ?
     `,
-      [pageSize, offset]
+      [...listParams, pageSize, offset]
     )
     const listBaseUrl = process.env.API_BASE_URL || 'http://localhost:4000'
     const list = (listRows as any[]).map((p) => ({
@@ -94,10 +121,20 @@ postRouter.get('/', async (req: AuthRequest, res) => {
       author_avatar: p.author_avatar ? `${listBaseUrl}${p.author_avatar}` : null
     }))
 
+    const countConditions: string[] = []
+    const countParams: string[] = []
+    if (!isAdmin) {
+      countConditions.push('audit_status = 1')
+    }
+    if (categoryFilter) {
+      countConditions.push('category = ?')
+      countParams.push(categoryFilter)
+    }
+    const countWhere =
+      countConditions.length > 0 ? `WHERE ${countConditions.join(' AND ')}` : ''
     const [countRows] = await pool.query(
-      isAdmin
-        ? 'SELECT COUNT(*) as total FROM posts'
-        : 'SELECT COUNT(*) as total FROM posts WHERE audit_status = 1'
+      `SELECT COUNT(*) as total FROM posts ${countWhere}`,
+      countParams
     )
     const total = (countRows as any[])[0]?.total ?? 0
 

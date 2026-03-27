@@ -8,8 +8,7 @@ export interface FeedTabsProps {
 }
 
 /**
- * FeedTabs - Horizontal category selector at top of main content
- * Categories: All, Campus Living, Class Q&A, Career, News, Mutual Help
+ * FeedTabs - 与发帖分类 category 字段一致（便于筛选）
  */
 export const FeedTabs: React.FC<FeedTabsProps> = ({
   activeCategory,
@@ -20,10 +19,11 @@ export const FeedTabs: React.FC<FeedTabsProps> = ({
   const categories = [
     { key: 'all', label: t('home.category.all') },
     { key: 'campus', label: t('home.category.campus') },
-    { key: 'class', label: t('home.category.class') },
-    { key: 'career', label: t('home.category.career') },
+    { key: 'teaching', label: t('home.category.teaching') },
     { key: 'news', label: t('home.category.news') },
-    { key: 'help', label: t('home.category.help') }
+    { key: 'trading', label: t('home.category.trading') },
+    { key: 'career', label: t('home.category.career') },
+    { key: 'mutual', label: t('home.category.mutual') }
   ]
 
   return (

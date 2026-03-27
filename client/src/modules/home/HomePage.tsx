@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { message } from 'antd'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { fetchPosts } from '../shared/api'
@@ -8,7 +8,7 @@ import './HomePage.css'
 
 /**
  * Home page with Weibo-style feed
- * Uses FeedTabs for category filtering and FeedList for post display
+ * FeedTabs 切换分类 → fetchPosts 带 category → 后端按 category 筛选（与发帖 category 字段一致）
  */
 export const HomePage: React.FC = () => {
   const [sortTab] = useState<'time' | 'hot'>('time')
@@ -22,40 +22,41 @@ export const HomePage: React.FC = () => {
   const navigate = useNavigate()
   const lastRefreshAt = useRef(0)
 
-  const loadPosts = async (pageNo = 1, sort: 'time' | 'hot' = sortTab) => {
-    setLoadingPosts(true)
-    try {
-      const data = await fetchPosts({
-        page: pageNo,
-        pageSize,
-        sort
-      })
-      setPosts(data.list)
-      setTotal(data.pagination.total)
-      setPage(pageNo)
-    } catch (err) {
-      message.error((err as Error).message)
-    } finally {
-      setLoadingPosts(false)
-    }
-  }
+  const loadPosts = useCallback(
+    async (pageNo = 1, sort: 'time' | 'hot' = sortTab, mode: 'replace' | 'append' = 'replace') => {
+      setLoadingPosts(true)
+      try {
+        const data = await fetchPosts({
+          page: pageNo,
+          pageSize,
+          sort,
+          ...(category !== 'all' ? { category } : {})
+        })
+        setPosts((prev) =>
+          pageNo === 1 || mode === 'replace' ? data.list : [...prev, ...data.list]
+        )
+        setTotal(data.pagination.total)
+        setPage(pageNo)
+      } catch (err) {
+        message.error((err as Error).message)
+      } finally {
+        setLoadingPosts(false)
+      }
+    },
+    [category, sortTab, pageSize]
+  )
 
   useEffect(() => {
-    void loadPosts(1, sortTab)
-  }, [sortTab, category])
+    void loadPosts(1, sortTab, 'replace')
+  }, [sortTab, category, loadPosts])
 
-  const refreshIfOnHome = () => {
+  const refreshIfOnHome = useCallback(() => {
     if (location.pathname !== '/') return
-    if (loadingPosts) return
     const now = Date.now()
     if (now - lastRefreshAt.current < 8000) return
     lastRefreshAt.current = now
-    void loadPosts(1, sortTab)
-  }
-
-  useEffect(() => {
-    refreshIfOnHome()
-  }, [location.pathname, sortTab, category])
+    void loadPosts(1, sortTab, 'replace')
+  }, [location.pathname, loadPosts, sortTab])
 
   useEffect(() => {
     const onFocus = () => refreshIfOnHome()
@@ -68,8 +69,7 @@ export const HomePage: React.FC = () => {
       window.removeEventListener('focus', onFocus)
       document.removeEventListener('visibilitychange', onVisibility)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sortTab, category, location.pathname])
+  }, [refreshIfOnHome])
 
   const handleNavigate = (path: string) => {
     navigate(path)
@@ -87,7 +87,7 @@ export const HomePage: React.FC = () => {
       <FeedList
         posts={posts}
         loading={loadingPosts}
-        onLoadMore={() => void loadPosts(page + 1, sortTab)}
+        onLoadMore={() => void loadPosts(page + 1, sortTab, 'append')}
         hasMore={total > pageSize * page}
         onNavigate={handleNavigate}
       />

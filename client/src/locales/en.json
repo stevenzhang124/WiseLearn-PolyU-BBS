@@ -69,11 +69,10 @@
     "category": {
       "all": "All",
       "campus": "Campus Life",
-      "class": "Class Q&A",
-      "career": "Career",
-      "news": "Campus News",
-      "help": "Mutual Aid",
-      "teaching": "Teaching",
+      "teaching": "Course Q&A",
+      "news": "News",
+      "trading": "Second-hand",
+      "career": "Job Sharing",
       "mutual": "Mutual Aid"
     }
   },

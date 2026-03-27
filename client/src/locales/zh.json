@@ -69,11 +69,10 @@
     "category": {
       "all": "全部",
       "campus": "校园生活",
-      "class": "课程问答",
-      "career": "求职分享",
+      "teaching": "课程答疑",
       "news": "新鲜事",
-      "help": "校园互助",
-      "teaching": "教学交流",
+      "trading": "二手交易",
+      "career": "求职分享",
       "mutual": "校园互助"
     }
   },

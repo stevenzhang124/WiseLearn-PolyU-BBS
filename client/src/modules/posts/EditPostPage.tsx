@@ -10,10 +10,11 @@ import { generateTitleCoverFile } from './generateTitleCover'
 import { extractImageUrlsFromContent } from './extractImageUrlsFromContent'
 
 const categoryValues = [
-  { value: 'teaching' },
   { value: 'campus' },
-  { value: 'career' },
+  { value: 'teaching' },
   { value: 'news' },
+  { value: 'trading' },
+  { value: 'career' },
   { value: 'mutual' }
 ]
 

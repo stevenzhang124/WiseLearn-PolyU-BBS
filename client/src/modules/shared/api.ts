@@ -101,6 +101,8 @@ export async function fetchPosts(params: {
   page: number
   pageSize: number
   sort: 'time' | 'hot'
+  /** 不传或 all 表示全部分类 */
+  category?: string
 }): Promise<any> {
   const res = await api.get('/posts', { params })
   return res.data
