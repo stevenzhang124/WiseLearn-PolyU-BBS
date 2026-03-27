@@ -1,24 +1,60 @@
-/* FeedTabs Styles - Horizontal category selector */
+/* FeedTabs - 横向分类 + 左右渐变 + 拖拽 / 滚轮仅作用于本区域 */
 
-.wiselearn-feed-tabs {
-  display: flex;
-  gap: 4px;
-  padding: 12px 16px;
-  background: #fff;
+.wiselearn-feed-tabs-root {
+  position: relative;
+  margin-bottom: 12px;
   border-radius: 8px;
   border: 1px solid #e8e8e8;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  margin-bottom: 12px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  background: #fff;
+  /* 与圆角一起裁剪滚动内容与渐变，避免四角漏光 */
+  overflow: hidden;
 }
 
-.wiselearn-feed-tabs::-webkit-scrollbar {
+.wiselearn-feed-tabs-scroller {
+  display: flex;
+  gap: 4px;
+  padding: 12px 16px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  cursor: grab;
+  touch-action: pan-x;
+  overscroll-behavior-x: contain;
+  overscroll-behavior-y: contain;
+}
+
+.wiselearn-feed-tabs-scroller:active {
+  cursor: grabbing;
+}
+
+.wiselearn-feed-tabs-scroller::-webkit-scrollbar {
   display: none;
 }
 
+.wiselearn-feed-tabs-fade {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 32px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.wiselearn-feed-tabs-fade--left {
+  left: 0;
+  /* 靠左一侧保持不透明白，避免圆角与子像素处透出底色 */
+  background: linear-gradient(to right, #fff 0%, #fff 28%, rgba(255, 255, 255, 0.9) 52%, transparent 100%);
+}
+
+.wiselearn-feed-tabs-fade--right {
+  right: 0;
+  background: linear-gradient(to left, #fff 0%, #fff 28%, rgba(255, 255, 255, 0.9) 52%, transparent 100%);
+}
+
 .wiselearn-feed-tab {
+  flex-shrink: 0;
   padding: 8px 16px;
   background: transparent;
   border: none;
@@ -28,7 +64,7 @@
   cursor: pointer;
   border-radius: 20px;
   white-space: nowrap;
-  transition: all 0.2s;
+  transition: background 0.2s, color 0.2s;
 }
 
 .wiselearn-feed-tab:hover {
@@ -37,19 +73,27 @@
 }
 
 .wiselearn-feed-tab.active {
-  background: #C8102E;
+  background: #c8102e;
   color: #fff;
 }
 
-/* Mobile adjustments */
 @media (max-width: 639px) {
-  .wiselearn-feed-tabs {
+  .wiselearn-feed-tabs-scroller {
     padding: 10px 12px;
-    margin-bottom: 12px;
   }
 
   .wiselearn-feed-tab {
     padding: 6px 12px;
     font-size: 13px;
+  }
+
+  .wiselearn-feed-tabs-fade {
+    width: 24px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wiselearn-feed-tab {
+    transition: none;
   }
 }
