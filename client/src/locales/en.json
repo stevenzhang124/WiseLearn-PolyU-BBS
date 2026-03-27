@@ -67,10 +67,13 @@
     "loadMore": "Load more",
     "pinned": "Pinned",
     "category": {
-      "teaching": "Teaching",
+      "all": "All",
       "campus": "Campus Life",
+      "class": "Class Q&A",
       "career": "Career",
       "news": "Campus News",
+      "help": "Mutual Aid",
+      "teaching": "Teaching",
       "mutual": "Mutual Aid"
     }
   },
@@ -98,6 +101,7 @@
     "publishTime": "Published",
     "like": "Like",
     "liked": "Liked",
+    "comment": "Comment",
     "share": "Share",
     "shareSuccess": "Share link copied to clipboard",
     "comments": "Comments",
@@ -232,5 +236,15 @@
   },
   "common": {
     "loading": "Loading..."
+  },
+  "rightBar": {
+    "trending": "Trending",
+    "latest": "Latest",
+    "activePosters": "Active Posters",
+    "activeLikers": "Active Likers",
+    "quickLinks": "Quick Links",
+    "createPost": "Create Post",
+    "myProfile": "My Profile",
+    "messages": "Messages"
   }
 }

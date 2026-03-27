@@ -1,0 +1,253 @@
+/* FeedList Styles - Weibo-style single column feed */
+
+.wiselearn-feed-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Loading state */
+.wiselearn-feed-loading {
+  padding: 40px 20px;
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+}
+
+/* Load more button */
+.wiselearn-feed-load-more {
+  padding: 16px 0;
+  text-align: center;
+}
+
+.wiselearn-feed-load-more-btn {
+  padding: 10px 32px;
+  background: #fff;
+  border: 1px solid #d9d9d9;
+  border-radius: 20px;
+  color: #666;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.wiselearn-feed-load-more-btn:hover:not(:disabled) {
+  border-color: #C8102E;
+  color: #C8102E;
+}
+
+.wiselearn-feed-load-more-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Feed Post Item - Weibo-style horizontal card */
+.wiselearn-feed-item {
+  background: #fff;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.2s;
+}
+
+.wiselearn-feed-item:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Author row */
+.wiselearn-feed-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.wiselearn-feed-item-author {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.wiselearn-feed-item-author:hover {
+  opacity: 0.8;
+}
+
+.wiselearn-feed-item-avatar {
+  flex-shrink: 0;
+}
+
+.wiselearn-feed-item-author-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.wiselearn-feed-item-author-name {
+  font-size: 15px;
+  font-weight: 500;
+  color: #333;
+}
+
+.wiselearn-feed-item-date {
+  font-size: 12px;
+  color: #999;
+}
+
+.wiselearn-feed-item-pin {
+  padding: 2px 8px;
+  background: #FFF1F0;
+  color: #C8102E;
+  font-size: 12px;
+  border-radius: 4px;
+}
+
+/* Title */
+.wiselearn-feed-item-title {
+  margin: 0 0 10px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.wiselearn-feed-item-title:hover {
+  color: #C8102E;
+}
+
+/* Content preview */
+.wiselearn-feed-item-excerpt {
+  font-size: 14px;
+  color: #666;
+  line-height: 1.6;
+  margin-bottom: 12px;
+  cursor: pointer;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+.wiselearn-feed-item-excerpt img {
+  display: none;
+}
+
+/* Image gallery */
+.wiselearn-feed-item-gallery {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.wiselearn-feed-item-gallery.single {
+  grid-template-columns: 1fr;
+}
+
+.wiselearn-feed-item-gallery.single .wiselearn-feed-item-gallery-img {
+  max-height: 300px;
+  object-fit: contain;
+}
+
+.wiselearn-feed-item-gallery.double {
+  grid-template-columns: 1fr 1fr;
+}
+
+.wiselearn-feed-item-gallery.quad {
+  grid-template-columns: 1fr 1fr;
+}
+
+.wiselearn-feed-item-gallery.multiple {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.wiselearn-feed-item-gallery-img {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.wiselearn-feed-item-gallery-img:hover {
+  opacity: 0.9;
+}
+
+.wiselearn-feed-item-gallery.quad .wiselearn-feed-item-gallery-img,
+.wiselearn-feed-item-gallery.multiple .wiselearn-feed-item-gallery-img {
+  height: 120px;
+}
+
+/* Action bar */
+.wiselearn-feed-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.wiselearn-feed-item-action {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background: transparent;
+  border: none;
+  color: #666;
+  font-size: 13px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.wiselearn-feed-item-action:hover {
+  background: #f5f5f5;
+  color: #C8102E;
+}
+
+.wiselearn-feed-item-stat {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  color: #999;
+  font-size: 13px;
+}
+
+.wiselearn-feed-item-tag {
+  margin-left: auto;
+  padding: 4px 10px;
+  background: #f5f5f5;
+  color: #666;
+  font-size: 12px;
+  border-radius: 12px;
+}
+
+/* Mobile adjustments */
+@media (max-width: 639px) {
+  .wiselearn-feed-item {
+    padding: 12px;
+  }
+
+  .wiselearn-feed-item-title {
+    font-size: 15px;
+  }
+
+  .wiselearn-feed-item-gallery-img {
+    height: 100px;
+  }
+
+  .wiselearn-feed-item-gallery.quad .wiselearn-feed-item-gallery-img,
+  .wiselearn-feed-item-gallery.multiple .wiselearn-feed-item-gallery-img {
+    height: 80px;
+  }
+
+  .wiselearn-feed-item-action {
+    padding: 6px 8px;
+    font-size: 12px;
+  }
+}

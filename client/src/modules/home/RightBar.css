@@ -1,0 +1,177 @@
+/* RightBar Styles - Right sidebar with tabbed lists */
+
+.wiselearn-right-bar {
+  padding: 16px;
+  background: #f7f7f8;
+  height: 100%;
+  overflow-y: auto;
+}
+
+/* Sidebar module */
+.wiselearn-sidebar-module {
+  background: #fff;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 16px;
+}
+
+.wiselearn-sidebar-module:last-child {
+  margin-bottom: 0;
+}
+
+.wiselearn-sidebar-module-header {
+  margin-bottom: 12px;
+}
+
+.wiselearn-sidebar-title-main {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+/* Sidebar tabs */
+.wiselearn-sidebar-tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.wiselearn-sidebar-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 12px;
+  background: #f5f5f5;
+  border: none;
+  color: #666;
+  font-size: 13px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.wiselearn-sidebar-tab:hover {
+  background: #ebebeb;
+}
+
+.wiselearn-sidebar-tab.active {
+  background: #C8102E;
+  color: #fff;
+}
+
+/* Sidebar list */
+.wiselearn-sidebar-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wiselearn-sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 4px;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.wiselearn-sidebar-item:hover {
+  background: #f9f9f9;
+}
+
+.wiselearn-sidebar-rank {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: #999;
+  background: #f5f5f5;
+  border-radius: 4px;
+}
+
+.wiselearn-sidebar-rank.top {
+  background: #C8102E;
+  color: #fff;
+}
+
+.wiselearn-sidebar-title {
+  flex: 1;
+  font-size: 13px;
+  color: #333;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wiselearn-sidebar-count {
+  font-size: 12px;
+  color: #999;
+}
+
+/* User item */
+.wiselearn-sidebar-user-item {
+  cursor: pointer;
+}
+
+.wiselearn-sidebar-user-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  font-size: 12px;
+  color: #666;
+}
+
+.wiselearn-sidebar-user-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.wiselearn-sidebar-username {
+  flex: 1;
+  font-size: 13px;
+  color: #333;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Quick links */
+.wiselearn-sidebar-links {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.wiselearn-sidebar-link {
+  display: block;
+  padding: 10px 12px;
+  background: #f5f5f5;
+  color: #333;
+  font-size: 13px;
+  text-decoration: none;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.wiselearn-sidebar-link:hover {
+  background: #ebebeb;
+  color: #C8102E;
+}
+
+/* Mobile - hide on screens < 992px */
+@media (max-width: 991px) {
+  .wiselearn-right-bar {
+    display: none;
+  }
+}

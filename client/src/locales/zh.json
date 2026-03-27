@@ -67,10 +67,13 @@
     "loadMore": "加载更多",
     "pinned": "置顶",
     "category": {
-      "teaching": "教学交流",
+      "all": "全部",
       "campus": "校园生活",
+      "class": "课程问答",
       "career": "求职分享",
       "news": "新鲜事",
+      "help": "校园互助",
+      "teaching": "教学交流",
       "mutual": "校园互助"
     }
   },
@@ -98,6 +101,7 @@
     "publishTime": "发布时间",
     "like": "点赞",
     "liked": "已点赞",
+    "comment": "评论",
     "share": "转发",
     "shareSuccess": "分享链接已复制到剪贴板",
     "comments": "评论",
@@ -232,5 +236,15 @@
   },
   "common": {
     "loading": "加载中..."
+  },
+  "rightBar": {
+    "trending": "热门话题",
+    "latest": "最新话题",
+    "activePosters": "活跃发帖",
+    "activeLikers": "活跃点赞",
+    "quickLinks": "快捷链接",
+    "createPost": "发布帖子",
+    "myProfile": "个人中心",
+    "messages": "私信"
   }
 }

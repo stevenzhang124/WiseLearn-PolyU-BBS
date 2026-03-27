@@ -1,20 +1,21 @@
 import React, { useEffect, useState } from 'react'
-import { Layout, Menu, Badge, Typography, Drawer, Button } from 'antd'
+import { Layout, Badge, Typography, Drawer, Button } from 'antd'
 import {
-  MessageOutlined,
-  HomeOutlined,
-  EditOutlined,
-  UserOutlined,
-  DashboardOutlined,
   LogoutOutlined,
   MenuOutlined,
-  PlusOutlined
+  PlusOutlined,
+  HomeOutlined,
+  MessageOutlined,
+  UserOutlined,
+  DashboardOutlined
 } from '@ant-design/icons'
 import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
 import { Avatar } from '../shared/Avatar'
 import { fetchAdminPendingPosts, getUnreadCount, getNotificationsUnreadCount, updateUserLanguageApi } from '../shared/api'
+import { LeftNav } from './LeftNav'
+import { RightBar } from '../home/RightBar'
 
 const { Header, Content, Sider } = Layout
 
@@ -109,51 +110,6 @@ export const LayoutShell: React.FC = () => {
     logout()
     navigate('/login')
   }
-
-  const navMenuItems = [
-    {
-      key: 'home',
-      icon: <HomeOutlined />,
-      label: <Link to="/" className="wiselearn-menu-link" onClick={() => setMobileNavOpen(false)}>{t('nav.home')}</Link>
-    },
-    {
-      key: 'create',
-      icon: <EditOutlined />,
-      label: <Link to="/create" className="wiselearn-menu-link" onClick={() => setMobileNavOpen(false)}>{t('nav.create')}</Link>
-    },
-    {
-      key: 'messages',
-      icon: (
-        <Badge count={unreadCount} size="small" offset={[4, 0]}>
-          <MessageOutlined style={{ fontSize: 16 }} />
-        </Badge>
-      ),
-      label: <Link to="/messages" className="wiselearn-menu-link" onClick={() => setMobileNavOpen(false)}>{t('nav.messages')}</Link>
-    },
-    {
-      key: 'profile',
-      icon: <UserOutlined />,
-      label: <Link to="/profile" className="wiselearn-menu-link" onClick={() => setMobileNavOpen(false)}>{t('nav.profile')}</Link>
-    },
-    ...(user?.isAdmin
-      ? [
-          {
-            key: 'admin',
-            icon: <DashboardOutlined />,
-            label:
-              adminPendingCount > 0 ? (
-                <Badge count={adminPendingCount} size="small" offset={[4, 0]}>
-                  <Link to="/admin" className="wiselearn-menu-link" onClick={() => setMobileNavOpen(false)}>
-                    {t('nav.admin')}
-                  </Link>
-                </Badge>
-              ) : (
-                <Link to="/admin" className="wiselearn-menu-link" onClick={() => setMobileNavOpen(false)}>{t('nav.admin')}</Link>
-              )
-          }
-        ]
-      : [])
-  ]
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
@@ -253,13 +209,12 @@ export const LayoutShell: React.FC = () => {
         }
         className="wiselearn-mobile-nav-drawer"
       >
-        <Menu
-          theme="light"
-          mode="inline"
+        <LeftNav
           selectedKeys={selectedKeys}
-          style={{ borderRight: 0, paddingTop: 8 }}
-          className="wiselearn-side-menu"
-          items={navMenuItems}
+          unreadCount={unreadCount}
+          adminPendingCount={adminPendingCount}
+          isAdmin={user?.isAdmin ?? false}
+          onNavClick={() => setMobileNavOpen(false)}
         />
         {user && (
           <div style={{ padding: '16px', borderTop: '1px solid #f0f0f0', marginTop: 'auto' }}>
@@ -270,28 +225,44 @@ export const LayoutShell: React.FC = () => {
         )}
       </Drawer>
 
-      <Layout>
+      <Layout className="wiselearn-main-layout">
+        {/* Left sidebar - Navigation */}
         <Sider
+          width={200}
           breakpoint="lg"
           collapsedWidth="0"
           trigger={null}
           className="wiselearn-sider-white"
           style={{ background: '#fff', borderRight: '1px solid #f0f0f0' }}
         >
-          <Menu
-            theme="light"
-            mode="inline"
+          <LeftNav
             selectedKeys={selectedKeys}
-            style={{ borderRight: 0 }}
-            className="wiselearn-side-menu"
-            items={navMenuItems}
+            unreadCount={unreadCount}
+            adminPendingCount={adminPendingCount}
+            isAdmin={user?.isAdmin ?? false}
           />
         </Sider>
-        <Layout>
-          <Content className="wiselearn-content-area">
-            <Outlet />
-          </Content>
-        </Layout>
+
+        {/* Main content area */}
+        <Content className="wiselearn-content-area">
+          <Outlet />
+        </Content>
+
+        {/* Right sidebar - Only visible on home page */}
+        <Sider
+          width={300}
+          className="wiselearn-right-sider"
+          style={{
+            background: '#f7f7f8',
+            borderLeft: '1px solid #f0f0f0',
+            opacity: selectedKeys.includes('home') ? 1 : 0,
+            transform: selectedKeys.includes('home') ? 'translateX(0)' : 'translateX(20px)',
+            transition: 'opacity 0.3s ease, transform 0.3s ease',
+            pointerEvents: selectedKeys.includes('home') ? 'auto' : 'none'
+          }}
+        >
+          <RightBar />
+        </Sider>
       </Layout>
 
       {/* 移动端底部导航栏（小红书风格） */}

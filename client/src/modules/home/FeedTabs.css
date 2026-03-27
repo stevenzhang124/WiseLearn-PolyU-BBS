@@ -1,0 +1,53 @@
+/* FeedTabs Styles - Horizontal category selector */
+
+.wiselearn-feed-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 12px 16px;
+  background: #fff;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.wiselearn-feed-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.wiselearn-feed-tab {
+  padding: 8px 16px;
+  background: transparent;
+  border: none;
+  color: #666;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 20px;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.wiselearn-feed-tab:hover {
+  background: #f5f5f5;
+  color: #333;
+}
+
+.wiselearn-feed-tab.active {
+  background: #C8102E;
+  color: #fff;
+}
+
+/* Mobile adjustments */
+@media (max-width: 639px) {
+  .wiselearn-feed-tabs {
+    padding: 10px 12px;
+    margin-bottom: 12px;
+  }
+
+  .wiselearn-feed-tab {
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+}
