@@ -3,11 +3,10 @@ import { message as antMessage } from 'antd'
 import { PictureOutlined, SmileOutlined, NumberOutlined } from '@ant-design/icons'
 import { BlockNoteEditor } from '@blocknote/core'
 import { uploadImageApi } from '../shared/api'
+import { MAX_IMAGE_UPLOAD_BYTES } from '../shared/imageUploadLimits'
 import { useTranslation } from 'react-i18next'
 
 import './EditorToolbar.css'
-
-const MAX_IMAGE_SIZE = 10 * 1024 * 1024 // 10MB
 
 // Common emojis for quick access
 const COMMON_EMOJIS = [
@@ -52,28 +51,32 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  // Handle image upload from file picker
+  // Handle image upload from file picker（支持一次多选）
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file || !editor) return
+    const raw = event.target.files
+    if (!raw?.length || !editor) return
 
-    if (file.size > MAX_IMAGE_SIZE) {
+    const files = Array.from(raw)
+    const oversized = files.find((f) => f.size > MAX_IMAGE_UPLOAD_BYTES)
+    if (oversized) {
       antMessage.error(t('auth.imageTooLarge'))
+      if (fileInputRef.current) fileInputRef.current.value = ''
       return
     }
 
     try {
-      const { url } = await uploadImageApi(file)
+      const urls = await Promise.all(files.map((file) => uploadImageApi(file).then((r) => r.url)))
       const blocks = editor.document
+      const ref = blocks[blocks.length - 1]
       editor.insertBlocks(
-        [{ type: 'image', props: { url } }],
-        blocks[blocks.length - 1],
+        urls.map((url) => ({ type: 'image' as const, props: { url } })),
+        ref,
         'after'
       )
-      antMessage.success(t('post.picture') + ' uploaded')
+      antMessage.success(t('post.imagesUploaded', { count: urls.length }))
     } catch (err) {
       console.error('Upload image failed', err)
-      antMessage.error(t('post.picture') + ' upload failed')
+      antMessage.error(t('post.imagesUploadFailed'))
     }
 
     if (fileInputRef.current) {
@@ -121,6 +124,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
         <input
           ref={fileInputRef}
           type="file"
+          multiple
           accept="image/jpeg,image/png,image/gif,image/webp"
           style={{ display: 'none' }}
           onChange={handleImageUpload}

@@ -16,6 +16,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { Avatar } from '../shared/Avatar'
 import { getActivities, updateNicknameApi, uploadAvatarApi, getMyProfileApi } from '../shared/api'
+import { MAX_IMAGE_UPLOAD_BYTES } from '../shared/imageUploadLimits'
 import './ProfilePage.css'
 
 /**
@@ -97,7 +98,7 @@ export const ProfilePage: React.FC = () => {
       message.warning(t('profile.avatarFormat'))
       return
     }
-    if (file.size > 5 * 1024 * 1024) {
+    if (file.size > MAX_IMAGE_UPLOAD_BYTES) {
       message.warning(t('profile.avatarSize'))
       return
     }

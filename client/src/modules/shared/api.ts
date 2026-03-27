@@ -1,5 +1,6 @@
 import axios from 'axios'
 import type { AuthUser } from '../auth/AuthContext'
+import { compressImageForUpload } from './compressImageForUpload'
 
 let inMemoryToken: string | null = null
 
@@ -15,6 +16,8 @@ const api = axios.create({
   baseURL: apiBaseURL,
   timeout: 10000
 })
+
+const uploadTimeoutMs = 180000
 
 api.interceptors.request.use((config) => {
   const stored = window.localStorage.getItem('wiselearn_token')
@@ -153,10 +156,12 @@ export async function getActivities(): Promise<any> {
 
 /** 上传图片，返回可访问的 URL（用于富文本插入图片） */
 export async function uploadImageApi(file: File): Promise<{ url: string }> {
+  const prepared = await compressImageForUpload(file, 'post')
   const form = new FormData()
-  form.append('file', file)
+  form.append('file', prepared)
   const res = await api.post<{ url: string }>('/upload/image', form, {
-    headers: { 'Content-Type': 'multipart/form-data' }
+    headers: { 'Content-Type': 'multipart/form-data' },
+    timeout: uploadTimeoutMs
   })
   return res.data
 }
@@ -228,10 +233,12 @@ export async function getUserPostsApi(userId: number): Promise<{ list: any[] }> 
 
 /** 上传当前用户头像，返回新头像 URL */
 export async function uploadAvatarApi(file: File): Promise<{ avatar: string }> {
+  const prepared = await compressImageForUpload(file, 'avatar')
   const form = new FormData()
-  form.append('file', file)
+  form.append('file', prepared)
   const res = await api.put<{ avatar: string }>('/users/me/avatar', form, {
-    headers: { 'Content-Type': 'multipart/form-data' }
+    headers: { 'Content-Type': 'multipart/form-data' },
+    timeout: uploadTimeoutMs
   })
   return res.data
 }

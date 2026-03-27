@@ -7,6 +7,7 @@ import { uploadImageApi } from '../shared/api'
 import { useAuth } from '../auth/AuthContext'
 import { RichTextEditor } from './RichTextEditor'
 import { generateTitleCoverFile } from './generateTitleCover'
+import { extractImageUrlsFromContent } from './extractImageUrlsFromContent'
 
 const categoryValues = [
   { value: 'teaching' },
@@ -80,12 +81,11 @@ export const EditPostPage: React.FC = () => {
     }
     setSaving(true)
     try {
-      const firstImgMatch = contentHtml.match(/<img[^>]+src=["'][^"']+["'][^>]*>/i)
-      const firstImgSrc = firstImgMatch ? firstImgMatch[0].match(/src=["']([^"']+)["']/i)?.[1] : null
+      const fromContent = extractImageUrlsFromContent(contentHtml)
       let imageUrls: string[]
 
-      if (firstImgSrc) {
-        imageUrls = [firstImgSrc]
+      if (fromContent.length > 0) {
+        imageUrls = fromContent
       } else {
         const coverFile = await generateTitleCoverFile(values.title)
         const { url } = await uploadImageApi(coverFile)

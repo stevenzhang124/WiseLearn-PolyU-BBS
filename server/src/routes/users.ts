@@ -1,7 +1,8 @@
-import express, { Router } from 'express'
+import { Router, type Response, type NextFunction } from 'express'
 import { pool } from '../db'
 import { authMiddleware, AuthRequest } from '../middleware/auth'
-import { upload } from './upload'
+import { upload, uploadImageErrorHandler } from './upload'
+import { processUploadedImage } from '../utils/processUploadedImage'
 
 export const usersRouter = Router()
 
@@ -374,7 +375,7 @@ usersRouter.get('/:id', async (req: AuthRequest, res) => {
 usersRouter.put(
   '/me/avatar',
   upload.single('file'),
-  async (req: AuthRequest, res) => {
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
     if (!req.user) {
       res.status(401).json({ message: '未登录' })
       return
@@ -383,7 +384,14 @@ usersRouter.put(
       res.status(400).json({ message: '请选择要上传的图片' })
       return
     }
-    const avatarPath = `/uploads/${req.file.filename}`
+    let processedName: string
+    try {
+      ;({ filename: processedName } = await processUploadedImage(req.file.path, 'avatar'))
+    } catch (err) {
+      next(err as Error)
+      return
+    }
+    const avatarPath = `/uploads/${processedName}`
     try {
       await pool.query('UPDATE users SET avatar = ? WHERE id = ?', [
         avatarPath,
@@ -396,9 +404,7 @@ usersRouter.put(
       res.status(500).json({ message: '头像更新失败' })
     }
   },
-  (err: Error, _req: express.Request, res: express.Response) => {
-    res.status(400).json({ message: err.message || '上传失败' })
-  }
+  uploadImageErrorHandler
 )
 
 /**

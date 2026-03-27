@@ -4,12 +4,11 @@ import { useCreateBlockNote } from '@blocknote/react'
 import { BlockNoteView } from '@blocknote/mantine'
 import { message as antMessage } from 'antd'
 import { uploadImageApi } from '../shared/api'
+import { MAX_IMAGE_UPLOAD_BYTES } from '../shared/imageUploadLimits'
 import { useTranslation } from 'react-i18next'
 
 import '@blocknote/mantine/style.css'
 import './RichTextEditor.css'
-
-const MAX_IMAGE_SIZE = 10 * 1024 * 1024 // 10MB
 
 // Common emojis for quick access
 export const COMMON_EMOJIS = [
@@ -54,7 +53,7 @@ export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>
 
     // Custom file upload handler
     const uploadFile = async (file: File): Promise<string> => {
-      if (file.size > MAX_IMAGE_SIZE) {
+      if (file.size > MAX_IMAGE_UPLOAD_BYTES) {
         antMessage.error(t('auth.imageTooLarge'))
         throw new Error('File too large')
       }
