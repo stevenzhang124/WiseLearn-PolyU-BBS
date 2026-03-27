@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { message } from 'antd'
-import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { fetchPosts } from '../shared/api'
 import { FeedTabs } from './FeedTabs'
@@ -12,7 +11,6 @@ import './HomePage.css'
  * Uses FeedTabs for category filtering and FeedList for post display
  */
 export const HomePage: React.FC = () => {
-  const { t } = useTranslation()
   const [sortTab] = useState<'time' | 'hot'>('time')
   const [category, setCategory] = useState('all')
   const [loadingPosts, setLoadingPosts] = useState(false)

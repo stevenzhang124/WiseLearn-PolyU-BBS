@@ -6,18 +6,18 @@ RedBrick frontend is a single-page application (SPA) built with React and TypeSc
 
 ## Technology Stack
 
-| Component | Technology |
-|-----------|------------|
-| Framework | React 18 |
-| Language | TypeScript |
-| Build Tool | Vite 8 |
-| UI Library | Ant Design 6 |
-| Routing | React Router 7 |
-| State Management | React Context + TanStack Query |
-| Rich Text Editor | Tiptap |
-| HTTP Client | Axios |
-| i18n | react-i18next |
-| XSS Prevention | DOMPurify |
+| Component | Technology | Notes |
+|-----------|------------|-------|
+| Framework | React 18 | |
+| Language | TypeScript | |
+| Build Tool | Vite 8 | |
+| UI Library | Ant Design 6 | PolyU theme (#C8102E) |
+| Routing | React Router 7 | |
+| State Management | React Context | Auth + local component state |
+| Rich Text Editor | BlockNote | Notion-style block editor |
+| HTTP Client | Axios | |
+| i18n | react-i18next | zh/en |
+| XSS Prevention | DOMPurify | |
 
 ## Project Structure
 
@@ -258,7 +258,7 @@ client/
 │                              UI Component Tree                                   │
 └─────────────────────────────────────────────────────────────────────────────────┘
 
-  LayoutShell
+  LayoutShell (Weibo-style 3-column layout)
   ├── Header
   │   ├── PolyU Logo (img)
   │   ├── Title + Subtitle
@@ -266,74 +266,69 @@ client/
   │   ├── Avatar + Username
   │   └── Logout Button
   │
-  ├── Sider (Desktop)
-  │   └── Menu (Ant Design)
-  │       ├── Home
-  │       ├── Create Post
-  │       ├── Messages (with badge)
-  │       ├── Profile
-  │       └── Admin (if isAdmin)
+  ├── Layout (3 columns: LeftNav | MainContent | RightBar)
+  │   │
+  │   ├── LeftNav (240px, extracted component)
+  │   │   └── Menu (Ant Design)
+  │   │       ├── Home
+  │   │       ├── Create Post
+  │   │       ├── Messages (with badge)
+  │   │       ├── Profile
+  │   │       └── Admin (if isAdmin)
+  │   │
+  │   ├── MainContent (flexible width)
+  │   │   │
+  │   │   ├── HomePage
+  │   │   │   ├── FeedTabs (All, Campus Life, Class Q&A, Career, etc.)
+  │   │   │   └── FeedList
+  │   │   │       └── FeedPostItem (Weibo-style horizontal card)
+  │   │   │           ├── Author Row (Avatar, Name, Date)
+  │   │   │           ├── Title
+  │   │   │           ├── Content Preview
+  │   │   │           ├── Image Gallery (grid)
+  │   │   │           └── Action Bar (Like, Comment, Share, Views, Category)
+  │   │   │
+  │   │   ├── PostDetailPage
+  │   │   │   ├── Article
+  │   │   │   │   ├── Title
+  │   │   │   │   ├── Author Row (Avatar, Name, Date)
+  │   │   │   │   ├── Content (DOMPurify sanitized)
+  │   │   │   │   └── Actions (Like, Share, Comment count)
+  │   │   │   └── Comments Section
+  │   │   │       ├── Comment Form
+  │   │   │       └── Comment Tree (with replies)
+  │   │   │
+  │   │   ├── CreatePostPage / EditPostPage
+  │   │   │   ├── Title Input
+  │   │   │   ├── Category Select
+  │   │   │   └── RichTextEditor (BlockNote)
+  │   │   │
+  │   │   ├── MessagesPage
+  │   │   │   ├── Tabs
+  │   │   │   │   ├── Likes (Badge count)
+  │   │   │   │   ├── Follows (Badge count)
+  │   │   │   │   ├── Comments (Badge count)
+  │   │   │   │   └── DM (Badge count)
+  │   │   │   └── DM Chat View
+  │   │   │
+  │   │   ├── ProfilePage
+  │   │   │   ├── Avatar Upload
+  │   │   │   ├── Stats (Following, Followers, Likes)
+  │   │   │   └── Activity Tabs (Posts, Comments, Likes)
+  │   │   │
+  │   │   └── AdminDashboardPage
+  │   │
+  │   └── RightBar (280px, only visible on home page)
+  │       └── Sidebar Modules
+  │           ├── Trending Topics (tabbed: Hot/Latest)
+  │           └── Active Users (tabbed: Posters/Likers)
   │
-  ├── Content (Outlet)
-  │   │
-  │   ├── HomePage
-  │   │   ├── Tabs (Latest / Hot)
-  │   │   └── Post Card Grid
-  │   │       └── PostCard
-  │   │           ├── Cover Image
-  │   │           ├── Title
-  │   │           ├── Author Avatar + Name
-  │   │           ├── Stats (Likes / Views)
-  │   │           └── Category Tag
-  │   │
-  │   ├── PostDetailPage
-  │   │   ├── Article
-  │   │   │   ├── Title
-  │   │   │   ├── Author Row (Avatar, Name, Date)
-  │   │   │   ├── Cover Image
-  │   │   │   ├── Content (DOMPurify sanitized)
-  │   │   │   └── Actions (Like, Share, Comment count)
-  │   │   └── Comments Section
-  │   │       ├── Comment Form
-  │   │       └── Comment Tree (with replies)
-  │   │
-  │   ├── CreatePostPage / EditPostPage
-  │   │   ├── Title Input
-  │   │   ├── Category Select
-  │   │   └── RichTextEditor
-  │   │       ├── Toolbar (Bold, Italic, List, Image)
-  │   │       └── EditorContent (Tiptap)
-  │   │
-  │   ├── MessagesPage
-  │   │   ├── Tabs
-  │   │   │   ├── Likes (Badge count)
-  │   │   │   ├── Follows (Badge count)
-  │   │   │   ├── Comments (Badge count)
-  │   │   │   └── DM (Badge count)
-  │   │   └── DM Chat View
-  │   │       ├── Chat Header
-  │   │       ├── Message Bubbles (WeChat style)
-  │   │       └── Input Area
-  │   │
-  │   ├── ProfilePage
-  │   │   ├── Avatar Upload
-  │   │   ├── Stats (Following, Followers, Likes)
-  │   │   ├── Info (Email, Role)
-  │   │   ├── Nickname Form
-  │   │   └── Activity Tabs (Posts, Comments, Likes)
-  │   │
-  │   └── AdminDashboardPage
-  │       ├── Stats Cards (Users, Posts)
-  │       ├── Daily New Users Chart
-  │       ├── Hot Posts Top 10
-  │       ├── Post Search Table
-  │       └── Pending Posts Table (Approve/Reject)
-  │
-  └── BottomNav (Mobile)
+  └── BottomNav (Mobile only, <992px)
       ├── Home
       ├── Create (Plus button)
       ├── Messages (with badge)
-      └── Profile
+      ├── Profile
+      └── Admin (if isAdmin)
 ```
 
 ---
@@ -423,7 +418,7 @@ client/
 
 ---
 
-## Rich Text Editor (Tiptap)
+## Rich Text Editor (BlockNote)
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────┐
@@ -431,45 +426,65 @@ client/
 └─────────────────────────────────────────────────────────────────────────────────┘
 
   ┌─────────────────────────────────────────────────────────────────────────────┐
+  │  Dependencies                                                                │
+  │  ┌─────────────────────────────────────────────────────────────────────┐   │
+  │  │  npm install @blocknote/core @blocknote/react @blocknote/mantine    │   │
+  │  │                                                                      │   │
+  │  │  @blocknote/core     - Core editor logic                            │   │
+  │  │  @blocknote/react    - React hooks (useCreateBlockNote)             │   │
+  │  │  @blocknote/mantine  - UI components (BlockNoteView)                 │   │
+  │  └─────────────────────────────────────────────────────────────────────┘   │
+  └─────────────────────────────────────────────────────────────────────────────┘
+
+  ┌─────────────────────────────────────────────────────────────────────────────┐
   │  Features                                                                    │
   │  ┌─────────────────────────────────────────────────────────────────────┐   │
-  │  │  Toolbar:                                                             │   │
-  │  │    - Bold (B)                                                         │   │
-  │  │    - Italic (I)                                                       │   │
-  │  │    - Bullet List                                                      │   │
-  │  │    - Ordered List                                                     │   │
-  │  │    - Image Upload                                                     │   │
+  │  │  Notion-style block editor:                                          │   │
+  │  │    - Drag and drop blocks                                            │   │
+  │  │    - Slash commands (/) to add blocks                                │   │
+  │  │    - Built-in formatting toolbar                                     │   │
+  │  │    - Heading levels 1-3                                              │   │
+  │  │    - Bullet and numbered lists                                       │   │
+  │  │    - Code blocks                                                     │   │
+  │  │    - Quote blocks                                                    │   │
+  │  │    - Image upload (with custom handler)                              │   │
   │  │                                                                      │   │
   │  │  Image Upload Methods:                                                │   │
-  │  │    1. Click "图片" button → File picker                              │   │
+  │  │    1. Click image button in toolbar                                  │   │
   │  │    2. Drag & drop image into editor                                  │   │
   │  │    3. Paste image from clipboard                                     │   │
   │  │                                                                      │   │
   │  │  Constraints:                                                         │   │
   │  │    - Max image size: 10MB                                            │   │
   │  │    - Allowed types: JPEG, PNG, GIF, WEBP                             │   │
-  │  │    - No base64 (uploads to server immediately)                       │   │
+  │  │    - Uploads to server immediately (no base64)                       │   │
   │  └─────────────────────────────────────────────────────────────────────┘   │
   └─────────────────────────────────────────────────────────────────────────────┘
 
   ┌─────────────────────────────────────────────────────────────────────────────┐
-  │  Flow                                                                        │
-  │                                                                              │
-  │  User Action          Editor           API              Server              │
-  │       │                 │               │                  │                │
-  │       │  Drop/Paste     │               │                  │                │
-  │       │ ───────────────►│               │                  │                │
-  │       │                 │  uploadImageApi(file)            │                │
-  │       │                 │ ─────────────►│  POST /upload    │                │
-  │       │                 │               │ ────────────────►│                │
-  │       │                 │               │  { url }         │                │
-  │       │                 │ ◄─────────────│ ◄────────────────│                │
-  │       │                 │  Insert <img src="url">          │                │
-  │       │                 │  into document                    │                │
-  │       │                 │                                   │                │
-  │       │  onChange(html) │                                   │                │
-  │       │ ◄───────────────│                                   │                │
-  │       │                 │                                   │                │
+  │  Component Props                                                             │
+  │  ┌─────────────────────────────────────────────────────────────────────┐   │
+  │  │  interface RichTextEditorProps {                                     │   │
+  │  │    value?: string       // Initial HTML content                     │   │
+  │  │    onChange?: (html: string) => void  // HTML output on change      │   │
+  │  │    placeholder?: string // Placeholder text (default: '写点什么…')   │   │
+  │  │    minHeight?: number   // Min height in px (default: 200)          │   │
+  │  │  }                                                                   │   │
+  │  └─────────────────────────────────────────────────────────────────────┘   │
+  └─────────────────────────────────────────────────────────────────────────────┘
+
+  ┌─────────────────────────────────────────────────────────────────────────────┐
+  │  HTML Import/Export                                                          │
+  │  ┌─────────────────────────────────────────────────────────────────────┐   │
+  │  │  Import (value prop):                                                │   │
+  │  │    editor.tryParseHTMLToBlocks(html) → Block[]                       │   │
+  │  │                                                                      │   │
+  │  │  Export (onChange callback):                                         │   │
+  │  │    editor.blocksToHTMLLossy() → HTML string                          │   │
+  │  │                                                                      │   │
+  │  │  Note: HTML export is "lossy" - some block formatting may be         │   │
+  │  │  simplified when converting to HTML.                                 │   │
+  │  └─────────────────────────────────────────────────────────────────────┘   │
   └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -628,3 +643,86 @@ Create `client/.env`:
 ```bash
 VITE_API_BASE_URL=http://localhost:4000/api
 ```
+
+---
+
+## Dependencies Reference
+
+### Core Dependencies
+
+| Package | Version | Purpose |
+|---------|---------|---------|
+| react | ^18.3.1 | UI framework |
+| react-dom | ^18.3.1 | React DOM renderer |
+| react-router-dom | ^7.1.3 | Client-side routing |
+
+### UI Libraries
+
+| Package | Version | Purpose |
+|---------|---------|---------|
+| antd | ^6.0.0 | UI component library |
+| @ant-design/icons | ^5.6.1 | Icon set |
+| dompurify | ^3.2.4 | XSS prevention for HTML content |
+
+### Rich Text Editor (BlockNote)
+
+| Package | Version | Purpose |
+|---------|---------|---------|
+| @blocknote/core | ^0.47.3 | Core editor logic |
+| @blocknote/react | ^0.47.3 | React hooks (useCreateBlockNote) |
+| @blocknote/mantine | ^0.47.3 | UI components (BlockNoteView) |
+
+**Note:** BlockNote requires all three packages:
+- `@blocknote/core` - Editor instance and block management
+- `@blocknote/react` - React hooks for creating editors
+- `@blocknote/mantine` - Pre-built UI components (side menu, formatting toolbar, etc.)
+
+### State Management & Data Fetching
+
+| Package | Version | Purpose |
+|---------|---------|---------|
+| axios | ^1.8.3 | HTTP client |
+| @tanstack/react-query | ^5.66.9 | Server state management |
+
+### Internationalization
+
+| Package | Version | Purpose |
+|---------|---------|---------|
+| react-i18next | ^15.4.1 | i18n framework |
+| i18next | ^24.2.2 | i18n core |
+
+### Development Dependencies
+
+| Package | Version | Purpose |
+|---------|---------|---------|
+| typescript | ~5.7.3 | TypeScript compiler |
+| vite | ^8.0.0 | Build tool |
+| @types/react | ^18.3.18 | React type definitions |
+| @types/react-dom | ^18.3.5 | React DOM type definitions |
+| @types/dompurify | ^3.2.0 | DOMPurify type definitions |
+
+### Installing Dependencies
+
+```bash
+# Install all dependencies
+npm install
+
+# Or install BlockNote specifically (if needed)
+npm install @blocknote/core @blocknote/react @blocknote/mantine
+```
+
+---
+
+## Component Index
+
+| Component | Path | Description |
+|-----------|------|-------------|
+| LayoutShell | src/modules/layout/LayoutShell.tsx | Main layout wrapper |
+| LeftNav | src/modules/layout/LeftNav.tsx | Left sidebar navigation |
+| MainContent | src/modules/layout/MainContent.tsx | Content router |
+| RightBar | src/modules/home/RightBar.tsx | Right sidebar (home only) |
+| FeedTabs | src/modules/home/FeedTabs.tsx | Category tabs |
+| FeedList | src/modules/home/FeedList.tsx | Feed list container |
+| FeedPostItem | src/modules/home/FeedPostItem.tsx | Weibo-style post card |
+| RichTextEditor | src/modules/posts/RichTextEditor.tsx | BlockNote editor wrapper |
+| Avatar | src/modules/shared/Avatar.tsx | Avatar component |
