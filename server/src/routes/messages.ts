@@ -33,7 +33,8 @@ messageRouter.get('/conversations', async (req: AuthRequest, res) => {
           CASE WHEN from_user_id = ? THEN to_user_id ELSE from_user_id END AS peer_id,
           MAX(created_at) AS last_at
         FROM messages
-        WHERE from_user_id = ? OR to_user_id = ?
+        WHERE (from_user_id = ? OR to_user_id = ?)
+          AND from_user_id <> to_user_id
         GROUP BY peer_id
       ) sub
       JOIN users u ON u.id = sub.peer_id
@@ -114,6 +115,10 @@ messageRouter.get('/conversation/:userId', async (req: AuthRequest, res) => {
   const otherId = Number(req.params.userId)
   if (Number.isNaN(otherId)) {
     res.status(400).json({ message: '用户 ID 不合法' })
+    return
+  }
+  if (otherId === req.user.id) {
+    res.status(400).json({ message: '不能查看与自己的私信会话' })
     return
   }
 

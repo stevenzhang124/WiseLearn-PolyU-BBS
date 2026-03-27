@@ -118,7 +118,10 @@ export const MessagesPage: React.FC = () => {
     setLoadingList(true)
     try {
       const data = await fetchConversationsList()
-      setConversations(data.conversations)
+      const me = user?.id
+      setConversations(
+        me != null ? data.conversations.filter((c) => c.userId !== me) : data.conversations
+      )
     } catch (err) {
       message.error((err as Error).message)
       setConversations([])
@@ -150,7 +153,7 @@ export const MessagesPage: React.FC = () => {
 
   useEffect(() => {
     if (activeTab === 'dm') void loadConversationsList()
-  }, [activeTab])
+  }, [activeTab, user?.id])
 
   const onSend = async () => {
     if (otherId == null || Number.isNaN(otherId) || !content.trim()) {
