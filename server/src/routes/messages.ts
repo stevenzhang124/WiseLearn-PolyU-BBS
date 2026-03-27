@@ -165,7 +165,7 @@ messageRouter.get('/unread-count', async (req: AuthRequest, res) => {
 
   try {
     const [rows] = await pool.query(
-      'SELECT COUNT(*) AS count FROM messages WHERE to_user_id = ? AND is_read = 0',
+      'SELECT COUNT(*) AS count FROM messages WHERE to_user_id = ? AND is_read = 0 AND from_user_id <> to_user_id',
       [req.user.id]
     )
     const count = (rows as any[])[0]?.count ?? 0
