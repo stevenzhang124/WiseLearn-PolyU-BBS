@@ -415,11 +415,7 @@ code {
 .wiselearn-content-area {
   flex: 1;
   min-width: 0;
-  margin: 20px;
-  background: #f7f7f8;
-  padding: 24px;
-  border-radius: 16px;
-  min-height: 280px;
+  padding: 16px;
   box-sizing: border-box;
 }
 
@@ -427,12 +423,20 @@ code {
 .wiselearn-main-layout {
   flex: 1;
   min-height: 0;
+  background: #f5f5f5;
+}
+
+/* Left sidebar */
+.wiselearn-left-sider {
+  background: #f5f5f5 !important;
+  overflow: visible;
 }
 
 /* Right sidebar */
 .wiselearn-right-sider {
   overflow: hidden;
   transition: all 0.3s ease;
+  background: #f5f5f5 !important;
 }
 
 .wiselearn-right-sider .ant-layout-sider-children {

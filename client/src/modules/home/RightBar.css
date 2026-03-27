@@ -2,17 +2,17 @@
 
 .wiselearn-right-bar {
   padding: 16px;
-  background: #f7f7f8;
   height: 100%;
   overflow-y: auto;
+  box-sizing: border-box;
 }
 
-/* Sidebar module */
+/* Sidebar module - white card style */
 .wiselearn-sidebar-module {
   background: #fff;
   border-radius: 8px;
   padding: 12px;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .wiselearn-sidebar-module:last-child {

@@ -232,8 +232,7 @@ export const LayoutShell: React.FC = () => {
           breakpoint="lg"
           collapsedWidth="0"
           trigger={null}
-          className="wiselearn-sider-white"
-          style={{ background: '#fff', borderRight: '1px solid #f0f0f0' }}
+          className="wiselearn-left-sider"
         >
           <LeftNav
             selectedKeys={selectedKeys}
@@ -254,10 +253,6 @@ export const LayoutShell: React.FC = () => {
           collapsedWidth={0}
           collapsed={!selectedKeys.includes('home')}
           className="wiselearn-right-sider"
-          style={{
-            background: '#f7f7f8',
-            borderLeft: '1px solid #f0f0f0'
-          }}
         >
           <RightBar />
         </Sider>

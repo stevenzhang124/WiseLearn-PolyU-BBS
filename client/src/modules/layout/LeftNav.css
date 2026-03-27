@@ -2,6 +2,10 @@
 
 .wiselearn-left-nav {
   border-right: none !important;
+  background: #fff !important;
+  border-radius: 8px;
+  margin: 16px;
+  padding: 8px 0;
 }
 
 .wiselearn-left-nav .ant-menu-item {
