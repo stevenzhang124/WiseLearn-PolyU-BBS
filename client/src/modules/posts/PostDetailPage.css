@@ -150,13 +150,147 @@
   border-top: 1px solid #f0f0f0;
 }
 
-.wiselearn-detail-cover {
+/* 新帖图文分离：顶栏图集（多图轮播可滑，单图静态） */
+.wiselearn-detail-gallery {
+  margin: 0 0 18px;
+}
+
+.wiselearn-detail-gallery--carousel {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  /* 与 .wiselearn-feed-card-frame 卡片白底一致 */
+  background: #fff;
+}
+
+.wiselearn-detail-gallery-counter {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  font-size: 12px;
+  line-height: 1.4;
+  pointer-events: none;
+}
+
+.wiselearn-detail-gallery--carousel .ant-carousel {
+  width: 100%;
+  background: #fff;
+}
+
+.wiselearn-detail-gallery--carousel .slick-list,
+.wiselearn-detail-gallery--carousel .slick-track {
+  background: #fff;
+}
+
+/* 便于触控横向滑动（避免被父级手势吞掉） */
+.wiselearn-detail-gallery--carousel .slick-list {
+  touch-action: pan-x pinch-zoom;
+  cursor: grab;
+}
+
+.wiselearn-detail-gallery--carousel .slick-list:active {
+  cursor: grabbing;
+}
+
+.wiselearn-detail-gallery-arrow {
+  position: absolute;
+  top: 50%;
+  z-index: 3;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  color: #c8102e;
+  font-size: 16px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  transition:
+    background 0.2s,
+    color 0.2s,
+    opacity 0.2s;
+}
+
+.wiselearn-detail-gallery-arrow:hover:not(:disabled) {
+  background: #fff;
+  color: #a50d26;
+}
+
+.wiselearn-detail-gallery-arrow:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.wiselearn-detail-gallery-arrow--prev {
+  left: 8px;
+}
+
+.wiselearn-detail-gallery-arrow--next {
+  right: 8px;
+}
+
+.wiselearn-detail-gallery-slide {
+  height: min(72vh, 520px);
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  outline: none;
+  background: #fff;
+}
+
+.wiselearn-detail-gallery-image-root.ant-image {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+  max-height: min(72vh, 520px);
+}
+
+.wiselearn-detail-gallery-image-img.ant-image-img {
+  max-width: 100%;
+  max-height: min(72vh, 520px);
+  width: auto !important;
+  height: auto !important;
+  object-fit: contain;
+  vertical-align: middle;
+  user-select: none;
+}
+
+.wiselearn-detail-gallery--carousel .slick-dots {
+  bottom: 8px !important;
+}
+
+.wiselearn-detail-gallery--carousel .slick-dots li button {
+  background: rgba(0, 0, 0, 0.48) !important;
+  opacity: 1 !important;
+}
+
+.wiselearn-detail-gallery--carousel .slick-dots li.slick-active button {
+  background: #a50d26 !important;
+  opacity: 1 !important;
+}
+
+.wiselearn-detail-gallery--single .wiselearn-detail-gallery-single-root.ant-image {
+  width: 100%;
+  display: block;
+}
+
+.wiselearn-detail-gallery--single .wiselearn-detail-gallery-single-img.ant-image-img {
   width: 100%;
   height: auto;
   max-height: 360px;
   object-fit: cover;
   border-radius: 8px;
-  margin: 0 0 16px;
   display: block;
 }
 .wiselearn-detail-action {
@@ -338,7 +472,19 @@
     margin-left: 24px;
     padding-left: 8px;
   }
-  .wiselearn-detail-cover {
+  .wiselearn-detail-gallery-slide {
+    height: min(65vh, 440px);
+  }
+
+  .wiselearn-detail-gallery-image-root.ant-image {
+    max-height: min(65vh, 440px);
+  }
+
+  .wiselearn-detail-gallery-image-img.ant-image-img {
+    max-height: min(65vh, 440px);
+  }
+
+  .wiselearn-detail-gallery--single .wiselearn-detail-gallery-single-img.ant-image-img {
     max-height: 260px;
   }
 }

@@ -1,6 +1,14 @@
-import React, { useEffect, useState } from 'react'
-import { App, Button, Form, Input, Space, Typography } from 'antd'
-import { LikeOutlined, ShareAltOutlined, MessageOutlined, EditOutlined } from '@ant-design/icons'
+import React, { useEffect, useRef, useState } from 'react'
+import { App, Button, Carousel, Form, Image, Input, Space, Typography } from 'antd'
+import type { CarouselRef } from 'antd/es/carousel'
+import {
+  LikeOutlined,
+  ShareAltOutlined,
+  MessageOutlined,
+  EditOutlined,
+  LeftOutlined,
+  RightOutlined
+} from '@ant-design/icons'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
@@ -67,6 +75,8 @@ export const PostDetailPage: React.FC = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const [form] = Form.useForm()
+  const [gallerySlideIndex, setGallerySlideIndex] = useState(0)
+  const galleryCarouselRef = useRef<CarouselRef>(null)
 
   const loadDetail = async () => {
     if (!postId) return
@@ -83,6 +93,10 @@ export const PostDetailPage: React.FC = () => {
 
   useEffect(() => {
     void loadDetail()
+  }, [postId])
+
+  useEffect(() => {
+    setGallerySlideIndex(0)
   }, [postId])
 
   useEffect(() => {
@@ -179,10 +193,19 @@ export const PostDetailPage: React.FC = () => {
   const post = detail?.post
   const comments: any[] = detail?.comments ?? []
   const commentTree = buildCommentTree(comments)
-  const coverUrl = post?.image_urls ? String(post.image_urls).split(',')[0]?.trim() : null
+  /** 正文内嵌图片：旧帖，保持原样渲染，不启用 image_urls 顶栏图集 */
   const hasImageInContent = Boolean(
     post?.content && /<img[^>]*>/i.test(String(post.content))
   )
+  const galleryUrls: string[] = post?.image_urls
+    ? String(post.image_urls)
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean)
+    : []
+  /** 新帖：图在 image_urls、文在外层；旧帖仅走正文 */
+  const showSplitImageGallery =
+    galleryUrls.length > 0 && !hasImageInContent
 
   if (loading && !detail) {
     return (
@@ -242,8 +265,83 @@ export const PostDetailPage: React.FC = () => {
               </Button>
             )}
           </div>
-          {coverUrl && !hasImageInContent && (
-            <img src={coverUrl} alt="" className="wiselearn-detail-cover" />
+          {showSplitImageGallery && galleryUrls.length >= 2 && (
+            <div
+              className="wiselearn-detail-gallery wiselearn-detail-gallery--carousel"
+              role="region"
+              aria-label={t('post.detailImageGallery')}
+            >
+              <span className="wiselearn-detail-gallery-counter" aria-live="polite">
+                {gallerySlideIndex + 1} / {galleryUrls.length}
+              </span>
+              <button
+                type="button"
+                className="wiselearn-detail-gallery-arrow wiselearn-detail-gallery-arrow--prev"
+                disabled={gallerySlideIndex <= 0}
+                aria-label={t('post.galleryPrev')}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  galleryCarouselRef.current?.prev()
+                }}
+              >
+                <LeftOutlined />
+              </button>
+              <button
+                type="button"
+                className="wiselearn-detail-gallery-arrow wiselearn-detail-gallery-arrow--next"
+                disabled={gallerySlideIndex >= galleryUrls.length - 1}
+                aria-label={t('post.galleryNext')}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  galleryCarouselRef.current?.next()
+                }}
+              >
+                <RightOutlined />
+              </button>
+              <Image.PreviewGroup>
+                <Carousel
+                  ref={galleryCarouselRef}
+                  infinite={false}
+                  arrows={false}
+                  dots
+                  dotPlacement="bottom"
+                  draggable
+                  swipe
+                  touchMove
+                  afterChange={(i) => setGallerySlideIndex(i)}
+                >
+                  {galleryUrls.map((url, i) => (
+                    <div key={`${url}-${i}`} className="wiselearn-detail-gallery-slide">
+                      <Image
+                        src={url}
+                        alt=""
+                        draggable={false}
+                        classNames={{
+                          root: 'wiselearn-detail-gallery-image-root',
+                          image: 'wiselearn-detail-gallery-image-img'
+                        }}
+                        preview={{
+                          mask: t('home.previewImage')
+                        }}
+                      />
+                    </div>
+                  ))}
+                </Carousel>
+              </Image.PreviewGroup>
+            </div>
+          )}
+          {showSplitImageGallery && galleryUrls.length === 1 && (
+            <div className="wiselearn-detail-gallery wiselearn-detail-gallery--single">
+              <Image
+                src={galleryUrls[0]}
+                alt=""
+                classNames={{
+                  root: 'wiselearn-detail-gallery-single-root',
+                  image: 'wiselearn-detail-gallery-single-img'
+                }}
+                preview={{ mask: t('home.previewImage') }}
+              />
+            </div>
           )}
           <div className="wiselearn-post-content wiselearn-detail-content">
             <PostContentBlockNote key={postId} html={String(post.content || '')} />
