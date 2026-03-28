@@ -26,6 +26,13 @@ export const CreatePostPage: React.FC = () => {
   const [attachedImageUrls, setAttachedImageUrls] = useState<string[]>([])
   const navigate = useNavigate()
   const editorRef = useRef<RichTextEditorRef>(null)
+  const contentSectionRef = useRef<HTMLDivElement>(null)
+
+  const scrollToContentSection = () => {
+    requestAnimationFrame(() => {
+      contentSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    })
+  }
 
   const categories = POST_CATEGORY_VALUES.map((value) => ({
     label: t(`home.category.${value}` as const),
@@ -42,6 +49,7 @@ export const CreatePostPage: React.FC = () => {
   }) => {
     if (!contentHtml || contentHtml === '<p></p>') {
       message.warning(t('post.contentRequired'))
+      scrollToContentSection()
       return
     }
     setCreating(true)
@@ -78,7 +86,12 @@ export const CreatePostPage: React.FC = () => {
   return (
     <div className="wiselearn-post-editor">
       <div className="wiselearn-post-editor-body">
-        <Form form={form} layout="vertical" onFinish={onCreatePost}>
+        <Form
+          form={form}
+          layout="vertical"
+          scrollToFirstError={{ behavior: 'smooth', block: 'center' }}
+          onFinish={onCreatePost}
+        >
           <Form.Item
             label={t('post.title')}
             name="title"
@@ -112,28 +125,30 @@ export const CreatePostPage: React.FC = () => {
             />
           </Form.Item>
 
-          <Form.Item
-            label={t('post.content')}
-            required
-            className="wiselearn-content-form-item"
-          >
-            <div className="wiselearn-editor-wrapper">
-              <RichTextEditor
-                ref={editorRef}
-                value={contentHtml}
-                onChange={setContentHtml}
-                placeholder={t('post.contentPlaceholder')}
-                minHeight={280}
-                onReady={handleEditorReady}
-                disableImages
-              />
-              <EditorToolbar
-                editor={editorReady ? editorRef.current?.editor ?? null : null}
-                showImageButton={false}
-                showHashtagButton={false}
-              />
-            </div>
-          </Form.Item>
+          <div ref={contentSectionRef} id="wiselearn-post-content-anchor">
+            <Form.Item
+              label={t('post.content')}
+              required
+              className="wiselearn-content-form-item"
+            >
+              <div className="wiselearn-editor-wrapper">
+                <RichTextEditor
+                  ref={editorRef}
+                  value={contentHtml}
+                  onChange={setContentHtml}
+                  placeholder={t('post.contentPlaceholder')}
+                  minHeight={280}
+                  onReady={handleEditorReady}
+                  disableImages
+                />
+                <EditorToolbar
+                  editor={editorReady ? editorRef.current?.editor ?? null : null}
+                  showImageButton={false}
+                  showHashtagButton={false}
+                />
+              </div>
+            </Form.Item>
+          </div>
 
           <div className="wiselearn-post-images-section">
             <PostImageUploadSection urls={attachedImageUrls} onChange={setAttachedImageUrls} />
