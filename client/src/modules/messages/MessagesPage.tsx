@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react'
-import { Card, List, Input, Button, Typography, message, Badge, Tabs } from 'antd'
+import { App, Card, Input, Button, Typography, Badge, Tabs, Spin } from 'antd'
 import { SendOutlined, LikeOutlined, UserAddOutlined, CommentOutlined, MessageOutlined } from '@ant-design/icons'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -10,6 +10,8 @@ import {
   fetchConversationsList,
   sendMessage,
   getUserApi,
+  getUnreadCount,
+  getNotificationsUnreadCount,
   getNotificationsLikes,
   getNotificationsFollows,
   getNotificationsComments,
@@ -20,10 +22,13 @@ import './MessagesPage.css'
 
 type TabKey = 'likes' | 'follows' | 'comments' | 'dm'
 
+const UNREAD_CHANGED_EVENT = 'wiselearn:unread-changed'
+
 /**
  * 消息中心（参考小红书）：点赞、关注、评论/回复 + 私信
  */
 export const MessagesPage: React.FC = () => {
+  const { message } = App.useApp()
   const { t, i18n } = useTranslation()
   const { userId: paramUserId } = useParams<{ userId: string }>()
   const navigate = useNavigate()
@@ -47,6 +52,7 @@ export const MessagesPage: React.FC = () => {
   const [loadingLikes, setLoadingLikes] = useState(false)
   const [loadingFollows, setLoadingFollows] = useState(false)
   const [loadingComments, setLoadingComments] = useState(false)
+  const [unreadCounts, setUnreadCounts] = useState({ likes: 0, follows: 0, comments: 0, dm: 0 })
 
   const otherId = paramUserId ? Number(paramUserId) : null
   const locale = i18n.language === 'en' ? 'en-US' : 'zh-CN'
@@ -83,6 +89,9 @@ export const MessagesPage: React.FC = () => {
       setMessagesList([])
     } finally {
       if (!silent) setLoading(false)
+      if (!silent) {
+        window.dispatchEvent(new Event(UNREAD_CHANGED_EVENT))
+      }
     }
   }
 
@@ -110,7 +119,10 @@ export const MessagesPage: React.FC = () => {
     setLoadingList(true)
     try {
       const data = await fetchConversationsList()
-      setConversations(data.conversations)
+      const me = user?.id
+      setConversations(
+        me != null ? data.conversations.filter((c) => c.userId !== me) : data.conversations
+      )
     } catch (err) {
       message.error((err as Error).message)
       setConversations([])
@@ -119,9 +131,30 @@ export const MessagesPage: React.FC = () => {
     }
   }
 
+  const fetchUnreadCounts = async () => {
+    if (!user) return
+    try {
+      const [msg, notif] = await Promise.all([getUnreadCount(), getNotificationsUnreadCount()])
+      setUnreadCounts({
+        likes: notif.likes,
+        follows: notif.follows,
+        comments: notif.comments,
+        dm: msg.count
+      })
+    } catch {
+      setUnreadCounts({ likes: 0, follows: 0, comments: 0, dm: 0 })
+    } finally {
+      window.dispatchEvent(new Event(UNREAD_CHANGED_EVENT))
+    }
+  }
+
+  useEffect(() => {
+    void fetchUnreadCounts()
+  }, [user])
+
   useEffect(() => {
     if (activeTab === 'dm') void loadConversationsList()
-  }, [activeTab])
+  }, [activeTab, user?.id])
 
   const onSend = async () => {
     if (otherId == null || Number.isNaN(otherId) || !content.trim()) {
@@ -193,11 +226,21 @@ export const MessagesPage: React.FC = () => {
     setActiveTab(k)
     if (k === 'dm') {
       if (otherId) { /* stay on /messages/:id */ } else navigate('/messages')
+      void fetchUnreadCounts()
     } else {
       if (otherId) navigate('/messages')
-      if (k === 'likes') markNotificationsRead('like').then(() => loadLikes(true)).catch(() => {})
-      if (k === 'follows') markNotificationsRead('follow').then(() => loadFollows(true)).catch(() => {})
-      if (k === 'comments') markNotificationsRead('comment').then(() => loadComments(true)).catch(() => {})
+      if (k === 'likes')
+        markNotificationsRead('like')
+          .then(() => { loadLikes(true); void fetchUnreadCounts() })
+          .catch(() => {})
+      if (k === 'follows')
+        markNotificationsRead('follow')
+          .then(() => { loadFollows(true); void fetchUnreadCounts() })
+          .catch(() => {})
+      if (k === 'comments')
+        markNotificationsRead('comment')
+          .then(() => { loadComments(true); void fetchUnreadCounts() })
+          .catch(() => {})
     }
   }
 
@@ -225,21 +268,19 @@ export const MessagesPage: React.FC = () => {
         {t('notifications.whoLiked')}
       </Typography.Title>
       {loadingLikes ? (
-        <List loading />
+        <div className="wiselearn-list-loading">
+          <Spin />
+        </div>
       ) : likesList.length === 0 ? (
         <Typography.Paragraph type="secondary">{t('notifications.noLikes')}</Typography.Paragraph>
       ) : (
-        <List
-          dataSource={likesList}
-          renderItem={(item) => (
-            <List.Item
-              className="wiselearn-notif-item"
+        <div className="wiselearn-simple-list" role="list">
+          {likesList.map((item) => (
+            <div
+              key={`${item.postId}-${item.createdAt}-${item.actor?.id ?? ''}`}
+              role="listitem"
+              className="wiselearn-notif-item wiselearn-notif-item--row"
               onClick={() => navigate(`/posts/${item.postId}`)}
-              extra={
-                <Button type="link" size="small">
-                  {t('notifications.goToPost')}
-                </Button>
-              }
             >
               <div className="wiselearn-notif-item-inner">
                 <Avatar src={item.actor.avatar} name={item.actor.nickname} size={44} className="wiselearn-conv-avatar" />
@@ -253,9 +294,14 @@ export const MessagesPage: React.FC = () => {
                   </Typography.Text>
                 </div>
               </div>
-            </List.Item>
-          )}
-        />
+              <div className="wiselearn-notif-item-extra">
+                <Button type="link" size="small" onClick={(e) => { e.stopPropagation(); navigate(`/posts/${item.postId}`) }}>
+                  {t('notifications.goToPost')}
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
       )}
     </div>
   )
@@ -266,19 +312,19 @@ export const MessagesPage: React.FC = () => {
         {t('notifications.whoFollowed')}
       </Typography.Title>
       {loadingFollows ? (
-        <List loading />
+        <div className="wiselearn-list-loading">
+          <Spin />
+        </div>
       ) : followsList.length === 0 ? (
         <Typography.Paragraph type="secondary">{t('notifications.noFollows')}</Typography.Paragraph>
       ) : (
-        <List
-          dataSource={followsList}
-          renderItem={(item) => (
-            <List.Item
-              className="wiselearn-notif-item"
+        <div className="wiselearn-simple-list" role="list">
+          {followsList.map((item) => (
+            <div
+              key={`${item.actor?.id ?? ''}-${item.createdAt}`}
+              role="listitem"
+              className="wiselearn-notif-item wiselearn-notif-item--row"
               onClick={() => navigate(`/users/${item.actor.id}`)}
-              extra={
-                <Button type="link" size="small">{t('notifications.viewProfile')}</Button>
-              }
             >
               <div className="wiselearn-notif-item-inner">
                 <Avatar src={item.actor.avatar} name={item.actor.nickname} size={44} className="wiselearn-conv-avatar" />
@@ -292,9 +338,14 @@ export const MessagesPage: React.FC = () => {
                   </Typography.Text>
                 </div>
               </div>
-            </List.Item>
-          )}
-        />
+              <div className="wiselearn-notif-item-extra">
+                <Button type="link" size="small" onClick={(e) => { e.stopPropagation(); navigate(`/users/${item.actor.id}`) }}>
+                  {t('notifications.viewProfile')}
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
       )}
     </div>
   )
@@ -305,21 +356,19 @@ export const MessagesPage: React.FC = () => {
         {t('notifications.whoCommented')}
       </Typography.Title>
       {loadingComments ? (
-        <List loading />
+        <div className="wiselearn-list-loading">
+          <Spin />
+        </div>
       ) : commentsList.length === 0 ? (
         <Typography.Paragraph type="secondary">{t('notifications.noComments')}</Typography.Paragraph>
       ) : (
-        <List
-          dataSource={commentsList}
-          renderItem={(item) => (
-            <List.Item
-              className="wiselearn-notif-item"
+        <div className="wiselearn-simple-list" role="list">
+          {commentsList.map((item) => (
+            <div
+              key={`${item.postId}-${item.createdAt}-${item.actor?.id ?? ''}-${item.content?.slice(0, 20) ?? ''}`}
+              role="listitem"
+              className="wiselearn-notif-item wiselearn-notif-item--row"
               onClick={() => navigate(`/posts/${item.postId}`)}
-              extra={
-                <Button type="link" size="small" onClick={(e) => { e.stopPropagation(); navigate(`/posts/${item.postId}`) }}>
-                  {t('notifications.goToPost')}
-                </Button>
-              }
             >
               <div className="wiselearn-notif-item-inner">
                 <Avatar src={item.actor.avatar} name={item.actor.nickname} size={44} className="wiselearn-conv-avatar" />
@@ -336,9 +385,14 @@ export const MessagesPage: React.FC = () => {
                   </Typography.Text>
                 </div>
               </div>
-            </List.Item>
-          )}
-        />
+              <div className="wiselearn-notif-item-extra">
+                <Button type="link" size="small" onClick={(e) => { e.stopPropagation(); navigate(`/posts/${item.postId}`) }}>
+                  {t('notifications.goToPost')}
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
       )}
     </div>
   )
@@ -349,20 +403,21 @@ export const MessagesPage: React.FC = () => {
         {t('messages.conversationList')}
       </Typography.Title>
       {loadingList ? (
-        <List loading />
+        <div className="wiselearn-list-loading">
+          <Spin />
+        </div>
       ) : conversations.length === 0 ? (
         <Typography.Paragraph type="secondary">{t('messages.noConversations')}</Typography.Paragraph>
       ) : (
-        <List
-          dataSource={conversations}
-          renderItem={(c) => (
-            <List.Item
+        <div className="wiselearn-simple-list" role="list">
+          {conversations.map((c) => (
+            <div
               key={c.userId}
-              className="wiselearn-conv-item"
+              role="listitem"
+              className="wiselearn-conv-item wiselearn-conv-item--row"
               onClick={() => navigate(`/messages/${c.userId}`)}
-              extra={c.unreadCount > 0 ? <Badge count={c.unreadCount} size="small" /> : null}
             >
-              <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+              <div className="wiselearn-conv-item-main">
                 <Avatar src={c.avatar} name={c.nickname} size={44} className="wiselearn-conv-avatar" />
                 <div className="wiselearn-conv-body">
                   <div className="wiselearn-conv-name">
@@ -378,9 +433,10 @@ export const MessagesPage: React.FC = () => {
                   </Typography.Text>
                 </div>
               </div>
-            </List.Item>
-          )}
-        />
+              {c.unreadCount > 0 ? <Badge count={c.unreadCount} size="small" /> : null}
+            </div>
+          ))}
+        </div>
       )}
     </div>
   )
@@ -461,6 +517,7 @@ export const MessagesPage: React.FC = () => {
             label: (
               <span>
                 <LikeOutlined /> {t('notifications.likes')}
+                <Badge count={unreadCounts.likes} size="small" style={{ marginLeft: 6 }} />
               </span>
             ),
             children: <Card className="wiselearn-card">{renderLikes()}</Card>
@@ -470,6 +527,7 @@ export const MessagesPage: React.FC = () => {
             label: (
               <span>
                 <UserAddOutlined /> {t('notifications.follows')}
+                <Badge count={unreadCounts.follows} size="small" style={{ marginLeft: 6 }} />
               </span>
             ),
             children: <Card className="wiselearn-card">{renderFollows()}</Card>
@@ -479,6 +537,7 @@ export const MessagesPage: React.FC = () => {
             label: (
               <span>
                 <CommentOutlined /> {t('notifications.comments')}
+                <Badge count={unreadCounts.comments} size="small" style={{ marginLeft: 6 }} />
               </span>
             ),
             children: <Card className="wiselearn-card">{renderComments()}</Card>
@@ -488,6 +547,7 @@ export const MessagesPage: React.FC = () => {
             label: (
               <span>
                 <MessageOutlined /> {t('notifications.dm')}
+                <Badge count={unreadCounts.dm} size="small" style={{ marginLeft: 6 }} />
               </span>
             ),
             children: (

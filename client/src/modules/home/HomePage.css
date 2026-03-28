@@ -7,7 +7,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 20px;
+  margin-bottom: 12px;
 }
 .wiselearn-feed-header .ant-typography {
   font-weight: 600;
@@ -35,7 +35,16 @@
 @media (max-width: 600px) {
   .wiselearn-feed-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
+    gap: 8px;
+  }
+  .wiselearn-feed {
+    padding: 0;
+  }
+  .wiselearn-feed-header {
+    margin-bottom: 12px;
+  }
+  .wiselearn-feed-card-body {
+    padding: 8px;
   }
 }
 

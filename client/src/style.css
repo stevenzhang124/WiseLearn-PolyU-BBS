@@ -157,7 +157,7 @@ code {
 }
 
 #app {
-  width: 1126px;
+  width: 1400px;
   max-width: 100%;
   margin: 0 auto;
   text-align: center;
@@ -308,6 +308,41 @@ code {
   padding-left: 1.5em;
   margin: 0.5em 0;
 }
+
+/*
+ * BlockNote 导出待办：toExternalHTML 为 ul>li>input[type=checkbox]+p，不是阅读态的 BlockNote 组件。
+ * 若不覆盖，会出现默认 list 圆点 + 复选框与文字分行，与编辑器内联观感不一致。
+ */
+.wiselearn-post-content ul:has(> li > input[type='checkbox']) {
+  list-style: none;
+  padding-left: 0;
+  margin-left: 0;
+}
+
+.wiselearn-post-content ul:has(> li > input[type='checkbox']) > li {
+  list-style: none;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0.25em 0;
+  padding-left: 0;
+}
+
+.wiselearn-post-content ul:has(> li > input[type='checkbox']) > li > input[type='checkbox'] {
+  flex-shrink: 0;
+  margin: 0.35em 0 0;
+  width: 1.05em;
+  height: 1.05em;
+  accent-color: #c8102e;
+}
+
+.wiselearn-post-content ul:has(> li > input[type='checkbox']) > li > p {
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+}
+
 .wiselearn-post-content img {
   max-width: 100%;
   height: auto;
@@ -355,6 +390,15 @@ code {
   display: block;
 }
 
+/* 移动端中国结图标：默认隐藏，< 767px 时显示 */
+.wiselearn-header-knot {
+  display: none;
+  height: 30px;
+  width: 30px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
 /* 顶栏白底：标题与副标题为深色 */
 .wiselearn-header-white .wiselearn-header-titles {
   display: flex;
@@ -400,4 +444,240 @@ code {
 .wiselearn-lang-switch button.active {
   color: #C8102E;
   font-weight: 600;
+}
+
+/* 主内容区域 */
+.wiselearn-content-area {
+  flex: 1;
+  min-width: 0;
+  padding: 16px 0;
+  box-sizing: border-box;
+}
+
+/* 与首页 .wiselearn-feed-item 外框一致（帖子详情、用户资料等白卡片复用） */
+.wiselearn-feed-card-frame {
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #e8e8e8;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.2s;
+}
+
+.wiselearn-feed-card-frame--interactive:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* Main layout with 3 columns */
+.wiselearn-main-layout {
+  flex: 1;
+  min-height: 0;
+  background: #f5f5f5;
+  gap: 16px;
+}
+
+/* Left sidebar */
+.wiselearn-left-sider {
+  background: transparent !important;
+  overflow: visible;
+  margin-left: 16px;
+}
+
+/* Right sidebar */
+.wiselearn-right-sider {
+  overflow: hidden;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  background: transparent !important;
+  margin-right: 16px;
+}
+
+.wiselearn-right-sider .ant-layout-sider-children {
+  height: 100%;
+}
+
+/* 热点面板：离开首页时淡出并向右滑出 */
+.wiselearn-right-sider-panel {
+  min-height: 100%;
+  transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1), transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: opacity, transform;
+}
+
+.wiselearn-right-sider--open .wiselearn-right-sider-panel {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.wiselearn-right-sider--closed .wiselearn-right-sider-panel {
+  opacity: 0;
+  transform: translateX(28px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wiselearn-right-sider {
+    transition: none !important;
+  }
+
+  .wiselearn-right-sider-panel {
+    transition: none;
+    transform: none !important;
+  }
+
+  .wiselearn-right-sider--closed .wiselearn-right-sider-panel {
+    opacity: 0;
+  }
+}
+
+/* 汉堡按钮：底部导航栏替代了汉堡菜单，始终隐藏 */
+.wiselearn-mobile-ham {
+  display: none !important;
+}
+
+/* 语言简称：默认隐藏，手机端显示 */
+.wiselearn-lang-abbr {
+  display: none;
+}
+.wiselearn-lang-full {
+  display: inline;
+}
+
+/* 底部导航栏（仅移动端） */
+.wiselearn-bottom-nav {
+  display: none;
+}
+
+/* ≥992px: 正常桌面布局 */
+@media (min-width: 992px) {
+  .wiselearn-header-logo {
+    height: 44px !important;
+  }
+}
+
+/* <992px: 侧边栏收起，底部导航出现 */
+@media (max-width: 991px) {
+  .wiselearn-content-area {
+    margin: 8px;
+    padding: 12px;
+    border-radius: 8px;
+    /* 为底部导航留出空间 */
+    padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px) + 12px) !important;
+  }
+  .wiselearn-header-logo {
+    height: 32px !important;
+  }
+  .wiselearn-header-subtitle {
+    display: none !important;
+  }
+  /* Hide right sidebar on mobile */
+  .wiselearn-left-sider {
+    display: none !important;
+    margin-left: 0;
+  }
+
+  .wiselearn-right-sider {
+    display: none !important;
+  }
+
+  /* 底部导航栏样式 */
+  .wiselearn-bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 56px;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    background: #fff;
+    border-top: 1px solid #f0f0f0;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.06);
+    z-index: 200;
+    align-items: stretch;
+  }
+  .wiselearn-bottom-nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    color: rgba(0, 0, 0, 0.4);
+    text-decoration: none !important;
+    padding: 4px 0;
+    transition: color 0.2s;
+  }
+  .wiselearn-bottom-nav-item.active {
+    color: #C8102E;
+  }
+  .wiselearn-bottom-nav-item:hover {
+    color: #C8102E;
+  }
+  .wiselearn-bottom-nav-icon {
+    font-size: 22px !important;
+    line-height: 1;
+  }
+  .wiselearn-bottom-nav-label {
+    font-size: 10px;
+    line-height: 1;
+    margin-top: 1px;
+  }
+  /* 发帖按钮：红色圆角方块 */
+  .wiselearn-bottom-nav-plus {
+    width: 42px;
+    height: 32px;
+    border-radius: 10px;
+    background: #C8102E;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    box-shadow: 0 2px 8px rgba(200, 16, 46, 0.35);
+  }
+  .wiselearn-bottom-nav-item:hover .wiselearn-bottom-nav-plus,
+  .wiselearn-bottom-nav-item.active .wiselearn-bottom-nav-plus {
+    background: #a00d24;
+  }
+}
+
+/* <767px: 手机端隐藏完整 logo，显示中国结图标，语言缩写 */
+@media (max-width: 767px) {
+  .wiselearn-header-logo {
+    display: none !important;
+  }
+  .wiselearn-header-knot {
+    display: block;
+  }
+  .wiselearn-lang-full {
+    display: none;
+  }
+  .wiselearn-lang-abbr {
+    display: inline;
+  }
+  .wiselearn-lang-switch button {
+    padding: 4px 8px;
+    font-size: 13px;
+  }
+}
+
+/* <640px: 小手机 */
+@media (max-width: 639px) {
+  .wiselearn-content-area {
+    margin: 4px;
+    padding: 8px;
+    border-radius: 6px;
+    padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px) + 8px) !important;
+  }
+  .wiselearn-header-username {
+    display: none !important;
+  }
+  .wiselearn-header-logout-text {
+    display: none !important;
+  }
+  .wiselearn-header-white .wiselearn-header-title {
+    font-size: 14px;
+  }
+}
+
+/* 登录/注册卡片移动端自适应 */
+.wiselearn-auth-card {
+  width: 100% !important;
+  max-width: 400px !important;
 }

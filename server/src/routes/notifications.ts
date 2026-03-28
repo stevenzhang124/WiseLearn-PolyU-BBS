@@ -30,10 +30,11 @@ notificationsRouter.get('/likes', async (req: AuthRequest, res) => {
       FROM likes l
       JOIN posts p ON p.id = l.post_id AND p.user_id = ?
       JOIN users u ON u.id = l.user_id
+      WHERE l.user_id != ?
       ORDER BY l.created_at DESC
       LIMIT 100
       `,
-      [myId]
+      [myId, myId]
     )
 
     let lastReadAt: Date | null = null
@@ -256,8 +257,8 @@ notificationsRouter.get('/unread-count', async (req: AuthRequest, res) => {
 
     let likesUnread = 0
     const [likeRows] = await pool.query(
-      'SELECT COUNT(*) AS c FROM likes l JOIN posts p ON p.id = l.post_id WHERE p.user_id = ? AND l.created_at > COALESCE((SELECT last_read_at FROM user_notification_read WHERE user_id = ? AND notification_type = ?), "1970-01-01")',
-      [myId, myId, 'like']
+      'SELECT COUNT(*) AS c FROM likes l JOIN posts p ON p.id = l.post_id WHERE p.user_id = ? AND l.user_id != ? AND l.created_at > COALESCE((SELECT last_read_at FROM user_notification_read WHERE user_id = ? AND notification_type = ?), "1970-01-01")',
+      [myId, myId, myId, 'like']
     )
     likesUnread = (likeRows as any[])[0]?.c ?? 0
 

@@ -1,0 +1,21 @@
+/* AdminDashboardPage Styles */
+
+.wiselearn-admin-card {
+  border-radius: 8px !important;
+  border: 1px solid #e8e8e8 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+}
+
+.wiselearn-admin-hot-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.wiselearn-admin-hot-row {
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.wiselearn-admin-hot-row:last-child {
+  border-bottom: none;
+}

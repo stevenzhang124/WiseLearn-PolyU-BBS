@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react'
-import { Button, Card, Form, Input, Typography, Checkbox, message, Modal } from 'antd'
+import { App, Button, Card, Form, Input, Typography, Checkbox, Modal } from 'antd'
 import { useNavigate, Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from './AuthContext'
-import { sendResetCodeApi, resetPasswordApi } from '../shared/api'
+import { sendResetCodeApi, resetPasswordApi, updateUserLanguageApi } from '../shared/api'
 
 /** 理工红主色 */
 const POLYU_RED = '#C8102E'
@@ -12,6 +12,7 @@ const POLYU_RED = '#C8102E'
  * 登录页：独立全屏，不显示侧栏/顶栏；理工红主题；含忘记密码（邮箱 6 位验证码重置）
  */
 export const LoginPage: React.FC = () => {
+  const { message } = App.useApp()
   const { t, i18n } = useTranslation()
   const { user, login } = useAuth()
   const navigate = useNavigate()
@@ -44,6 +45,10 @@ export const LoginPage: React.FC = () => {
     setLoading(true)
     try {
       await login(values.email, values.password, values.remember)
+      const lng = i18n.language === 'en' ? 'en' : 'zh'
+      void updateUserLanguageApi(lng).catch(() => {
+        // ignore: language persistence is best-effort
+      })
       message.success(t('auth.loginSuccess'))
       navigate('/')
     } catch (err) {
@@ -169,7 +174,8 @@ export const LoginPage: React.FC = () => {
         title={t('auth.loginTitle')}
         className="wiselearn-auth-card"
         style={{
-          width: 400,
+          width: '100%',
+          maxWidth: 400,
           borderRadius: 16,
           boxShadow: '0 8px 24px rgba(200, 16, 46, 0.12)',
           border: '1px solid rgba(200, 16, 46, 0.2)'
@@ -241,12 +247,19 @@ export const LoginPage: React.FC = () => {
         </Form>
       </Card>
 
+      <Typography.Text
+        type="secondary"
+        style={{ marginTop: 24, fontSize: 12, color: 'rgba(0,0,0,0.4)', textAlign: 'center' }}
+      >
+        The Hong Kong Polytechnic University. 2026
+      </Typography.Text>
+
       <Modal
         title={t('auth.resetPasswordTitle')}
         open={resetModalOpen}
         onCancel={() => setResetModalOpen(false)}
         footer={null}
-        destroyOnClose
+        destroyOnHidden
         width={400}
       >
         <Form form={resetForm} layout="vertical">

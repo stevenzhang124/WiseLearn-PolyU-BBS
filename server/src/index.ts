@@ -3,7 +3,13 @@ import cors from 'cors'
 import path from 'path'
 import { json, urlencoded } from 'express'
 import { config } from './config'
-import { testConnection } from './db'
+import {
+  ensurePostsAuditColumns,
+  ensurePostsPublishedAtColumn,
+  ensureUserNotificationReadTable,
+  ensureUsersUiLangColumn,
+  testConnection
+} from './db'
 import { authRouter } from './routes/auth'
 import { postRouter } from './routes/posts'
 import { messageRouter } from './routes/messages'
@@ -29,7 +35,7 @@ app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')))
 
 // 基础健康检查接口
 app.get('/api/health', (_req, res) => {
-  res.json({ status: 'ok', service: 'WiseLearn API' })
+  res.json({ status: 'ok', service: 'RedBrick API' })
 })
 
 // 功能路由
@@ -54,11 +60,17 @@ app.use(
 async function bootstrap(): Promise<void> {
   try {
     await testConnection()
+    await ensurePostsAuditColumns()
+    await ensurePostsPublishedAtColumn()
+    await ensureUsersUiLangColumn()
+    await ensureUserNotificationReadTable()
     app.listen(config.port, () => {
       // eslint-disable-next-line no-console
-      console.log(`WiseLearn API listening on port ${config.port}`)
+      console.log(`RedBrick API listening on port ${config.port}`)
     })
-  } catch {
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('Server startup failed:', err)
     process.exit(1)
   }
 }

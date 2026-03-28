@@ -8,7 +8,7 @@
     "logout": "Logout",
     "welcome": "Welcome, {{name}}",
     "adminBadge": " (Admin)",
-    "headerTitle": "WiseLearn · Campus",
+    "headerTitle": "RedBrick · Campus",
     "headerSubtitle": "The Hong Kong Polytechnic University"
   },
   "lang": {
@@ -16,8 +16,8 @@
     "en": "English"
   },
   "auth": {
-    "loginTitle": "WiseLearn Login",
-    "registerTitle": "WiseLearn Register",
+    "loginTitle": "RedBrick Login",
+    "registerTitle": "RedBrick Register",
     "email": "PolyU Email",
     "emailPlaceholder": "yourid@polyu.edu.hk",
     "emailRequired": "Please enter email",
@@ -28,6 +28,8 @@
     "nickname": "Nickname",
     "nicknameRequired": "Please enter nickname",
     "nicknameInvalid": "2–20 characters: Chinese, letters or numbers only",
+    "titleTooLong": "Title cannot exceed 20 characters",
+    "imageTooLarge": "Each image must be 60MB or smaller",
     "nicknameTaken": "This nickname is already taken. Please choose another.",
     "nicknamePlaceholder": "Your nickname",
     "remember": "Remember me (auto login for 7 days)",
@@ -64,10 +66,17 @@
     "loading": "Loading...",
     "loadMore": "Load more",
     "pinned": "Pinned",
+    "feedTabsAria": "Post categories; drag horizontally or scroll with the wheel",
+    "feedImageGallery": "Post images",
+    "previewImage": "Preview",
     "category": {
-      "teaching": "Teaching",
+      "all": "All",
       "campus": "Campus Life",
-      "career": "Career"
+      "teaching": "Course Q&A",
+      "news": "News",
+      "trading": "Second-hand",
+      "career": "Job Sharing",
+      "mutual": "Mutual Aid"
     }
   },
   "post": {
@@ -78,13 +87,12 @@
     "category": "Category",
     "categoryRequired": "Please select category",
     "categoryPlaceholder": "Select category",
-    "content": "Content",
-    "contentHelp": "Supports bold, lists, images (paste or drag to upload)",
-    "contentPlaceholder": "Write something…",
+    "content": "Body",
+    "contentPlaceholder": "Write the body, or type '/' for the command menu…",
     "publish": "Publish",
     "cancel": "Cancel",
     "contentRequired": "Please enter post content",
-    "createSuccess": "Post published",
+    "createSuccess": "Post submitted, waiting for admin review",
     "invalidId": "Invalid post ID",
     "author": "Author",
     "me": " (me)",
@@ -94,14 +102,23 @@
     "publishTime": "Published",
     "like": "Like",
     "liked": "Liked",
+    "detailImageGallery": "Post images",
+    "galleryPrev": "Previous image",
+    "galleryNext": "Next image",
+    "comment": "Comment",
     "share": "Share",
     "shareSuccess": "Share link copied to clipboard",
+    "copyLink": "Copy link",
+    "linkCopied": "Link copied",
+    "copyFailed": "Copy failed — select the link manually",
     "comments": "Comments",
     "commentsCount": "Comments ({{count}})",
     "saySomething": "Say something...",
     "commentRequired": "Please enter a comment",
     "submitComment": "Post comment",
     "commentSuccess": "Comment posted",
+    "loginToComment": "Please sign in to comment",
+    "feedInlineCommentPlaceholder": "Write your comment…",
     "reply": "Reply",
     "replyTo": "Reply to @{{name}}",
     "send": "Send",
@@ -110,9 +127,21 @@
     "deleteSuccess": "Deleted",
     "edit": "Edit",
     "saveUpdate": "Save",
-    "updateSuccess": "Updated",
+    "updateSuccess": "Update saved, waiting for admin review again",
     "editNotAuthor": "You can only edit your own post",
-    "authorLabel": "Author"
+    "authorLabel": "Author",
+    "picture": "Picture",
+    "imagesUploaded": "Uploaded {{count}} image(s)",
+    "imagesUploadFailed": "Image upload failed",
+    "emoji": "Emoji",
+    "hashtag": "Hashtag",
+    "toolbarHelp": "Bold, lists, and more. Type '/' for the command menu.",
+    "uploadImagesHint": "Click or drag to add",
+    "uploadImages": "Upload images",
+    "addImage": "Add image",
+    "removeImage": "Remove image",
+    "imagesMaxReached": "You can upload at most {{max}} images",
+    "imagesDropNeedImage": "Please drop image files only"
   },
   "notifications": {
     "title": "Messages",
@@ -151,7 +180,7 @@
     "uploading": "Uploading…",
     "avatarHint": "JPG/PNG/GIF/WebP, max 5MB",
     "avatarFormat": "Please choose a JPG/PNG/GIF/WebP image",
-    "avatarSize": "Image must be under 5MB",
+    "avatarSize": "Image must be 60MB or smaller",
     "avatarSuccess": "Avatar updated",
     "email": "Email",
     "role": "Role",
@@ -173,7 +202,10 @@
     "viewProfile": "View profile",
     "noFollowing": "No following",
     "noFollowers": "No followers",
-    "backToProfile": "Back to profile"
+    "backToProfile": "Back to profile",
+    "postStatusPublished": "Published",
+    "postStatusPending": "Pending review",
+    "postStatusRevision": "Needs revision"
   },
   "admin": {
     "totalUsers": "Total users",
@@ -196,7 +228,18 @@
     "deleteSuccess": "Post deleted",
     "dataDesc": "About",
     "dataDescLabel": "Description",
-    "dataDescText": "This page shows WiseLearn platform statistics for admins."
+    "dataDescText": "This page shows RedBrick platform statistics for admins.",
+    "pendingPostsTitle": "Posts pending review",
+    "pending": "Pending",
+    "approve": "Approve",
+    "reject": "Reject with feedback",
+    "reason": "Feedback / Reason",
+    "reasonPlaceholder": "Please provide specific feedback so the user can revise",
+    "submitAudit": "Submit audit result",
+    "approveSuccess": "Approved",
+    "rejectSuccess": "Rejected and notified the user",
+    "reasonRequired": "Please enter the revision feedback",
+    "pendingNew": "New pending posts: {{count}}"
   },
   "user": {
     "selfLabel": " (me)",
@@ -214,5 +257,16 @@
   },
   "common": {
     "loading": "Loading..."
+  },
+  "rightBar": {
+    "trending": "Hot posts",
+    "latest": "Latest posts",
+    "viewCount": "{{count}} views",
+    "empty": "No posts yet",
+    "loadFailed": "Failed to load",
+    "quickLinks": "Quick Links",
+    "createPost": "Create Post",
+    "myProfile": "My Profile",
+    "messages": "Messages"
   }
 }

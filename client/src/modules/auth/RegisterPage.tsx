@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Button, Card, Form, Input, Space, Typography, message } from 'antd'
+import { App, Button, Card, Form, Input, Space, Typography } from 'antd'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { registerApi, sendVerificationCodeApi } from '../shared/api'
@@ -12,6 +12,7 @@ const CODE_COOLDOWN_SEC = 60
  * 注册页：邮箱验证码 + 理工红主题
  */
 export const RegisterPage: React.FC = () => {
+  const { message } = App.useApp()
   const { t, i18n } = useTranslation()
   const { user } = useAuth()
   const navigate = useNavigate()
@@ -126,7 +127,8 @@ export const RegisterPage: React.FC = () => {
         title={t('auth.registerTitle')}
         className="wiselearn-auth-card"
         style={{
-          width: 400,
+          width: '100%',
+          maxWidth: 400,
           borderRadius: 16,
           boxShadow: '0 8px 24px rgba(200, 16, 46, 0.12)',
           border: '1px solid rgba(200, 16, 46, 0.2)'
@@ -214,7 +216,7 @@ export const RegisterPage: React.FC = () => {
               }
             ]}
           >
-            <Input placeholder={t('auth.nicknamePlaceholder')} size="large" />
+            <Input placeholder={t('auth.nicknamePlaceholder')} size="large" maxLength={20} showCount />
           </Form.Item>
           <Form.Item>
             <Button

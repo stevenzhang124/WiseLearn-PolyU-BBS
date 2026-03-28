@@ -7,7 +7,7 @@ dotenv.config()
  */
 export const config = {
   port: Number(process.env.PORT) || 4000,
-  jwtSecret: process.env.JWT_SECRET || 'changeme-wiselearn-secret',
+  jwtSecret: process.env.JWT_SECRET || 'changeme-redbrick-secret',
   jwtExpiresIn: '7d',
   db: {
     host: process.env.DB_HOST || 'localhost',

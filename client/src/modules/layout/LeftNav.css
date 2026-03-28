@@ -1,0 +1,51 @@
+/* LeftNav Styles */
+
+.wiselearn-left-nav {
+  border-right: none !important;
+  background: #fff !important;
+  border-radius: 8px;
+  border: 1px solid #e8e8e8;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  margin: 16px 0;
+  padding: 8px 0;
+}
+
+.wiselearn-left-nav .ant-menu-item {
+  margin: 4px 0 !important;
+  height: 48px;
+  line-height: 48px;
+  border-radius: 8px;
+  margin-inline: 8px !important;
+  width: calc(100% - 16px);
+}
+
+.wiselearn-left-nav .ant-menu-item-selected {
+  background: #C8102E !important;
+  color: #fff !important;
+}
+
+.wiselearn-left-nav .ant-menu-item-selected .anticon {
+  color: #fff !important;
+}
+
+.wiselearn-left-nav .ant-menu-item:hover {
+  background: rgba(200, 16, 46, 0.08) !important;
+  color: #C8102E !important;
+}
+
+.wiselearn-left-nav .ant-menu-item-selected:hover {
+  background: #a00d24 !important;
+  color: #fff !important;
+}
+
+.wiselearn-menu-link {
+  color: inherit;
+  text-decoration: none;
+  display: inline-block;
+  width: 100%;
+}
+
+.wiselearn-left-nav .ant-badge {
+  display: inline-flex;
+  align-items: center;
+}
