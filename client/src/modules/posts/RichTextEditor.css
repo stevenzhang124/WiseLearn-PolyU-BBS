@@ -42,7 +42,24 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-/* Slash menu */
+/*
+ * 块类型建议菜单（「/」与侧栏 +）：Floating UI 在外层设 max-height，内层 Stack 默认不收缩，
+ * 若不设 overflow，底部会被裁切且滚轮冒泡到主滚动区（页面已滑到底时像在列表里滑不动）。
+ */
+.wiselearn-rich-editor div:has(> #bn-suggestion-menu),
+.wiselearn-rich-editor div:has(> #bn-grid-suggestion-menu) {
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+  min-height: 0;
+}
+
+.wiselearn-rich-editor #bn-suggestion-menu.bn-suggestion-menu,
+.wiselearn-rich-editor #bn-grid-suggestion-menu.bn-grid-suggestion-menu {
+  min-height: 0;
+}
+
+/* 与 slash/建议菜单同一块 UI（类名为 bn-suggestion-menu） */
+.wiselearn-rich-editor .bn-suggestion-menu,
 .wiselearn-rich-editor .bn-slash-menu {
   background: #fff;
   border: 1px solid #e8e8e8;
