@@ -308,6 +308,41 @@ code {
   padding-left: 1.5em;
   margin: 0.5em 0;
 }
+
+/*
+ * BlockNote 导出待办：toExternalHTML 为 ul>li>input[type=checkbox]+p，不是阅读态的 BlockNote 组件。
+ * 若不覆盖，会出现默认 list 圆点 + 复选框与文字分行，与编辑器内联观感不一致。
+ */
+.wiselearn-post-content ul:has(> li > input[type='checkbox']) {
+  list-style: none;
+  padding-left: 0;
+  margin-left: 0;
+}
+
+.wiselearn-post-content ul:has(> li > input[type='checkbox']) > li {
+  list-style: none;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0.25em 0;
+  padding-left: 0;
+}
+
+.wiselearn-post-content ul:has(> li > input[type='checkbox']) > li > input[type='checkbox'] {
+  flex-shrink: 0;
+  margin: 0.35em 0 0;
+  width: 1.05em;
+  height: 1.05em;
+  accent-color: #c8102e;
+}
+
+.wiselearn-post-content ul:has(> li > input[type='checkbox']) > li > p {
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+}
+
 .wiselearn-post-content img {
   max-width: 100%;
   height: auto;

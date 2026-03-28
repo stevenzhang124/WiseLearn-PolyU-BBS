@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react'
-import DOMPurify from 'dompurify'
 import { Button, Form, Input, Space, Typography, message } from 'antd'
 import { LikeOutlined, ShareAltOutlined, MessageOutlined, EditOutlined } from '@ant-design/icons'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
@@ -13,6 +12,7 @@ import {
 } from '../shared/api'
 import { useAuth } from '../auth/AuthContext'
 import { Avatar } from '../shared/Avatar'
+import { PostContentBlockNote } from './PostContentBlockNote'
 import './PostDetailPage.css'
 
 type CommentNode = { root: any; children: CommentNode[] }
@@ -244,14 +244,9 @@ export const PostDetailPage: React.FC = () => {
           {coverUrl && !hasImageInContent && (
             <img src={coverUrl} alt="" className="wiselearn-detail-cover" />
           )}
-          <div
-            className="wiselearn-post-content wiselearn-detail-content"
-            dangerouslySetInnerHTML={{
-              __html: DOMPurify.sanitize(post.content || '', {
-                ADD_ATTR: ['target']
-              })
-            }}
-          />
+          <div className="wiselearn-post-content wiselearn-detail-content">
+            <PostContentBlockNote key={postId} html={String(post.content || '')} />
+          </div>
           <div className="wiselearn-detail-actions">
             <button
               type="button"
