@@ -57,6 +57,42 @@ const fmtTime = (s: string) =>
     hour12: false
   })
 
+const DRAG_THRESHOLD = 6
+
+/**
+ * 轮播内拖动切图后浏览器仍会派发 click，导致 antd Image 误开 preview。
+ * 在容器上记录指针位移，超过阈值则在捕获阶段吞掉 click。
+ */
+function useSwipeGuard() {
+  const startPos = useRef<{ x: number; y: number } | null>(null)
+  const dragged = useRef(false)
+
+  const onPointerDown = React.useCallback((e: React.PointerEvent) => {
+    startPos.current = { x: e.clientX, y: e.clientY }
+    dragged.current = false
+  }, [])
+
+  const onPointerMove = React.useCallback((e: React.PointerEvent) => {
+    if (!startPos.current || dragged.current) return
+    const dx = e.clientX - startPos.current.x
+    const dy = e.clientY - startPos.current.y
+    if (dx * dx + dy * dy > DRAG_THRESHOLD * DRAG_THRESHOLD) {
+      dragged.current = true
+    }
+  }, [])
+
+  const onClickCapture = React.useCallback((e: React.MouseEvent) => {
+    if (dragged.current) {
+      e.preventDefault()
+      e.stopPropagation()
+      dragged.current = false
+    }
+    startPos.current = null
+  }, [])
+
+  return { onPointerDown, onPointerMove, onClickCapture }
+}
+
 /**
  * 帖子详情页：小红书风格 + 评论回复树
  */
@@ -77,6 +113,7 @@ export const PostDetailPage: React.FC = () => {
   const [form] = Form.useForm()
   const [gallerySlideIndex, setGallerySlideIndex] = useState(0)
   const galleryCarouselRef = useRef<CarouselRef>(null)
+  const swipeGuard = useSwipeGuard()
 
   const loadDetail = async () => {
     if (!postId) return
@@ -270,6 +307,9 @@ export const PostDetailPage: React.FC = () => {
               className="wiselearn-detail-gallery wiselearn-detail-gallery--carousel"
               role="region"
               aria-label={t('post.detailImageGallery')}
+              onPointerDown={swipeGuard.onPointerDown}
+              onPointerMove={swipeGuard.onPointerMove}
+              onClickCapture={swipeGuard.onClickCapture}
             >
               <span className="wiselearn-detail-gallery-counter" aria-live="polite">
                 {gallerySlideIndex + 1} / {galleryUrls.length}

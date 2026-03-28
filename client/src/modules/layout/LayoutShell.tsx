@@ -58,8 +58,9 @@ export const LayoutShell: React.FC = () => {
   else if (location.pathname.startsWith('/users/')) selectedKeys.push('userDetail')
   else selectedKeys.push('home')
 
-  /** 仅首页信息流展示右侧热点；其它路由与「用户详情」等均收起 */
-  const showRightHotBar = location.pathname === '/'
+  /** 首页信息流 + 帖子详情页展示右侧热点栏，避免进入详情时 Sider 收起导致 Carousel 闪烁 */
+  const showRightHotBar =
+    location.pathname === '/' || /^\/posts\/\d+$/.test(location.pathname)
 
   const fetchUnread = () => {
     if (!user) return
