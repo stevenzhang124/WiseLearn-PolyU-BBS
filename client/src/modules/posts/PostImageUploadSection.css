@@ -1,13 +1,20 @@
 .wiselearn-post-image-upload {
   margin-top: 8px;
-  padding: 6px;
-  margin-left: -6px;
-  margin-right: -6px;
+  padding: 10px 12px;
+  margin-left: -12px;
+  margin-right: -12px;
   border-radius: 10px;
-  transition: background 0.15s, box-shadow 0.15s;
+  transition:
+    background 0.15s,
+    box-shadow 0.15s,
+    padding 0.2s ease,
+    border-radius 0.2s ease;
 }
 
+/* 拖拽进入时加大内边距，让 inset 红框与标题、缩略图之间更透气 */
 .wiselearn-post-image-upload--dragover {
+  padding: 16px 18px;
+  border-radius: 12px;
   background: rgba(200, 16, 46, 0.06);
   box-shadow: inset 0 0 0 2px rgba(200, 16, 46, 0.35);
 }
