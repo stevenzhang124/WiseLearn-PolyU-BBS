@@ -567,6 +567,11 @@ code {
     display: none !important;
   }
   /* Hide right sidebar on mobile */
+  .wiselearn-left-sider {
+    display: none !important;
+    margin-left: 0;
+  }
+
   .wiselearn-right-sider {
     display: none !important;
   }
