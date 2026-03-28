@@ -85,9 +85,8 @@
     "category": "Category",
     "categoryRequired": "Please select category",
     "categoryPlaceholder": "Select category",
-    "content": "Content",
-    "contentHelp": "Supports bold, lists, images (paste or drag to upload)",
-    "contentPlaceholder": "Write something…",
+    "content": "Body",
+    "contentPlaceholder": "Write the body, or type '/' for the command menu…",
     "publish": "Publish",
     "cancel": "Cancel",
     "contentRequired": "Please enter post content",
@@ -129,7 +128,13 @@
     "imagesUploadFailed": "Image upload failed",
     "emoji": "Emoji",
     "hashtag": "Hashtag",
-    "toolbarHelp": "Bold, lists, and images — paste or drag to upload"
+    "toolbarHelp": "Bold, lists, and more. Type '/' for the command menu.",
+    "uploadImagesHint": "Click or drag to add",
+    "uploadImages": "Upload images",
+    "addImage": "Add image",
+    "removeImage": "Remove image",
+    "imagesMaxReached": "You can upload at most {{max}} images",
+    "imagesDropNeedImage": "Please drop image files only"
   },
   "notifications": {
     "title": "Messages",

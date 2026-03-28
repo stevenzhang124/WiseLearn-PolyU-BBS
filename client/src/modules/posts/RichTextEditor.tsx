@@ -1,10 +1,11 @@
-import { useEffect, useState, useImperativeHandle, forwardRef } from 'react'
-import { BlockNoteEditor } from '@blocknote/core'
+import { useEffect, useState, useImperativeHandle, forwardRef, useMemo, useCallback } from 'react'
+import { BlockNoteEditor, BlockNoteSchema, defaultBlockSpecs } from '@blocknote/core'
 import { useCreateBlockNote } from '@blocknote/react'
 import { BlockNoteView } from '@blocknote/mantine'
 import { App } from 'antd'
 import { uploadImageApi } from '../shared/api'
 import { MAX_IMAGE_UPLOAD_BYTES } from '../shared/imageUploadLimits'
+import { stripImagesFromHtml } from './extractImageUrlsFromContent'
 import { useTranslation } from 'react-i18next'
 
 import '@blocknote/mantine/style.css'
@@ -28,11 +29,13 @@ interface RichTextEditorProps {
   placeholder?: string
   minHeight?: number
   onReady?: () => void
+  /** 为 true 时移除图片/音视频/文件等媒体块与上传，正文仅排版；图片走独立上传区 */
+  disableImages?: boolean
 }
 
 /**
  * Rich text editor using BlockNote (Notion-style block editor)
- * Supports drag-and-drop blocks, slash commands, and image uploads
+ * 默认可插入图片；disableImages 时无 Media（无 image/video/file/audio），图片走独立上传区
  */
 export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(
   ({
@@ -40,32 +43,33 @@ export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>
     onChange,
     placeholder: _placeholder = '写点什么…',
     minHeight = 200,
-    onReady
+    onReady,
+    disableImages = false
   }, ref) => {
     const { message } = App.useApp()
     const { t } = useTranslation()
     const [initialContentSet, setInitialContentSet] = useState(false)
 
-    // Custom file upload handler
-    const uploadFile = async (file: File): Promise<string> => {
-      if (file.size > MAX_IMAGE_UPLOAD_BYTES) {
-        message.error(t('auth.imageTooLarge'))
-        throw new Error('File too large')
-      }
+    const uploadFile = useCallback(
+      async (file: File): Promise<string> => {
+        if (file.size > MAX_IMAGE_UPLOAD_BYTES) {
+          message.error(t('auth.imageTooLarge'))
+          throw new Error('File too large')
+        }
 
-      try {
-        const { url } = await uploadImageApi(file)
-        return url
-      } catch (err) {
-        console.error('Upload image failed', err)
-        throw err
-      }
-    }
+        try {
+          const { url } = await uploadImageApi(file)
+          return url
+        } catch (err) {
+          console.error('Upload image failed', err)
+          throw err
+        }
+      },
+      [message, t]
+    )
 
-    // Create editor instance using hook
-    const editor: BlockNoteEditor = useCreateBlockNote(
-      {
-        uploadFile,
+    const editorOptions = useMemo(() => {
+      const tiptap = {
         _tiptapOptions: {
           editorProps: {
             attributes: {
@@ -73,15 +77,32 @@ export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>
             }
           }
         }
-      },
-      []
-    )
+      }
+      if (disableImages) {
+        const {
+          image: _image,
+          video: _video,
+          file: _file,
+          audio: _audio,
+          ...blockSpecs
+        } = defaultBlockSpecs
+        return {
+          schema: BlockNoteSchema.create({ blockSpecs }),
+          ...tiptap
+        }
+      }
+      return {
+        uploadFile,
+        ...tiptap
+      }
+    }, [disableImages, uploadFile])
 
-    // Expose editor methods via ref
+    const editor = useCreateBlockNote(editorOptions, [disableImages, uploadFile]) as BlockNoteEditor
+
     useImperativeHandle(ref, () => ({
       editor,
       insertImage: (url: string) => {
-        if (!editor) return
+        if (disableImages || !editor) return
         let refBlock: (typeof editor.document)[number] | undefined
         try {
           refBlock = editor.getTextCursorPosition().block
@@ -112,22 +133,21 @@ export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>
           'after'
         )
       }
-    }), [editor])
+    }), [editor, disableImages])
 
-    // Notify parent when editor is ready
     useEffect(() => {
       if (editor && onReady) {
         onReady()
       }
     }, [editor, onReady])
 
-    // Set initial content from value prop when editor mounts
     useEffect(() => {
       if (!editor || initialContentSet || !value || value === '<p></p>' || value === '') return
 
       const insertInitialContent = async () => {
         try {
-          const blocks = await editor.tryParseHTMLToBlocks(value)
+          const html = disableImages ? stripImagesFromHtml(value) : value
+          const blocks = await editor.tryParseHTMLToBlocks(html)
           if (blocks && blocks.length > 0) {
             editor.replaceBlocks(editor.document, blocks)
             setInitialContentSet(true)
@@ -137,15 +157,17 @@ export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>
         }
       }
 
-      insertInitialContent()
-    }, [editor, value, initialContentSet])
+      void insertInitialContent()
+    }, [editor, value, initialContentSet, disableImages])
 
-    // Handle content changes - export to HTML
     const handleChange = async () => {
       if (!onChange) return
 
       try {
-        const html = await editor.blocksToHTMLLossy()
+        let html = await editor.blocksToHTMLLossy()
+        if (disableImages) {
+          html = stripImagesFromHtml(html)
+        }
         onChange(html)
       } catch (err) {
         console.error('Failed to export HTML', err)

@@ -17,13 +17,24 @@ const COMMON_HASHTAGS = [
 
 interface EditorToolbarProps {
   editor: BlockNoteEditor | null
+  /** 发帖正文与图片分区时隐藏工具栏「图片」按钮 */
+  showImageButton?: boolean
+  /** 为 false 时隐藏「话题」快捷插入 */
+  showHashtagButton?: boolean
+  /** 为 false 时隐藏右侧灰色说明文案 */
+  showToolbarHelp?: boolean
 }
 
 /**
  * Editor toolbar with image, emoji, and hashtag buttons
  * Rendered inside the editor footer bar
  */
-export const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
+export const EditorToolbar: React.FC<EditorToolbarProps> = ({
+  editor,
+  showImageButton = true,
+  showHashtagButton = true,
+  showToolbarHelp = true
+}) => {
   const { message } = App.useApp()
   const { t, i18n } = useTranslation()
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
@@ -40,14 +51,18 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
       if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target as Node)) {
         setShowEmojiPicker(false)
       }
-      if (hashtagPickerRef.current && !hashtagPickerRef.current.contains(event.target as Node)) {
+      if (
+        showHashtagButton &&
+        hashtagPickerRef.current &&
+        !hashtagPickerRef.current.contains(event.target as Node)
+      ) {
         setShowHashtagPicker(false)
       }
     }
 
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+  }, [showHashtagButton])
 
   // Handle image upload from file picker（支持一次多选）
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -123,35 +138,40 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
   }
 
   return (
-    <div className="wiselearn-editor-footer">
+    <div
+      className={`wiselearn-editor-footer${!showToolbarHelp ? ' wiselearn-editor-footer--compact' : ''}`}
+    >
       {/* Left side: toolbar buttons */}
       <div className="wiselearn-toolbar-buttons">
-        {/* Image button */}
-        <button
-          type="button"
-          className="wiselearn-toolbar-btn"
-          onMouseDown={(e) => {
-            e.preventDefault()
-            if (!editor) return
-            try {
-              imageInsertAnchorIdRef.current = editor.getTextCursorPosition().block.id
-            } catch {
-              imageInsertAnchorIdRef.current = null
-            }
-          }}
-          onClick={() => fileInputRef.current?.click()}
-        >
-          <PictureOutlined className="wiselearn-toolbar-icon" />
-          <span>{t('post.picture')}</span>
-        </button>
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          accept="image/jpeg,image/png,image/gif,image/webp"
-          style={{ display: 'none' }}
-          onChange={handleImageUpload}
-        />
+        {showImageButton && (
+          <>
+            <button
+              type="button"
+              className="wiselearn-toolbar-btn"
+              onMouseDown={(e) => {
+                e.preventDefault()
+                if (!editor) return
+                try {
+                  imageInsertAnchorIdRef.current = editor.getTextCursorPosition().block.id
+                } catch {
+                  imageInsertAnchorIdRef.current = null
+                }
+              }}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <PictureOutlined className="wiselearn-toolbar-icon" />
+              <span>{t('post.picture')}</span>
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              accept="image/jpeg,image/png,image/gif,image/webp"
+              style={{ display: 'none' }}
+              onChange={handleImageUpload}
+            />
+          </>
+        )}
 
         {/* Emoji button */}
         <div ref={emojiPickerRef} className="wiselearn-picker-wrapper">
@@ -160,7 +180,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
             className="wiselearn-toolbar-btn"
             onClick={() => {
               setShowEmojiPicker(!showEmojiPicker)
-              setShowHashtagPicker(false)
+              if (showHashtagButton) setShowHashtagPicker(false)
             }}
           >
             <SmileOutlined className="wiselearn-toolbar-icon" />
@@ -176,40 +196,40 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
           )}
         </div>
 
-        {/* Hashtag button */}
-        <div ref={hashtagPickerRef} className="wiselearn-picker-wrapper">
-          <button
-            type="button"
-            className="wiselearn-toolbar-btn"
-            onClick={() => {
-              setShowHashtagPicker(!showHashtagPicker)
-              setShowEmojiPicker(false)
-            }}
-          >
-            <NumberOutlined className="wiselearn-toolbar-icon" />
-            <span>{t('post.hashtag')}</span>
-          </button>
-          {showHashtagPicker && (
-            <div className="wiselearn-hashtag-picker">
-              {COMMON_HASHTAGS.map((tag) => (
-                <button
-                  key={tag}
-                  type="button"
-                  className="wiselearn-hashtag-item"
-                  onClick={() => handleHashtagInsert(tag)}
-                >
-                  {tag}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+        {showHashtagButton && (
+          <div ref={hashtagPickerRef} className="wiselearn-picker-wrapper">
+            <button
+              type="button"
+              className="wiselearn-toolbar-btn"
+              onClick={() => {
+                setShowHashtagPicker(!showHashtagPicker)
+                setShowEmojiPicker(false)
+              }}
+            >
+              <NumberOutlined className="wiselearn-toolbar-icon" />
+              <span>{t('post.hashtag')}</span>
+            </button>
+            {showHashtagPicker && (
+              <div className="wiselearn-hashtag-picker">
+                {COMMON_HASHTAGS.map((tag) => (
+                  <button
+                    key={tag}
+                    type="button"
+                    className="wiselearn-hashtag-item"
+                    onClick={() => handleHashtagInsert(tag)}
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* Right side: help text */}
-      <div className="wiselearn-toolbar-help">
-        {t('post.toolbarHelp')}
-      </div>
+      {showToolbarHelp && (
+        <div className="wiselearn-toolbar-help">{t('post.toolbarHelp')}</div>
+      )}
     </div>
   )
 }

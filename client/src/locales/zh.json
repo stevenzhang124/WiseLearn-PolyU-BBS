@@ -85,9 +85,8 @@
     "category": "分类",
     "categoryRequired": "请选择分类",
     "categoryPlaceholder": "请选择帖子分类",
-    "content": "内容",
-    "contentHelp": "支持加粗、列表、插入图片（粘贴或拖拽图片即可上传）",
-    "contentPlaceholder": "写点什么…",
+    "content": "正文",
+    "contentPlaceholder": "输入正文，或输入「/」唤出命令菜单…",
     "publish": "发布帖子",
     "cancel": "取消",
     "contentRequired": "请输入帖子内容",
@@ -129,7 +128,13 @@
     "imagesUploadFailed": "图片上传失败",
     "emoji": "表情",
     "hashtag": "话题",
-    "toolbarHelp": "支持加粗、列表，插入图片（粘贴或拖拽图片即可上传）"
+    "toolbarHelp": "支持加粗、列表等排版；输入「/」可唤出命令菜单",
+    "uploadImagesHint": "点击或拖拽添加",
+    "uploadImages": "上传图片",
+    "addImage": "添加图片",
+    "removeImage": "移除图片",
+    "imagesMaxReached": "最多上传 {{max}} 张图片",
+    "imagesDropNeedImage": "请拖入图片文件"
   },
   "notifications": {
     "title": "消息",

@@ -13,6 +13,13 @@
   transition: border-color 0.2s;
 }
 
+/* 发帖页：无右侧说明时收窄内边距 */
+.wiselearn-editor-footer--compact {
+  justify-content: flex-start;
+  gap: 8px;
+  padding: 8px 10px;
+}
+
 .wiselearn-editor-wrapper:hover .wiselearn-editor-footer,
 .wiselearn-editor-wrapper:focus-within .wiselearn-editor-footer {
   border-top-color: #c8102e;

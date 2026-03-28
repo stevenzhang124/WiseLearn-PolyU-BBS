@@ -8,7 +8,11 @@ import { RichTextEditor } from './RichTextEditor'
 import type { RichTextEditorRef } from './RichTextEditor'
 import { EditorToolbar } from './EditorToolbar'
 import { generateTitleCoverFile } from './generateTitleCover'
-import { extractImageUrlsFromContent } from './extractImageUrlsFromContent'
+import {
+  extractImageUrlsFromContent,
+  stripImagesFromHtml
+} from './extractImageUrlsFromContent'
+import { PostImageUploadSection } from './PostImageUploadSection'
 import { POST_CATEGORY_VALUES } from './postCategoryValues'
 import './PostEditorPage.css'
 
@@ -28,6 +32,7 @@ export const EditPostPage: React.FC = () => {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [editorReady, setEditorReady] = useState(false)
+  const [attachedImageUrls, setAttachedImageUrls] = useState<string[]>([])
   const editorRef = useRef<RichTextEditorRef>(null)
 
   const handleEditorReady = useCallback(() => {
@@ -65,6 +70,13 @@ export const EditPostPage: React.FC = () => {
         })
         setTitleValue(post.title || '')
         setContentHtml(post.content || '')
+        const rawUrls = post.image_urls
+        const fromField =
+          typeof rawUrls === 'string' && rawUrls.trim()
+            ? rawUrls.split(',').map((s: string) => s.trim()).filter(Boolean)
+            : []
+        const fromContent = extractImageUrlsFromContent(post.content || '')
+        setAttachedImageUrls(fromField.length > 0 ? fromField : fromContent)
       })
       .catch((err) => {
         if (!cancelled) {
@@ -87,11 +99,10 @@ export const EditPostPage: React.FC = () => {
     }
     setSaving(true)
     try {
-      const fromContent = extractImageUrlsFromContent(contentHtml)
+      const bodyHtml = stripImagesFromHtml(contentHtml)
       let imageUrls: string[]
-
-      if (fromContent.length > 0) {
-        imageUrls = fromContent
+      if (attachedImageUrls.length > 0) {
+        imageUrls = attachedImageUrls
       } else {
         const coverFile = await generateTitleCoverFile(values.title)
         const { url } = await uploadImageApi(coverFile)
@@ -101,7 +112,7 @@ export const EditPostPage: React.FC = () => {
       await updatePost(postId, {
         title: values.title,
         category: values.category,
-        content: contentHtml,
+        content: bodyHtml,
         imageUrls
       })
       message.success(t('post.updateSuccess'))
@@ -176,10 +187,19 @@ export const EditPostPage: React.FC = () => {
                 placeholder={t('post.contentPlaceholder')}
                 minHeight={280}
                 onReady={handleEditorReady}
+                disableImages
               />
-              <EditorToolbar editor={editorReady ? editorRef.current?.editor ?? null : null} />
+              <EditorToolbar
+                editor={editorReady ? editorRef.current?.editor ?? null : null}
+                showImageButton={false}
+                showHashtagButton={false}
+              />
             </div>
           </Form.Item>
+
+          <div className="wiselearn-post-images-section">
+            <PostImageUploadSection urls={attachedImageUrls} onChange={setAttachedImageUrls} />
+          </div>
         </Form>
       </div>
 

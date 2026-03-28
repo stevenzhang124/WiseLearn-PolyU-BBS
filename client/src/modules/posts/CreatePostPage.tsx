@@ -7,7 +7,8 @@ import { RichTextEditor } from './RichTextEditor'
 import type { RichTextEditorRef } from './RichTextEditor'
 import { EditorToolbar } from './EditorToolbar'
 import { generateTitleCoverFile } from './generateTitleCover'
-import { extractImageUrlsFromContent } from './extractImageUrlsFromContent'
+import { stripImagesFromHtml } from './extractImageUrlsFromContent'
+import { PostImageUploadSection } from './PostImageUploadSection'
 import { POST_CATEGORY_VALUES } from './postCategoryValues'
 import './PostEditorPage.css'
 
@@ -22,6 +23,7 @@ export const CreatePostPage: React.FC = () => {
   const [contentHtml, setContentHtml] = useState('')
   const [titleValue, setTitleValue] = useState('')
   const [editorReady, setEditorReady] = useState(false)
+  const [attachedImageUrls, setAttachedImageUrls] = useState<string[]>([])
   const navigate = useNavigate()
   const editorRef = useRef<RichTextEditorRef>(null)
 
@@ -44,11 +46,10 @@ export const CreatePostPage: React.FC = () => {
     }
     setCreating(true)
     try {
-      const fromContent = extractImageUrlsFromContent(contentHtml)
+      const bodyHtml = stripImagesFromHtml(contentHtml)
       let imageUrls: string[]
-
-      if (fromContent.length > 0) {
-        imageUrls = fromContent
+      if (attachedImageUrls.length > 0) {
+        imageUrls = attachedImageUrls
       } else {
         const coverFile = await generateTitleCoverFile(values.title)
         const { url } = await uploadImageApi(coverFile)
@@ -58,13 +59,14 @@ export const CreatePostPage: React.FC = () => {
       await createPost({
         title: values.title,
         category: values.category,
-        content: contentHtml,
+        content: bodyHtml,
         imageUrls
       })
       message.success(t('post.createSuccess'))
       form.resetFields()
       setContentHtml('')
       setTitleValue('')
+      setAttachedImageUrls([])
       navigate('/')
     } catch (err) {
       message.error((err as Error).message)
@@ -123,10 +125,19 @@ export const CreatePostPage: React.FC = () => {
                 placeholder={t('post.contentPlaceholder')}
                 minHeight={280}
                 onReady={handleEditorReady}
+                disableImages
               />
-              <EditorToolbar editor={editorReady ? editorRef.current?.editor ?? null : null} />
+              <EditorToolbar
+                editor={editorReady ? editorRef.current?.editor ?? null : null}
+                showImageButton={false}
+                showHashtagButton={false}
+              />
             </div>
           </Form.Item>
+
+          <div className="wiselearn-post-images-section">
+            <PostImageUploadSection urls={attachedImageUrls} onChange={setAttachedImageUrls} />
+          </div>
         </Form>
       </div>
 
