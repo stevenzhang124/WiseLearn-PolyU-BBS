@@ -5,7 +5,8 @@
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   border: 1px solid #e8e8e8;
-  overflow: hidden;
+  /* BlockNote  slash 菜单、侧栏按钮等可能溢出卡片，不可 hidden 裁剪 */
+  overflow: visible;
 }
 
 /* Body - form section */
@@ -100,9 +101,11 @@
 .wiselearn-editor-wrapper {
   border: 1px solid #d9d9d9;
   border-radius: 12px;
-  overflow: hidden;
+  overflow: visible;
   background: #fff;
   transition: all 0.2s;
+  position: relative;
+  z-index: 1;
 }
 
 .wiselearn-editor-wrapper:hover {
