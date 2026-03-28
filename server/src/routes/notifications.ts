@@ -222,7 +222,7 @@ notificationsRouter.post('/read', async (req: AuthRequest, res) => {
     return
   }
   const { type } = req.body as { type?: string }
-  if (!['like', 'follow', 'comment'].includes(type)) {
+  if (type !== 'like' && type !== 'follow' && type !== 'comment') {
     res.status(400).json({ message: '无效的 type' })
     return
   }

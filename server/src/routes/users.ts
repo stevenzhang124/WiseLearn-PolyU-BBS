@@ -10,8 +10,10 @@ usersRouter.use(authMiddleware)
 
 const baseUrl = () => process.env.API_BASE_URL || 'http://localhost:4000'
 
-function parseUserId(param: string): number | null {
-  const id = Number(param)
+function parseUserId(param: string | string[] | undefined): number | null {
+  const raw = Array.isArray(param) ? param[0] : param
+  if (raw == null || raw === '') return null
+  const id = Number(raw)
   return Number.isNaN(id) ? null : id
 }
 
