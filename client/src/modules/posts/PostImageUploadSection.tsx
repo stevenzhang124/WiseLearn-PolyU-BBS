@@ -1,5 +1,5 @@
 import React, { useRef, useState, useCallback } from 'react'
-import { App } from 'antd'
+import { App, Image } from 'antd'
 import { PlusOutlined, CloseOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { uploadImageApi } from '../shared/api'
@@ -130,19 +130,28 @@ export const PostImageUploadSection: React.FC<PostImageUploadSectionProps> = ({
         </div>
       </div>
       <div className="wiselearn-post-image-upload__grid">
-        {urls.map((url, index) => (
-          <div key={`${url}-${index}`} className="wiselearn-post-image-upload__thumb">
-            <img src={url} alt="" />
-            <button
-              type="button"
-              className="wiselearn-post-image-upload__remove"
-              onClick={() => removeAt(index)}
-              aria-label={t('post.removeImage')}
-            >
-              <CloseOutlined />
-            </button>
-          </div>
-        ))}
+        <Image.PreviewGroup>
+          {urls.map((url, index) => (
+            <div key={`${url}-${index}`} className="wiselearn-post-image-upload__thumb">
+              <Image
+                src={url}
+                alt=""
+                width="100%"
+                height="100%"
+                style={{ objectFit: 'cover', display: 'block' }}
+                preview={{ mask: t('home.previewImage') }}
+              />
+              <button
+                type="button"
+                className="wiselearn-post-image-upload__remove"
+                onClick={(e) => { e.stopPropagation(); removeAt(index) }}
+                aria-label={t('post.removeImage')}
+              >
+                <CloseOutlined />
+              </button>
+            </div>
+          ))}
+        </Image.PreviewGroup>
         {canAdd && (
           <label className="wiselearn-post-image-upload__add">
             <input

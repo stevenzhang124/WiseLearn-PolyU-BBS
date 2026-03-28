@@ -162,6 +162,12 @@
   overflow: hidden;
 }
 
+.wiselearn-feed-item-gallery-img-root {
+  width: 100%;
+  display: block;
+  line-height: 0;
+}
+
 .wiselearn-feed-item-gallery.single {
   grid-template-columns: 1fr;
 }
@@ -396,4 +402,46 @@
     padding: 6px 8px;
     font-size: 12px;
   }
+}
+
+/* 大图预览遮罩：更暗 + 磨砂 */
+.ant-image-preview-mask {
+  background: rgba(0, 0, 0, 0.75) !important;
+  -webkit-backdrop-filter: blur(12px) saturate(120%);
+  backdrop-filter: blur(12px) saturate(120%);
+}
+
+/* 缩略图 hover 遮罩：半透明暗底 */
+.wiselearn-feed-item-gallery .ant-image-mask {
+  background: rgba(0, 0, 0, 0.35) !important;
+  border-radius: 0;
+}
+
+/* 预览操作栏（缩放、旋转等）更透明一点 */
+.ant-image-preview-operations-wrapper {
+  background: transparent !important;
+}
+
+.ant-image-preview-operations {
+  background: rgba(0, 0, 0, 0.35) !important;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  border-radius: 8px;
+}
+
+/* 左右切换箭头更明显 */
+.ant-image-preview-switch-left,
+.ant-image-preview-switch-right {
+  background: rgba(0, 0, 0, 0.35) !important;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  color: #fff !important;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+}
+
+.ant-image-preview-switch-left:hover,
+.ant-image-preview-switch-right:hover {
+  background: rgba(0, 0, 0, 0.55) !important;
 }

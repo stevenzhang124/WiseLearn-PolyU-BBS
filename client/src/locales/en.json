@@ -67,6 +67,8 @@
     "loadMore": "Load more",
     "pinned": "Pinned",
     "feedTabsAria": "Post categories; drag horizontally or scroll with the wheel",
+    "feedImageGallery": "Post images",
+    "previewImage": "Preview",
     "category": {
       "all": "All",
       "campus": "Campus Life",

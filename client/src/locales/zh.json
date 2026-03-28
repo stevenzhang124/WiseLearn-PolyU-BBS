@@ -67,6 +67,8 @@
     "loadMore": "加载更多",
     "pinned": "置顶",
     "feedTabsAria": "帖子分类，可横向拖动或使用滚轮左右滚动",
+    "feedImageGallery": "帖子配图",
+    "previewImage": "预览大图",
     "category": {
       "all": "全部",
       "campus": "校园生活",

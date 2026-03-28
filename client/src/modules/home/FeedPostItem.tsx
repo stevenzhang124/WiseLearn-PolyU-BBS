@@ -6,7 +6,7 @@ import {
   ShareAltOutlined,
   EyeOutlined
 } from '@ant-design/icons'
-import { App, Button, Input, Modal } from 'antd'
+import { App, Button, Image, Input, Modal } from 'antd'
 import { useTranslation } from 'react-i18next'
 import { Avatar } from '../shared/Avatar'
 import { getShareLink, toggleLike } from '../shared/api'
@@ -226,18 +226,30 @@ export const FeedPostItem: React.FC<FeedPostItemProps> = ({
         }}
       />
 
-      {/* Image gallery */}
+      {/* Image gallery：点击大图预览，多图可在预览内左右切换 */}
       {imageUrls.length > 0 && (
-        <div className={`wiselearn-feed-item-gallery ${getImageGridClass()}`}>
-          {imageUrls.map((url, index) => (
-            <img
-              key={index}
-              src={url}
-              alt=""
-              className="wiselearn-feed-item-gallery-img"
-              onClick={() => onNavigate(`/posts/${post.id}`)}
-            />
-          ))}
+        <div
+          className={`wiselearn-feed-item-gallery ${getImageGridClass()}`}
+          onClick={(e) => e.stopPropagation()}
+          role="group"
+          aria-label={t('home.feedImageGallery')}
+        >
+          <Image.PreviewGroup>
+            {imageUrls.map((url, index) => (
+              <Image
+                key={`${post.id}-${index}-${url}`}
+                src={url}
+                alt=""
+                classNames={{
+                  root: 'wiselearn-feed-item-gallery-img-root',
+                  image: 'wiselearn-feed-item-gallery-img'
+                }}
+                preview={{
+                  mask: t('home.previewImage')
+                }}
+              />
+            ))}
+          </Image.PreviewGroup>
         </div>
       )}
 
