@@ -129,7 +129,7 @@
     "imagesUploadFailed": "Image upload failed",
     "emoji": "Emoji",
     "hashtag": "Hashtag",
-    "toolbarHelp": "Supports Ctrl+B for bold, lists, images (paste or drag to upload)"
+    "toolbarHelp": "Bold, lists, and images — paste or drag to upload"
   },
   "notifications": {
     "title": "Messages",

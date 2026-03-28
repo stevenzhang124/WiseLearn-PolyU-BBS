@@ -8,20 +8,12 @@ import type { RichTextEditorRef } from './RichTextEditor'
 import { EditorToolbar } from './EditorToolbar'
 import { generateTitleCoverFile } from './generateTitleCover'
 import { extractImageUrlsFromContent } from './extractImageUrlsFromContent'
-import './CreatePostPage.css'
+import { POST_CATEGORY_VALUES } from './postCategoryValues'
+import './PostEditorPage.css'
 
 /**
- * 发帖页：富文本编辑 + 图片上传
+ * 发帖页：富文本编辑 + 图片上传（布局与 PostEditorPage.css 与编辑页共用）
  */
-const categoryValues = [
-  { value: 'campus' },
-  { value: 'teaching' },
-  { value: 'news' },
-  { value: 'trading' },
-  { value: 'career' },
-  { value: 'mutual' }
-]
-
 export const CreatePostPage: React.FC = () => {
   const { t } = useTranslation()
   const [form] = Form.useForm()
@@ -32,12 +24,11 @@ export const CreatePostPage: React.FC = () => {
   const navigate = useNavigate()
   const editorRef = useRef<RichTextEditorRef>(null)
 
-  const categories = categoryValues.map((c) => ({
-    label: t(`home.category.${c.value}` as const),
-    value: c.value
+  const categories = POST_CATEGORY_VALUES.map((value) => ({
+    label: t(`home.category.${value}` as const),
+    value
   }))
 
-  // Callback when editor is ready - triggers re-render so toolbar gets the editor
   const handleEditorReady = useCallback(() => {
     setEditorReady(true)
   }, [])
@@ -82,11 +73,9 @@ export const CreatePostPage: React.FC = () => {
   }
 
   return (
-    <div className="wiselearn-create-post">
-      {/* Form section */}
-      <div className="wiselearn-create-post-body">
+    <div className="wiselearn-post-editor">
+      <div className="wiselearn-post-editor-body">
         <Form form={form} layout="vertical" onFinish={onCreatePost}>
-          {/* Title input */}
           <Form.Item
             label={t('post.title')}
             name="title"
@@ -108,7 +97,6 @@ export const CreatePostPage: React.FC = () => {
             </div>
           </Form.Item>
 
-          {/* Category select */}
           <Form.Item
             label={t('post.category')}
             name="category"
@@ -121,7 +109,6 @@ export const CreatePostPage: React.FC = () => {
             />
           </Form.Item>
 
-          {/* Content editor - using Form.Item for consistent label styling */}
           <Form.Item
             label={t('post.content')}
             required
@@ -142,8 +129,7 @@ export const CreatePostPage: React.FC = () => {
         </Form>
       </div>
 
-      {/* Footer with action buttons */}
-      <div className="wiselearn-create-post-footer">
+      <div className="wiselearn-post-editor-footer">
         <Button
           className="wiselearn-btn-cancel"
           onClick={() => navigate('/')}

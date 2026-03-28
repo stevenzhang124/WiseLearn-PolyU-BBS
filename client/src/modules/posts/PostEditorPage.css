@@ -1,44 +1,44 @@
-/* CreatePostPage Styles */
+/* 发帖 / 编辑帖子共用：白卡片 + 表单区 + 底栏按钮 + 标题与分类输入样式 */
 
-.wiselearn-create-post {
+.wiselearn-post-editor {
   background: #fff;
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   border: 1px solid #e8e8e8;
-  /* BlockNote  slash 菜单、侧栏按钮等可能溢出卡片，不可 hidden 裁剪 */
   overflow: visible;
 }
 
-/* Body - form section */
-.wiselearn-create-post-body {
+.wiselearn-post-editor-body {
   padding: 24px 32px;
 }
 
-/* Form item - consistent spacing */
-.wiselearn-create-post-body .ant-form-item {
+.wiselearn-post-editor-heading {
+  margin: 0 0 20px;
+  font-size: 18px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.85);
+}
+
+.wiselearn-post-editor-body .ant-form-item {
   margin-bottom: 20px;
 }
 
-/* Form label styling */
-.wiselearn-create-post-body .ant-form-item-label > label {
+.wiselearn-post-editor-body .ant-form-item-label > label {
   font-weight: 500;
   color: #333;
   font-size: 14px;
   height: auto;
 }
 
-/* Required asterisk - Ant Design default styling */
-.wiselearn-create-post-body .ant-form-item-label > label.ant-form-item-required::before {
+.wiselearn-post-editor-body .ant-form-item-label > label.ant-form-item-required::before {
   color: #ff4d4f;
   margin-right: 4px;
 }
 
-/* Input wrapper for character counter */
 .wiselearn-input-wrapper {
   position: relative;
 }
 
-/* Input styling - consistent radius and height */
 .wiselearn-input {
   border-radius: 12px;
   padding: 10px 60px 10px 14px;
@@ -48,16 +48,15 @@
 }
 
 .wiselearn-input:hover {
-  border-color: #C8102E;
+  border-color: #c8102e;
 }
 
 .wiselearn-input:focus,
 .wiselearn-input-focused {
-  border-color: #C8102E;
+  border-color: #c8102e;
   box-shadow: 0 0 0 2px rgba(200, 16, 46, 0.1);
 }
 
-/* Character counter */
 .wiselearn-char-count {
   position: absolute;
   right: 14px;
@@ -68,7 +67,6 @@
   pointer-events: none;
 }
 
-/* Select styling - same radius and height as input */
 .wiselearn-select {
   width: 100%;
 }
@@ -83,21 +81,19 @@
 }
 
 .wiselearn-select:hover .ant-select-selector {
-  border-color: #C8102E !important;
+  border-color: #c8102e !important;
 }
 
 .wiselearn-select-focused .ant-select-selector,
 .wiselearn-select.ant-select-focused .ant-select-selector {
-  border-color: #C8102E !important;
+  border-color: #c8102e !important;
   box-shadow: 0 0 0 2px rgba(200, 16, 46, 0.1) !important;
 }
 
-/* Content form item */
 .wiselearn-content-form-item {
   text-align: left;
 }
 
-/* Editor wrapper - same radius as input/select */
 .wiselearn-editor-wrapper {
   border: 1px solid #d9d9d9;
   border-radius: 12px;
@@ -109,15 +105,14 @@
 }
 
 .wiselearn-editor-wrapper:hover {
-  border-color: #C8102E;
+  border-color: #c8102e;
 }
 
 .wiselearn-editor-wrapper:focus-within {
-  border-color: #C8102E;
+  border-color: #c8102e;
   box-shadow: 0 0 0 2px rgba(200, 16, 46, 0.1);
 }
 
-/* Remove border from editor since wrapper has it */
 .wiselearn-editor-wrapper .wiselearn-rich-editor {
   border: none;
   border-radius: 0;
@@ -129,8 +124,7 @@
   box-shadow: none;
 }
 
-/* Footer with action buttons */
-.wiselearn-create-post-footer {
+.wiselearn-post-editor-footer {
   display: flex;
   justify-content: flex-end;
   align-items: center;
@@ -140,7 +134,6 @@
   border-top: 1px solid #f0f0f0;
 }
 
-/* Cancel button - outlined, pill shape */
 .wiselearn-btn-cancel {
   padding: 8px 24px;
   height: auto;
@@ -159,13 +152,13 @@
   border-color: #d9d9d9;
 }
 
-/* Publish button - solid primary, pill shape */
+/* 发帖「发布」与编辑「保存」共用主按钮样式 */
 .wiselearn-btn-publish {
   padding: 8px 28px;
   height: auto;
   font-size: 14px;
   font-weight: 500;
-  background: #C8102E;
+  background: #c8102e;
   border: none;
   border-radius: 20px;
   box-shadow: 0 2px 8px rgba(200, 16, 46, 0.25);

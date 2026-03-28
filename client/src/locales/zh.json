@@ -129,7 +129,7 @@
     "imagesUploadFailed": "图片上传失败",
     "emoji": "表情",
     "hashtag": "话题",
-    "toolbarHelp": "支持 Ctrl+B 加粗、列表，图片可拖拽或粘贴上传"
+    "toolbarHelp": "支持加粗、列表，插入图片（粘贴或拖拽图片即可上传）"
   },
   "notifications": {
     "title": "消息",
