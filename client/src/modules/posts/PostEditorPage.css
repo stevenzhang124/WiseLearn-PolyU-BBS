@@ -95,27 +95,39 @@
 }
 
 .wiselearn-editor-wrapper {
-  border: 1px solid #d9d9d9;
   border-radius: 12px;
   overflow: visible;
   background: #fff;
-  transition: all 0.2s;
   position: relative;
-  z-index: 1;
 }
 
-.wiselearn-editor-wrapper:hover {
-  border-color: #c8102e;
+.wiselearn-editor-wrapper::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px #d9d9d9;
+  pointer-events: none;
+  transition: box-shadow 0.2s;
+  z-index: 2;
 }
 
-.wiselearn-editor-wrapper:focus-within {
-  border-color: #c8102e;
-  box-shadow: 0 0 0 2px rgba(200, 16, 46, 0.1);
+.wiselearn-editor-wrapper:hover::after {
+  box-shadow: inset 0 0 0 1px #c8102e;
+}
+
+.wiselearn-editor-wrapper:focus-within::after {
+  box-shadow: inset 0 0 0 1.5px #c8102e, 0 0 0 2px rgba(200, 16, 46, 0.1);
 }
 
 .wiselearn-editor-wrapper .wiselearn-rich-editor {
   border: none;
   border-radius: 0;
+  background: transparent;
+}
+
+.wiselearn-editor-wrapper .bn-container {
+  --bn-colors-editor-background: transparent;
 }
 
 .wiselearn-editor-wrapper .wiselearn-rich-editor:hover,
@@ -132,6 +144,7 @@
   padding: 16px 32px;
   background: #f7f7f8;
   border-top: 1px solid #f0f0f0;
+  border-radius: 0 0 8px 8px;
 }
 
 .wiselearn-btn-cancel {

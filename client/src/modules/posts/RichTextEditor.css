@@ -2,9 +2,6 @@
 
 .wiselearn-rich-editor {
   background: #fff;
-  position: relative;
-  z-index: 1;
-  overflow: visible;
 }
 
 /* BlockNote editor container */
@@ -20,13 +17,8 @@
   --bn-font-size: 15px;
   --bn-line-height: 1.6;
   --bn-border-radius: 4px;
-  overflow: visible;
 }
 
-/*
- * 正文区用常规内边距即可；左侧 + / 手柄由 BlockNote 绝对定位在块左侧，
- * 父级已 overflow:visible（CreatePostPage / editor-wrapper / bn-container），不必再留 54px「假空白」。
- */
 .wiselearn-rich-editor .bn-editor {
   padding: 12px 14px;
   min-height: 200px;
@@ -148,7 +140,3 @@
   margin: 8px 0;
 }
 
-/* 编辑帖等场景：Ant Card body 默认可能裁剪 BlockNote 弹出层 */
-.ant-card-body:has(.wiselearn-rich-editor) {
-  overflow: visible;
-}
