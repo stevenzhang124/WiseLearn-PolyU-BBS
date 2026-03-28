@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { Button, Form, Input, Select, Typography, message } from 'antd'
+import { App, Button, Form, Input, Select, Typography } from 'antd'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { fetchPostDetail, updatePost, uploadImageApi } from '../shared/api'
@@ -16,6 +16,7 @@ import './PostEditorPage.css'
  * 编辑帖子页：布局与发帖页共用 PostEditorPage.css，仅数据加载与提交逻辑不同
  */
 export const EditPostPage: React.FC = () => {
+  const { message } = App.useApp()
   const { t } = useTranslation()
   const { id } = useParams<{ id: string }>()
   const postId = Number(id)

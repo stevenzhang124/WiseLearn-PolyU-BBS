@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback } from 'react'
-import { Button, Form, Input, Select, message } from 'antd'
+import { App, Button, Form, Input, Select } from 'antd'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { createPost, uploadImageApi } from '../shared/api'
@@ -15,6 +15,7 @@ import './PostEditorPage.css'
  * 发帖页：富文本编辑 + 图片上传（布局与 PostEditorPage.css 与编辑页共用）
  */
 export const CreatePostPage: React.FC = () => {
+  const { message } = App.useApp()
   const { t } = useTranslation()
   const [form] = Form.useForm()
   const [creating, setCreating] = useState(false)

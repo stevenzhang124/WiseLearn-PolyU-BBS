@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { message } from 'antd'
+import { App } from 'antd'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { fetchPosts } from '../shared/api'
 import { FeedTabs } from './FeedTabs'
@@ -11,6 +11,7 @@ import './HomePage.css'
  * FeedTabs 切换分类 → fetchPosts 带 category → 后端按 category 筛选（与发帖 category 字段一致）
  */
 export const HomePage: React.FC = () => {
+  const { message } = App.useApp()
   const [sortTab] = useState<'time' | 'hot'>('time')
   const [category, setCategory] = useState('all')
   const [loadingPosts, setLoadingPosts] = useState(false)

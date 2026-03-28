@@ -1,17 +1,16 @@
 import React, { useEffect, useRef, useState } from 'react'
 import {
+  App,
   Card,
   Col,
   Descriptions,
   Input,
-  List,
   Row,
   Space,
   Statistic,
   Table,
   Tag,
   Button,
-  message,
   Modal
 } from 'antd'
 import { useTranslation } from 'react-i18next'
@@ -30,6 +29,7 @@ import './AdminDashboardPage.css'
  * 管理后台：展示统计数据 + 热门帖子 + 帖子搜索/置顶/删除
  */
 export const AdminDashboardPage: React.FC = () => {
+  const { message } = App.useApp()
   const { t, i18n } = useTranslation()
   const [stats, setStats] = useState<any | null>(null)
   const [loading, setLoading] = useState(false)
@@ -202,23 +202,24 @@ export const AdminDashboardPage: React.FC = () => {
       <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
         <Col xs={24} md={12}>
           <Card title={t('admin.hotPostsTop10')} className="wiselearn-admin-card">
-            <List
-              dataSource={stats?.hotPostsTop10 ?? []}
-              renderItem={(item: any) => (
-                <List.Item key={item.id}>
+            <div className="wiselearn-admin-hot-list">
+              {(stats?.hotPostsTop10 ?? []).map((item: any) => (
+                <div key={item.id} className="wiselearn-admin-hot-row">
                   <Space wrap>
                     <span>#{item.id}</span>
                     <span>{item.title}</span>
-                    <Tag color="blue">{t('admin.views')} {item.view_count}</Tag>
+                    <Tag color="blue">
+                      {t('admin.views')} {item.view_count}
+                    </Tag>
                   </Space>
-                </List.Item>
-              )}
-            />
+                </div>
+              ))}
+            </div>
           </Card>
         </Col>
         <Col xs={24} md={12}>
           <Card title={t('admin.postSearch')} className="wiselearn-admin-card">
-            <Space direction="vertical" style={{ width: '100%' }}>
+            <Space orientation="vertical" style={{ width: '100%' }}>
               <Input.Search
                 placeholder={t('admin.searchPlaceholder')}
                 enterButton={t('admin.search')}
@@ -344,7 +345,7 @@ export const AdminDashboardPage: React.FC = () => {
         cancelText={t('post.cancel')}
         onCancel={() => setRejectModalOpen(false)}
         onOk={confirmReject}
-        destroyOnClose
+        destroyOnHidden
       >
         <Input.TextArea
           rows={4}

@@ -6,7 +6,7 @@ import {
   ShareAltOutlined,
   EyeOutlined
 } from '@ant-design/icons'
-import { Button, Input, Modal, message } from 'antd'
+import { App, Button, Input, Modal } from 'antd'
 import { useTranslation } from 'react-i18next'
 import { Avatar } from '../shared/Avatar'
 import { getShareLink, toggleLike } from '../shared/api'
@@ -65,6 +65,7 @@ export const FeedPostItem: React.FC<FeedPostItemProps> = ({
   onNavigate,
   headerMode = 'full'
 }) => {
+  const { message } = App.useApp()
   const { t, i18n } = useTranslation()
   const [likeCount, setLikeCount] = useState(post.like_count)
   const [liked, setLiked] = useState(Boolean(post.user_liked))
@@ -278,7 +279,7 @@ export const FeedPostItem: React.FC<FeedPostItemProps> = ({
         open={shareOpen}
         onCancel={() => setShareOpen(false)}
         footer={null}
-        destroyOnClose
+        destroyOnHidden
       >
         <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
           <Input readOnly value={shareUrl} />

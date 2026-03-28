@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Button, Typography, message } from 'antd'
+import { App, Button, Typography } from 'antd'
 import { UserAddOutlined, MessageOutlined, UserOutlined } from '@ant-design/icons'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -18,6 +18,7 @@ import './UserProfilePage.css'
  * 用户公开资料页：顶部信息 + 微博样式帖子列表（复用首页 FeedPostItem）
  */
 export const UserProfilePage: React.FC = () => {
+  const { message } = App.useApp()
   const { t } = useTranslation()
   const { id } = useParams<{ id: string }>()
   const userId = id ? Number(id) : 0

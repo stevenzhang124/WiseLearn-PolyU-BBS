@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react'
-import { message as antMessage } from 'antd'
+import { App } from 'antd'
 import { PictureOutlined, SmileOutlined, NumberOutlined } from '@ant-design/icons'
 import { BlockNoteEditor } from '@blocknote/core'
 import { uploadImageApi } from '../shared/api'
@@ -24,6 +24,7 @@ interface EditorToolbarProps {
  * Rendered inside the editor footer bar
  */
 export const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
+  const { message } = App.useApp()
   const { t, i18n } = useTranslation()
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const [showHashtagPicker, setShowHashtagPicker] = useState(false)
@@ -56,7 +57,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
     const files = Array.from(raw)
     const oversized = files.find((f) => f.size > MAX_IMAGE_UPLOAD_BYTES)
     if (oversized) {
-      antMessage.error(t('auth.imageTooLarge'))
+      message.error(t('auth.imageTooLarge'))
       if (fileInputRef.current) fileInputRef.current.value = ''
       return
     }
@@ -86,10 +87,10 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
         refBlock,
         'after'
       )
-      antMessage.success(t('post.imagesUploaded', { count: urls.length }))
+      message.success(t('post.imagesUploaded', { count: urls.length }))
     } catch (err) {
       console.error('Upload image failed', err)
-      antMessage.error(t('post.imagesUploadFailed'))
+      message.error(t('post.imagesUploadFailed'))
     }
 
     if (fileInputRef.current) {

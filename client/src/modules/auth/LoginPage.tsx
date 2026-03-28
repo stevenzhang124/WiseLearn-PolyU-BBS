@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Button, Card, Form, Input, Typography, Checkbox, message, Modal } from 'antd'
+import { App, Button, Card, Form, Input, Typography, Checkbox, Modal } from 'antd'
 import { useNavigate, Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from './AuthContext'
@@ -12,6 +12,7 @@ const POLYU_RED = '#C8102E'
  * 登录页：独立全屏，不显示侧栏/顶栏；理工红主题；含忘记密码（邮箱 6 位验证码重置）
  */
 export const LoginPage: React.FC = () => {
+  const { message } = App.useApp()
   const { t, i18n } = useTranslation()
   const { user, login } = useAuth()
   const navigate = useNavigate()
@@ -258,7 +259,7 @@ export const LoginPage: React.FC = () => {
         open={resetModalOpen}
         onCancel={() => setResetModalOpen(false)}
         footer={null}
-        destroyOnClose
+        destroyOnHidden
         width={400}
       >
         <Form form={resetForm} layout="vertical">

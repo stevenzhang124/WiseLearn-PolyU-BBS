@@ -204,7 +204,7 @@ export const LayoutShell: React.FC = () => {
         open={mobileNavOpen}
         placement="left"
         onClose={() => setMobileNavOpen(false)}
-        width={220}
+        size={220}
         styles={{ body: { padding: 0 }, header: { padding: '12px 16px' } }}
         title={
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

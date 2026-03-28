@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Button, Form, Input, Space, Typography, message } from 'antd'
+import { App, Button, Form, Input, Space, Typography } from 'antd'
 import { LikeOutlined, ShareAltOutlined, MessageOutlined, EditOutlined } from '@ant-design/icons'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -53,6 +53,7 @@ const fmtTime = (s: string) =>
  * 帖子详情页：小红书风格 + 评论回复树
  */
 export const PostDetailPage: React.FC = () => {
+  const { message } = App.useApp()
   const { t } = useTranslation()
   const { id } = useParams<{ id: string }>()
   const postId = Number(id)

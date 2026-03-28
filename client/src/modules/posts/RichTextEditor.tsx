@@ -2,7 +2,7 @@ import { useEffect, useState, useImperativeHandle, forwardRef } from 'react'
 import { BlockNoteEditor } from '@blocknote/core'
 import { useCreateBlockNote } from '@blocknote/react'
 import { BlockNoteView } from '@blocknote/mantine'
-import { message as antMessage } from 'antd'
+import { App } from 'antd'
 import { uploadImageApi } from '../shared/api'
 import { MAX_IMAGE_UPLOAD_BYTES } from '../shared/imageUploadLimits'
 import { useTranslation } from 'react-i18next'
@@ -42,13 +42,14 @@ export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>
     minHeight = 200,
     onReady
   }, ref) => {
+    const { message } = App.useApp()
     const { t } = useTranslation()
     const [initialContentSet, setInitialContentSet] = useState(false)
 
     // Custom file upload handler
     const uploadFile = async (file: File): Promise<string> => {
       if (file.size > MAX_IMAGE_UPLOAD_BYTES) {
-        antMessage.error(t('auth.imageTooLarge'))
+        message.error(t('auth.imageTooLarge'))
         throw new Error('File too large')
       }
 
