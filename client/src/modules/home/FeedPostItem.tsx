@@ -3,6 +3,7 @@ import {
   LikeOutlined,
   LikeFilled,
   MessageOutlined,
+  SendOutlined,
   ShareAltOutlined,
   EyeOutlined
 } from '@ant-design/icons'
@@ -343,30 +344,30 @@ export const FeedPostItem: React.FC<FeedPostItemProps> = ({
               className="wiselearn-feed-item-inline-comment__avatar"
             />
             <div className="wiselearn-feed-item-inline-comment__field">
-              <Input.TextArea
-                ref={commentTextareaRef}
-                value={commentText}
-                onChange={(e) => setCommentText(e.target.value)}
-                placeholder={t('post.feedInlineCommentPlaceholder')}
-                autoSize={{ minRows: 2, maxRows: 6 }}
-                maxLength={2000}
-                className="wiselearn-feed-item-inline-comment__textarea"
-                onPressEnter={(e) => {
-                  if (e.shiftKey) return
-                  e.preventDefault()
-                  void submitInlineComment()
-                }}
-              />
-              <div className="wiselearn-feed-item-inline-comment__send">
+              <div className="wiselearn-feed-item-inline-comment__textarea-wrap">
+                <Input.TextArea
+                  ref={commentTextareaRef}
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  placeholder={t('post.feedInlineCommentPlaceholder')}
+                  autoSize={{ minRows: 2, maxRows: 6 }}
+                  maxLength={2000}
+                  className="wiselearn-feed-item-inline-comment__textarea"
+                  onPressEnter={(e) => {
+                    if (e.shiftKey) return
+                    e.preventDefault()
+                    void submitInlineComment()
+                  }}
+                />
                 <Button
                   type="primary"
-                  size="small"
+                  shape="circle"
+                  icon={<SendOutlined />}
                   loading={commentSubmitting}
-                  className="wiselearn-feed-item-inline-comment__send-btn"
+                  className="wiselearn-feed-item-inline-comment__send-circle"
+                  aria-label={t('post.send')}
                   onClick={() => void submitInlineComment()}
-                >
-                  {t('post.send')}
-                </Button>
+                />
               </div>
             </div>
           </div>

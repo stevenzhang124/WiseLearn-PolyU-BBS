@@ -397,15 +397,20 @@
 .wiselearn-feed-item-inline-comment__field {
   flex: 1;
   min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+}
+
+.wiselearn-feed-item-inline-comment__textarea-wrap {
+  position: relative;
+  width: 100%;
 }
 
 textarea.wiselearn-feed-item-inline-comment__textarea,
 .wiselearn-feed-item-inline-comment__textarea.ant-input {
   border-color: rgba(200, 16, 46, 0.45) !important;
   border-radius: 8px;
+  padding-right: 48px;
+  padding-bottom: 44px;
+  resize: vertical;
 }
 
 textarea.wiselearn-feed-item-inline-comment__textarea:hover,
@@ -420,22 +425,30 @@ textarea.wiselearn-feed-item-inline-comment__textarea:focus,
   box-shadow: 0 0 0 2px rgba(200, 16, 46, 0.12);
 }
 
-.wiselearn-feed-item-inline-comment__send {
-  display: flex;
-  justify-content: flex-end;
+.wiselearn-feed-item-inline-comment__send-circle.ant-btn {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #c8102e !important;
+  border-color: #c8102e !important;
+  box-shadow: 0 2px 6px rgba(200, 16, 46, 0.35);
+  z-index: 1;
 }
 
-.wiselearn-feed-item-inline-comment__send-btn.ant-btn-primary {
-  background: #c8102e;
-  border-color: #c8102e;
-  border-radius: 16px;
-  padding-left: 18px;
-  padding-right: 18px;
+.wiselearn-feed-item-inline-comment__send-circle.ant-btn:not(:disabled):hover {
+  background: #a50d26 !important;
+  border-color: #a50d26 !important;
 }
 
-.wiselearn-feed-item-inline-comment__send-btn.ant-btn-primary:hover {
-  background: #a50d26;
-  border-color: #a50d26;
+.wiselearn-feed-item-inline-comment__send-circle.ant-btn .anticon {
+  font-size: 16px;
 }
 
 /* 评论按钮展开态：图标与文案理工红 */
