@@ -1,8 +1,10 @@
-/* 帖子详情：小红书风格 */
+/* 帖子详情：与首页主栏 .wiselearn-feed 同宽上限，随中间区域伸缩 */
 .wiselearn-detail {
-  max-width: 720px;
+  width: 100%;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 0 16px 32px;
+  box-sizing: border-box;
   text-align: left;
 }
 .wiselearn-detail-loading {
