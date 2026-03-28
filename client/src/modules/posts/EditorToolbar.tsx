@@ -28,6 +28,8 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const [showHashtagPicker, setShowHashtagPicker] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  /** 点击图片按钮时记下光标所在 block，避免点开文件选择器后失焦导致只能插到文末 */
+  const imageInsertAnchorIdRef = useRef<string | null>(null)
   const emojiPickerRef = useRef<HTMLDivElement>(null)
   const hashtagPickerRef = useRef<HTMLDivElement>(null)
 
@@ -61,11 +63,27 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
 
     try {
       const urls = await Promise.all(files.map((file) => uploadImageApi(file).then((r) => r.url)))
-      const blocks = editor.document
-      const ref = blocks[blocks.length - 1]
+      const anchorId = imageInsertAnchorIdRef.current
+      imageInsertAnchorIdRef.current = null
+
+      let refBlock =
+        (anchorId ? editor.getBlock(anchorId) : undefined) ??
+        (() => {
+          try {
+            return editor.getTextCursorPosition().block
+          } catch {
+            return undefined
+          }
+        })()
+
+      if (!refBlock) {
+        const doc = editor.document
+        refBlock = doc[doc.length - 1]
+      }
+
       editor.insertBlocks(
         urls.map((url) => ({ type: 'image' as const, props: { url } })),
-        ref,
+        refBlock,
         'after'
       )
       antMessage.success(t('post.imagesUploaded', { count: urls.length }))
@@ -111,6 +129,15 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
         <button
           type="button"
           className="wiselearn-toolbar-btn"
+          onMouseDown={(e) => {
+            e.preventDefault()
+            if (!editor) return
+            try {
+              imageInsertAnchorIdRef.current = editor.getTextCursorPosition().block.id
+            } catch {
+              imageInsertAnchorIdRef.current = null
+            }
+          }}
           onClick={() => fileInputRef.current?.click()}
         >
           <PictureOutlined className="wiselearn-toolbar-icon" />

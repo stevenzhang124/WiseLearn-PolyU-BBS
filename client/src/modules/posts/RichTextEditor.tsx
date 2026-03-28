@@ -81,18 +81,33 @@ export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>
       editor,
       insertImage: (url: string) => {
         if (!editor) return
-        const blocks = editor.document
-        editor.insertBlocks(
-          [{ type: 'image', props: { url } }],
-          blocks[blocks.length - 1],
-          'after'
-        )
+        let refBlock: (typeof editor.document)[number] | undefined
+        try {
+          refBlock = editor.getTextCursorPosition().block
+        } catch {
+          refBlock = undefined
+        }
+        if (!refBlock) {
+          const doc = editor.document
+          refBlock = doc[doc.length - 1]
+        }
+        editor.insertBlocks([{ type: 'image', props: { url } }], refBlock, 'after')
       },
       insertText: (text: string) => {
         if (!editor) return
+        let refBlock: (typeof editor.document)[number] | undefined
+        try {
+          refBlock = editor.getTextCursorPosition().block
+        } catch {
+          refBlock = undefined
+        }
+        if (!refBlock) {
+          const doc = editor.document
+          refBlock = doc[doc.length - 1]
+        }
         editor.insertBlocks(
           [{ type: 'paragraph', content: [{ type: 'text', text: text, styles: {} }] }],
-          editor.document[editor.document.length - 1],
+          refBlock,
           'after'
         )
       }
