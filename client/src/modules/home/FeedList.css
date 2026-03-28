@@ -379,6 +379,70 @@
   border-radius: 12px;
 }
 
+/* 内联评论（理工红） */
+.wiselearn-feed-item-inline-comment {
+  margin-top: 18px;
+}
+
+.wiselearn-feed-item-inline-comment__row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.wiselearn-feed-item-inline-comment__avatar {
+  flex-shrink: 0;
+}
+
+.wiselearn-feed-item-inline-comment__field {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+textarea.wiselearn-feed-item-inline-comment__textarea,
+.wiselearn-feed-item-inline-comment__textarea.ant-input {
+  border-color: rgba(200, 16, 46, 0.45) !important;
+  border-radius: 8px;
+}
+
+textarea.wiselearn-feed-item-inline-comment__textarea:hover,
+.wiselearn-feed-item-inline-comment__textarea.ant-input:hover {
+  border-color: #c8102e !important;
+}
+
+textarea.wiselearn-feed-item-inline-comment__textarea:focus,
+.wiselearn-feed-item-inline-comment__textarea.ant-input:focus,
+.wiselearn-feed-item-inline-comment__textarea.ant-input-focused {
+  border-color: #c8102e !important;
+  box-shadow: 0 0 0 2px rgba(200, 16, 46, 0.12);
+}
+
+.wiselearn-feed-item-inline-comment__send {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.wiselearn-feed-item-inline-comment__send-btn.ant-btn-primary {
+  background: #c8102e;
+  border-color: #c8102e;
+  border-radius: 16px;
+  padding-left: 18px;
+  padding-right: 18px;
+}
+
+.wiselearn-feed-item-inline-comment__send-btn.ant-btn-primary:hover {
+  background: #a50d26;
+  border-color: #a50d26;
+}
+
+/* 评论按钮展开态：图标与文案理工红 */
+.wiselearn-feed-item-action.active .anticon {
+  color: #c8102e;
+}
+
 /* Mobile adjustments */
 @media (max-width: 639px) {
   .wiselearn-feed-item {

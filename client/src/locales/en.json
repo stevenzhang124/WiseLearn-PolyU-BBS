@@ -114,6 +114,8 @@
     "commentRequired": "Please enter a comment",
     "submitComment": "Post comment",
     "commentSuccess": "Comment posted",
+    "loginToComment": "Please sign in to comment",
+    "feedInlineCommentPlaceholder": "Write your comment…",
     "reply": "Reply",
     "replyTo": "Reply to @{{name}}",
     "send": "Send",

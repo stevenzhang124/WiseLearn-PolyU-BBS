@@ -114,6 +114,8 @@
     "commentRequired": "请输入评论内容",
     "submitComment": "发表评论",
     "commentSuccess": "评论成功",
+    "loginToComment": "请先登录后再评论",
+    "feedInlineCommentPlaceholder": "写下你的评论…",
     "reply": "回复",
     "replyTo": "回复 @{{name}}",
     "send": "发送",
