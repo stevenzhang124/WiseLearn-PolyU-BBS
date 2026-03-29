@@ -223,8 +223,26 @@ export const PostDetailPage: React.FC = () => {
     }
   }
 
+  /** 与浏览器后退一致；离开过首页后再回来会按 sessionStorage 恢复 Feed 列表与滚动 */
+  const handleBack = React.useCallback(() => {
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      navigate(-1)
+    } else {
+      navigate('/')
+    }
+  }, [navigate])
+
   if (!postId) {
-    return <Typography.Text>{t('post.invalidId')}</Typography.Text>
+    return (
+      <div className="wiselearn-detail">
+        <div className="wiselearn-detail-toolbar">
+          <button type="button" className="wiselearn-detail-back" onClick={handleBack}>
+            <LeftOutlined /> {t('post.back')}
+          </button>
+        </div>
+        <Typography.Text>{t('post.invalidId')}</Typography.Text>
+      </div>
+    )
   }
 
   const post = detail?.post
@@ -247,6 +265,11 @@ export const PostDetailPage: React.FC = () => {
   if (loading && !detail) {
     return (
       <div className="wiselearn-detail">
+        <div className="wiselearn-detail-toolbar">
+          <button type="button" className="wiselearn-detail-back" onClick={handleBack}>
+            <LeftOutlined /> {t('post.back')}
+          </button>
+        </div>
         <div className="wiselearn-detail-loading wiselearn-feed-card-frame">{t('common.loading')}</div>
       </div>
     )
@@ -254,6 +277,11 @@ export const PostDetailPage: React.FC = () => {
 
   return (
     <div className="wiselearn-detail">
+      <div className="wiselearn-detail-toolbar">
+        <button type="button" className="wiselearn-detail-back" onClick={handleBack}>
+          <LeftOutlined /> {t('post.back')}
+        </button>
+      </div>
       {post && (
         <article className="wiselearn-detail-article wiselearn-feed-card-frame wiselearn-feed-card-frame--interactive">
           <h1 className="wiselearn-detail-title">{post.title}</h1>

@@ -1,7 +1,13 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { App } from 'antd'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { fetchPosts } from '../shared/api'
+import {
+  HOME_FEED_RESTORE_KEY,
+  HOME_FEED_RESTORE_MAX_AGE_MS,
+  saveHomeFeedSnapshot,
+  type HomeFeedRestorePayload
+} from '../shared/homeFeedRestore'
 import { FeedTabs } from './FeedTabs'
 import { FeedList } from './FeedList'
 import './HomePage.css'
@@ -22,6 +28,17 @@ export const HomePage: React.FC = () => {
   const location = useLocation()
   const navigate = useNavigate()
   const lastRefreshAt = useRef(0)
+  const feedCacheConsumedRef = useRef(false)
+  const scrollAfterRestoreY = useRef<number | null>(null)
+  const suppressFocusRefreshRef = useRef(false)
+  const latestFeedRef = useRef({
+    category,
+    sortTab,
+    posts,
+    page,
+    total
+  })
+  latestFeedRef.current = { category, sortTab, posts, page, total }
 
   const loadPosts = useCallback(
     async (pageNo = 1, sort: 'time' | 'hot' = sortTab, mode: 'replace' | 'append' = 'replace') => {
@@ -47,12 +64,56 @@ export const HomePage: React.FC = () => {
     [category, sortTab, pageSize]
   )
 
+  useLayoutEffect(() => {
+    if (location.pathname !== '/') {
+      feedCacheConsumedRef.current = false
+      return
+    }
+    const raw = sessionStorage.getItem(HOME_FEED_RESTORE_KEY)
+    if (!raw) return
+    try {
+      const d = JSON.parse(raw) as HomeFeedRestorePayload
+      if (Date.now() - d.savedAt > HOME_FEED_RESTORE_MAX_AGE_MS) {
+        sessionStorage.removeItem(HOME_FEED_RESTORE_KEY)
+        return
+      }
+      sessionStorage.removeItem(HOME_FEED_RESTORE_KEY)
+      setCategory(d.category)
+      setPosts(d.posts as any[])
+      setPage(d.page)
+      setTotal(d.total)
+      feedCacheConsumedRef.current = true
+      scrollAfterRestoreY.current = d.scrollY
+      suppressFocusRefreshRef.current = true
+      window.setTimeout(() => {
+        suppressFocusRefreshRef.current = false
+      }, 12000)
+    } catch {
+      sessionStorage.removeItem(HOME_FEED_RESTORE_KEY)
+    }
+  }, [location.pathname])
+
+  useLayoutEffect(() => {
+    if (location.pathname !== '/') return
+    if (scrollAfterRestoreY.current == null) return
+    if (posts.length === 0) return
+    const y = scrollAfterRestoreY.current
+    scrollAfterRestoreY.current = null
+    window.scrollTo(0, y)
+  }, [location.pathname, posts])
+
   useEffect(() => {
+    if (location.pathname !== '/') return
+    if (feedCacheConsumedRef.current) {
+      feedCacheConsumedRef.current = false
+      return
+    }
     void loadPosts(1, sortTab, 'replace')
-  }, [sortTab, category, loadPosts])
+  }, [sortTab, category, loadPosts, location.pathname])
 
   const refreshIfOnHome = useCallback(() => {
     if (location.pathname !== '/') return
+    if (suppressFocusRefreshRef.current) return
     const now = Date.now()
     if (now - lastRefreshAt.current < 8000) return
     lastRefreshAt.current = now
@@ -72,9 +133,31 @@ export const HomePage: React.FC = () => {
     }
   }, [refreshIfOnHome])
 
-  const handleNavigate = (path: string) => {
-    navigate(path)
-  }
+  /** 任意路由离开首页时写入快照（热门、详情、消息等），返回 / 时再恢复 */
+  useEffect(() => {
+    return () => {
+      const s = latestFeedRef.current
+      const scrollY = typeof window !== 'undefined' ? window.scrollY : 0
+      const meaningful =
+        s.posts.length > 0 || s.page > 1 || scrollY >= 8
+      if (!meaningful) return
+      saveHomeFeedSnapshot({
+        scrollY,
+        category: s.category,
+        sortTab: s.sortTab,
+        posts: s.posts,
+        page: s.page,
+        total: s.total
+      })
+    }
+  }, [])
+
+  const handleNavigate = useCallback(
+    (path: string) => {
+      navigate(path)
+    },
+    [navigate]
+  )
 
   return (
     <div className="wiselearn-feed">
