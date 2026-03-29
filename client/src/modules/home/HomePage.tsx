@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { App } from 'antd'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { fetchPosts } from '../shared/api'
 import {
   HOME_FEED_RESTORE_KEY,
@@ -8,7 +8,7 @@ import {
   saveHomeFeedSnapshot,
   type HomeFeedRestorePayload
 } from '../shared/homeFeedRestore'
-import { getMainScrollTop, setMainScrollTop } from '../layout/mainScroll'
+import { getMainScrollElement, setMainScrollTop } from '../layout/mainScroll'
 import { FeedTabs } from './FeedTabs'
 import { FeedList } from './FeedList'
 import './HomePage.css'
@@ -26,12 +26,13 @@ export const HomePage: React.FC = () => {
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
   const pageSize = 20
-  const location = useLocation()
   const navigate = useNavigate()
   const lastRefreshAt = useRef(0)
   const feedCacheConsumedRef = useRef(false)
   const scrollAfterRestoreY = useRef<number | null>(null)
   const suppressFocusRefreshRef = useRef(false)
+
+  const latestScrollY = useRef(0)
   const latestFeedRef = useRef({
     category,
     sortTab,
@@ -65,11 +66,17 @@ export const HomePage: React.FC = () => {
     [category, sortTab, pageSize]
   )
 
+  /** 实时跟踪主滚动容器的 scrollTop，卸载时用此值保存快照 */
+  useEffect(() => {
+    const el = getMainScrollElement()
+    if (!el) return
+    const onScroll = () => { latestScrollY.current = el.scrollTop }
+    el.addEventListener('scroll', onScroll, { passive: true })
+    return () => el.removeEventListener('scroll', onScroll)
+  }, [])
+
+  /** 挂载时从 sessionStorage 恢复快照（category + posts + scrollY） */
   useLayoutEffect(() => {
-    if (location.pathname !== '/') {
-      feedCacheConsumedRef.current = false
-      return
-    }
     const raw = sessionStorage.getItem(HOME_FEED_RESTORE_KEY)
     if (!raw) return
     try {
@@ -92,34 +99,35 @@ export const HomePage: React.FC = () => {
     } catch {
       sessionStorage.removeItem(HOME_FEED_RESTORE_KEY)
     }
-  }, [location.pathname])
+  }, [])
 
+  /** posts 恢复后，等 DOM 渲染完再设置 scrollTop */
   useLayoutEffect(() => {
-    if (location.pathname !== '/') return
     if (scrollAfterRestoreY.current == null) return
     if (posts.length === 0) return
     const y = scrollAfterRestoreY.current
     scrollAfterRestoreY.current = null
-    setMainScrollTop(y)
-  }, [location.pathname, posts])
+    requestAnimationFrame(() => {
+      setMainScrollTop(y)
+      latestScrollY.current = y
+    })
+  }, [posts])
 
   useEffect(() => {
-    if (location.pathname !== '/') return
     if (feedCacheConsumedRef.current) {
       feedCacheConsumedRef.current = false
       return
     }
     void loadPosts(1, sortTab, 'replace')
-  }, [sortTab, category, loadPosts, location.pathname])
+  }, [sortTab, category, loadPosts])
 
   const refreshIfOnHome = useCallback(() => {
-    if (location.pathname !== '/') return
     if (suppressFocusRefreshRef.current) return
     const now = Date.now()
     if (now - lastRefreshAt.current < 8000) return
     lastRefreshAt.current = now
     void loadPosts(1, sortTab, 'replace')
-  }, [location.pathname, loadPosts, sortTab])
+  }, [loadPosts, sortTab])
 
   useEffect(() => {
     const onFocus = () => refreshIfOnHome()
@@ -134,13 +142,12 @@ export const HomePage: React.FC = () => {
     }
   }, [refreshIfOnHome])
 
-  /** 任意路由离开首页时写入快照（热门、详情、消息等），返回 / 时再恢复 */
+  /** 卸载时写入快照：用实时跟踪的 latestScrollY 而非当场读取（此时 DOM 可能已切换） */
   useEffect(() => {
     return () => {
       const s = latestFeedRef.current
-      const scrollY = getMainScrollTop()
-      const meaningful =
-        s.posts.length > 0 || s.page > 1 || scrollY >= 8
+      const scrollY = latestScrollY.current
+      const meaningful = s.posts.length > 0 || s.page > 1 || scrollY >= 8
       if (!meaningful) return
       saveHomeFeedSnapshot({
         scrollY,
