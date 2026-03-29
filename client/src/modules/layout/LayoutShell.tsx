@@ -66,6 +66,29 @@ export const LayoutShell: React.FC = () => {
     }
   }, [isOnHome, homeScrolledDown])
 
+  /** 左右侧栏 wheel 事件转发给主滚动容器（整个侧栏区域都转发） */
+  useEffect(() => {
+    const leftSider = document.querySelector('.wiselearn-left-sider') as HTMLElement | null
+    const rightSider = document.querySelector('.wiselearn-right-sider') as HTMLElement | null
+
+    const forwardWheel = (e: WheelEvent) => {
+      const mainEl = getMainScrollElement()
+      if (!mainEl) return
+      const prev = mainEl.scrollTop
+      mainEl.scrollTop += e.deltaY
+      if (mainEl.scrollTop !== prev) {
+        e.preventDefault()
+      }
+    }
+
+    leftSider?.addEventListener('wheel', forwardWheel, { passive: false })
+    rightSider?.addEventListener('wheel', forwardWheel, { passive: false })
+    return () => {
+      leftSider?.removeEventListener('wheel', forwardWheel)
+      rightSider?.removeEventListener('wheel', forwardWheel)
+    }
+  }, [])
+
   const setLang = (lng: 'zh' | 'en') => {
     i18n.changeLanguage(lng)
     localStorage.setItem('wiselearn_lang', lng)
