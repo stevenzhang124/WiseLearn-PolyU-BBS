@@ -218,20 +218,20 @@ export const LayoutShell: React.FC = () => {
           <span className="wiselearn-lang-switch">
             <button
               type="button"
-              className={i18n.language === 'zh' ? 'active' : ''}
-              onClick={() => setLang('zh')}
-            >
-              <span className="wiselearn-lang-full">{t('lang.zh')}</span>
-              <span className="wiselearn-lang-abbr">中</span>
-            </button>
-            <span style={{ color: '#ddd', margin: '0 2px' }}>|</span>
-            <button
-              type="button"
               className={i18n.language === 'en' ? 'active' : ''}
               onClick={() => setLang('en')}
             >
               <span className="wiselearn-lang-full">{t('lang.en')}</span>
               <span className="wiselearn-lang-abbr">EN</span>
+            </button>
+            <span style={{ color: '#ddd', margin: '0 2px' }}>|</span>
+            <button
+              type="button"
+              className={i18n.language === 'zh' ? 'active' : ''}
+              onClick={() => setLang('zh')}
+            >
+              <span className="wiselearn-lang-full">{t('lang.zh')}</span>
+              <span className="wiselearn-lang-abbr">中</span>
             </button>
           </span>
           {user && (

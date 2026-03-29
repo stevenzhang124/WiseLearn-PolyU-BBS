@@ -94,21 +94,6 @@ export const RegisterPage: React.FC = () => {
       <div style={{ position: 'absolute', top: 24, right: 24, display: 'flex', gap: 8 }}>
         <button
           type="button"
-          onClick={() => { i18n.changeLanguage('zh'); localStorage.setItem('wiselearn_lang', 'zh') }}
-          style={{
-            border: 'none',
-            background: i18n.language === 'zh' ? POLYU_RED : 'transparent',
-            color: i18n.language === 'zh' ? '#fff' : 'rgba(0,0,0,0.65)',
-            padding: '6px 12px',
-            borderRadius: 8,
-            cursor: 'pointer',
-            fontSize: 14
-          }}
-        >
-          {t('lang.zh')}
-        </button>
-        <button
-          type="button"
           onClick={() => { i18n.changeLanguage('en'); localStorage.setItem('wiselearn_lang', 'en') }}
           style={{
             border: 'none',
@@ -121,6 +106,21 @@ export const RegisterPage: React.FC = () => {
           }}
         >
           {t('lang.en')}
+        </button>
+        <button
+          type="button"
+          onClick={() => { i18n.changeLanguage('zh'); localStorage.setItem('wiselearn_lang', 'zh') }}
+          style={{
+            border: 'none',
+            background: i18n.language === 'zh' ? POLYU_RED : 'transparent',
+            color: i18n.language === 'zh' ? '#fff' : 'rgba(0,0,0,0.65)',
+            padding: '6px 12px',
+            borderRadius: 8,
+            cursor: 'pointer',
+            fontSize: 14
+          }}
+        >
+          {t('lang.zh')}
         </button>
       </div>
       <Card

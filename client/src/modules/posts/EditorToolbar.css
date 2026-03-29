@@ -30,6 +30,7 @@
   display: flex;
   align-items: center;
   gap: 4px;
+  flex-wrap: wrap;
 }
 
 /* Toolbar button - clean style like reference */
@@ -46,6 +47,8 @@
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .wiselearn-toolbar-btn:hover {
