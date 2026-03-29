@@ -8,7 +8,7 @@ import {
   saveHomeFeedSnapshot,
   type HomeFeedRestorePayload
 } from '../shared/homeFeedRestore'
-import { getMainScrollElement, setMainScrollTop, HOME_SCROLL_TOP_REFRESH_EVENT } from '../layout/mainScroll'
+import { getMainScrollElement, getMainScrollTop, setMainScrollTop, HOME_SCROLL_TOP_REFRESH_EVENT } from '../layout/mainScroll'
 import { FeedTabs } from './FeedTabs'
 import { FeedList } from './FeedList'
 import './HomePage.css'
@@ -101,16 +101,24 @@ export const HomePage: React.FC = () => {
     }
   }, [])
 
-  /** posts 恢复后，等 DOM 渲染完再设置 scrollTop */
+  /** posts 恢复后，反复尝试设置 scrollTop 直到位置正确（图片加载会撑高 DOM） */
   useLayoutEffect(() => {
     if (scrollAfterRestoreY.current == null) return
     if (posts.length === 0) return
     const y = scrollAfterRestoreY.current
     scrollAfterRestoreY.current = null
-    requestAnimationFrame(() => {
+
+    let attempts = 0
+    const maxAttempts = 15
+    const tryRestore = () => {
       setMainScrollTop(y)
       latestScrollY.current = y
-    })
+      attempts++
+      if (attempts < maxAttempts && Math.abs(getMainScrollTop() - y) > 2) {
+        requestAnimationFrame(tryRestore)
+      }
+    }
+    requestAnimationFrame(tryRestore)
   }, [posts])
 
   useEffect(() => {
