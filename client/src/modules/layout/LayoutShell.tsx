@@ -117,7 +117,7 @@ export const LayoutShell: React.FC = () => {
   }
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
+    <Layout className="wiselearn-app-shell">
       <Header
         className="wiselearn-header-white"
         style={{
@@ -248,7 +248,7 @@ export const LayoutShell: React.FC = () => {
         </Sider>
 
         {/* Main content area */}
-        <Content className="wiselearn-content-area">
+        <Content className="wiselearn-content-area wiselearn-main-scroll">
           <Outlet />
         </Content>
 

@@ -50,8 +50,57 @@
   }
 }
 
+html,
 body {
+  height: 100%;
   margin: 0;
+}
+
+#app {
+  height: 100%;
+  min-height: 100dvh;
+}
+
+/* 已登录壳：顶栏 + 三栏仅中间滚动 */
+.wiselearn-app-shell.ant-layout {
+  height: 100%;
+  max-height: 100dvh;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.wiselearn-app-shell > .ant-layout-header.wiselearn-header-white {
+  flex-shrink: 0;
+  z-index: 100;
+}
+
+.wiselearn-main-layout.ant-layout {
+  flex: 1;
+  min-height: 0 !important;
+  overflow: hidden;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: stretch;
+}
+
+.wiselearn-content-area.ant-layout-content.wiselearn-main-scroll {
+  flex: 1;
+  min-width: 0;
+  min-height: 0 !important;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  /* 隐藏滚动条，仍可用滚轮/触控滑动 */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.wiselearn-content-area.ant-layout-content.wiselearn-main-scroll::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 h1,
@@ -475,16 +524,26 @@ code {
   gap: 16px;
 }
 
-/* Left sidebar */
+/* Left sidebar：与顶栏一起固定，仅内部可滚（菜单过长时） */
 .wiselearn-left-sider {
   background: transparent !important;
-  overflow: visible;
   margin-left: 16px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  align-self: stretch;
+  max-height: 100%;
 }
 
-/* Right sidebar */
+.wiselearn-left-sider .ant-layout-sider-children {
+  min-height: min-content;
+}
+
+/* Right sidebar：列高固定，仅面板内列表滚动（避免与 sider 双滚动条） */
 .wiselearn-right-sider {
   overflow: hidden;
+  align-self: stretch;
+  max-height: 100%;
   transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   background: transparent !important;
   margin-right: 16px;
@@ -492,11 +551,17 @@ code {
 
 .wiselearn-right-sider .ant-layout-sider-children {
   height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 /* 热点面板：离开首页时淡出并向右滑出 */
 .wiselearn-right-sider-panel {
-  min-height: 100%;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1), transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   will-change: opacity, transform;
 }

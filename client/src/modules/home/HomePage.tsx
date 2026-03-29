@@ -8,6 +8,7 @@ import {
   saveHomeFeedSnapshot,
   type HomeFeedRestorePayload
 } from '../shared/homeFeedRestore'
+import { getMainScrollTop, setMainScrollTop } from '../layout/mainScroll'
 import { FeedTabs } from './FeedTabs'
 import { FeedList } from './FeedList'
 import './HomePage.css'
@@ -99,7 +100,7 @@ export const HomePage: React.FC = () => {
     if (posts.length === 0) return
     const y = scrollAfterRestoreY.current
     scrollAfterRestoreY.current = null
-    window.scrollTo(0, y)
+    setMainScrollTop(y)
   }, [location.pathname, posts])
 
   useEffect(() => {
@@ -137,7 +138,7 @@ export const HomePage: React.FC = () => {
   useEffect(() => {
     return () => {
       const s = latestFeedRef.current
-      const scrollY = typeof window !== 'undefined' ? window.scrollY : 0
+      const scrollY = getMainScrollTop()
       const meaningful =
         s.posts.length > 0 || s.page > 1 || scrollY >= 8
       if (!meaningful) return
