@@ -69,6 +69,8 @@
     "feedTabsAria": "帖子分类，可横向拖动或使用滚轮左右滚动",
     "feedImageGallery": "帖子配图",
     "previewImage": "预览大图",
+    "expandFull": "展开全文",
+    "collapseFull": "收起",
     "category": {
       "all": "全部",
       "campus": "校园生活",
@@ -270,5 +272,14 @@
     "createPost": "发布帖子",
     "myProfile": "个人中心",
     "messages": "私信"
+  },
+  "share": {
+    "share": "分享",
+    "tapToView": "点击查看完整内容",
+    "copyImage": "复制图片",
+    "saveImage": "保存图片",
+    "imageSaved": "图片已保存",
+    "imageCopied": "图片已复制",
+    "imageFailed": "操作失败，请重试"
   }
 }

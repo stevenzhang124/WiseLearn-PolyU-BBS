@@ -112,6 +112,8 @@ postRouter.get('/', async (req: AuthRequest, res) => {
         p.published_at,
         p.view_count,
         p.like_count,
+        p.share_count,
+        (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS comment_count,
         u.nickname AS author,
         u.avatar AS author_avatar,
         EXISTS(SELECT 1 FROM likes lk WHERE lk.post_id = p.id AND lk.user_id = ?) AS user_liked
@@ -126,6 +128,8 @@ postRouter.get('/', async (req: AuthRequest, res) => {
     const listBaseUrl = process.env.API_BASE_URL || 'http://localhost:4000'
     const list = (listRows as any[]).map((p) => ({
       ...p,
+      comment_count: Number(p.comment_count ?? 0),
+      share_count: Number(p.share_count ?? 0),
       author_avatar: p.author_avatar ? `${listBaseUrl}${p.author_avatar}` : null,
       user_liked: Boolean(p.user_liked)
     }))
@@ -323,7 +327,7 @@ postRouter.get('/:id/comments', async (req: AuthRequest, res) => {
       author_avatar: c.author_avatar ? `${baseUrl}${c.author_avatar}` : null
     }))
 
-    const roots = all.filter((c) => c.parent_comment_id == null)
+    const roots = all.filter((c) => c.parent_comment_id == null).reverse()
     const childMap = new Map<number, any[]>()
     for (const c of all) {
       if (c.parent_comment_id != null) {
@@ -501,9 +505,28 @@ postRouter.get('/:id/share-link', async (req: AuthRequest, res) => {
     return
   }
 
-  const baseUrl = req.headers.origin || `http://localhost:5173`
-  const link = `${baseUrl}/posts/${postId}`
-  res.json({ link })
+  const isAdmin = Boolean(req.user?.isAdmin)
+  try {
+    const [upd] = await pool.query(
+      `UPDATE posts SET share_count = share_count + 1
+       WHERE id = ? AND (audit_status = 1 OR user_id = ? OR ? = 1)`,
+      [postId, req.user!.id, isAdmin ? 1 : 0]
+    )
+    const affected = (upd as { affectedRows?: number }).affectedRows ?? 0
+    if (affected === 0) {
+      res.status(404).json({ message: '帖子不存在或不可见' })
+      return
+    }
+    const [cntRows] = await pool.query('SELECT share_count FROM posts WHERE id = ?', [postId])
+    const shareCount = Number((cntRows as { share_count: number }[])[0]?.share_count ?? 0)
+    const apiBase = process.env.API_BASE_URL || `${req.protocol}://${req.get('host')}`
+    const link = `${apiBase.replace(/\/$/, '')}/s/${postId}`
+    res.json({ link, share_count: shareCount })
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('Share link error', err)
+    res.status(500).json({ message: '生成分享链接失败' })
+  }
 })
 
 /**

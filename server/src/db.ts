@@ -80,6 +80,28 @@ export async function ensurePostsAuditColumns(): Promise<void> {
  *   编辑后重新提交并审核通过时，更新此字段，使帖子排列到最前。
  *   对于历史数据，published_at 为 NULL，回退到 created_at。
  */
+export async function ensurePostsShareCountColumn(): Promise<void> {
+  const dbName = config.db.database
+  const [rows] = await pool.query(
+    `SELECT column_name FROM information_schema.columns
+     WHERE table_schema = ? AND table_name = 'posts'`,
+    [dbName]
+  )
+  const colSet = new Set(
+    (rows as any[]).map((r: { column_name: string }) => String(r.column_name).toLowerCase())
+  )
+  if (!colSet.has('share_count')) {
+    try {
+      await pool.query(
+        'ALTER TABLE posts ADD COLUMN share_count INT NOT NULL DEFAULT 0'
+      )
+    } catch (err: any) {
+      if (err?.code === 'ER_DUP_FIELDNAME' || err?.errno === 1060) return
+      throw err
+    }
+  }
+}
+
 export async function ensurePostsPublishedAtColumn(): Promise<void> {
   const dbName = config.db.database
   const [rows] = await pool.query(

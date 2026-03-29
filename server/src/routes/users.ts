@@ -304,7 +304,8 @@ usersRouter.get('/:id/posts', async (req: AuthRequest, res) => {
     try {
       const [r] = await pool.query(
         `SELECT p.id, p.user_id, p.title, p.content, p.category, p.image_urls, p.created_at, p.view_count, p.like_count,
-         p.is_pinned, u.nickname AS author, u.avatar AS author_avatar,
+         p.share_count, p.is_pinned, u.nickname AS author, u.avatar AS author_avatar,
+         (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS comment_count,
          EXISTS(SELECT 1 FROM likes lk WHERE lk.post_id = p.id AND lk.user_id = ?) AS user_liked
          FROM posts p JOIN users u ON p.user_id = u.id WHERE p.user_id = ?
          ${isAdmin || isSelf ? '' : 'AND p.audit_status = 1'}
@@ -315,7 +316,8 @@ usersRouter.get('/:id/posts', async (req: AuthRequest, res) => {
     } catch {
       const [r] = await pool.query(
         `SELECT p.id, p.user_id, p.title, p.content, p.category, p.image_urls, p.created_at, p.view_count, p.like_count,
-         p.is_pinned, u.nickname AS author,
+         p.share_count, p.is_pinned, u.nickname AS author,
+         (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS comment_count,
          EXISTS(SELECT 1 FROM likes lk WHERE lk.post_id = p.id AND lk.user_id = ?) AS user_liked
          FROM posts p JOIN users u ON p.user_id = u.id WHERE p.user_id = ?
          ${isAdmin || isSelf ? '' : 'AND p.audit_status = 1'}
@@ -327,6 +329,8 @@ usersRouter.get('/:id/posts', async (req: AuthRequest, res) => {
     const listBaseUrl = baseUrl()
     const list = rows.map((p) => ({
       ...p,
+      comment_count: Number((p as any).comment_count ?? 0),
+      share_count: Number((p as any).share_count ?? 0),
       author_avatar: p.author_avatar ? `${listBaseUrl}${p.author_avatar}` : null,
       user_liked: Boolean(p.user_liked)
     }))

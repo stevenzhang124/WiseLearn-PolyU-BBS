@@ -7,10 +7,11 @@ import {
   ShareAltOutlined,
   EyeOutlined
 } from '@ant-design/icons'
-import { App, Button, Image, Input, Modal } from 'antd'
+import { App, Button, Image, Input } from 'antd'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
 import { Avatar } from '../shared/Avatar'
+import { ShareCard } from '../shared/ShareCard'
 import { fetchPostComments, getShareLink, sendComment, toggleLike } from '../shared/api'
 import './FeedList.css'
 
@@ -24,6 +25,10 @@ export interface FeedPostItemProps {
     user_id: number
     like_count: number
     view_count: number
+    /** 评论条数（含回复），列表接口返回 */
+    comment_count?: number
+    /** 分享次数（用户点击分享生成链接时 +1） */
+    share_count?: number
     image_urls?: string
     created_at: string
     is_pinned?: number
@@ -58,6 +63,14 @@ function getImageUrls(post: FeedPostItemProps['post']): string[] {
   return urls.slice(0, 9) // Max 9 images
 }
 
+/** 列表正文去图后的纯文本长度，用于判断是否显示「展开全文」 */
+function plainTextLengthFromHtml(html: string): number {
+  const text = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+  return [...text].length
+}
+
+const FEED_CONTENT_EXPAND_THRESHOLD = 140
+
 /**
  * Weibo-style feed post item
  * Horizontal layout with author row, content preview, image gallery, and action bar
@@ -72,6 +85,8 @@ export const FeedPostItem: React.FC<FeedPostItemProps> = ({
   const { user } = useAuth()
   const commentTextareaRef = useRef<React.ComponentRef<typeof Input.TextArea>>(null)
   const [likeCount, setLikeCount] = useState(post.like_count)
+  const [commentCount, setCommentCount] = useState(post.comment_count ?? 0)
+  const [shareCount, setShareCount] = useState(post.share_count ?? 0)
   const [liked, setLiked] = useState(Boolean(post.user_liked))
   const [likeLoading, setLikeLoading] = useState(false)
   /** 点赞成功瞬间触发的图标动画 */
@@ -87,11 +102,19 @@ export const FeedPostItem: React.FC<FeedPostItemProps> = ({
   const [commentTotal, setCommentTotal] = useState(0)
   const [commentsLoading, setCommentsLoading] = useState(false)
   const commentsFetchedRef = useRef(false)
+  /** 正文过长时折叠，点击展开全文（微博式） */
+  const [contentExpanded, setContentExpanded] = useState(false)
+
+  useEffect(() => {
+    setContentExpanded(false)
+  }, [post.id])
 
   useEffect(() => {
     setLikeCount(post.like_count)
     setLiked(Boolean(post.user_liked))
-  }, [post.id, post.like_count, post.user_liked])
+    setCommentCount(post.comment_count ?? 0)
+    setShareCount(post.share_count ?? 0)
+  }, [post.id, post.like_count, post.user_liked, post.comment_count, post.share_count])
 
   useEffect(() => {
     if (!commentOpen) return
@@ -133,6 +156,10 @@ export const FeedPostItem: React.FC<FeedPostItemProps> = ({
 
   const pinned = Boolean(post.is_pinned)
 
+  const contentHtmlForFeed = (post.content || '').replace(/<img[^>]*>/gi, '')
+  const needsContentExpand =
+    plainTextLengthFromHtml(contentHtmlForFeed) > FEED_CONTENT_EXPAND_THRESHOLD
+
   const handleLike = async (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
@@ -169,6 +196,7 @@ export const FeedPostItem: React.FC<FeedPostItemProps> = ({
       const data = await fetchPostComments(post.id, 5)
       setComments(data.comments)
       setCommentTotal(data.total)
+      setCommentCount(data.total)
       commentsFetchedRef.current = true
     } catch {
       /* silent */
@@ -218,22 +246,14 @@ export const FeedPostItem: React.FC<FeedPostItemProps> = ({
     e.stopPropagation()
     setShareLoading(true)
     try {
-      const { link } = await getShareLink(post.id)
+      const { link, share_count: sc } = await getShareLink(post.id)
       setShareUrl(link)
+      setShareCount(sc)
       setShareOpen(true)
     } catch (err) {
       message.error((err as Error).message)
     } finally {
       setShareLoading(false)
-    }
-  }
-
-  const copyShareLink = async () => {
-    try {
-      await navigator.clipboard.writeText(shareUrl)
-      message.success(t('post.linkCopied'))
-    } catch {
-      message.error(t('post.copyFailed'))
     }
   }
 
@@ -280,14 +300,33 @@ export const FeedPostItem: React.FC<FeedPostItemProps> = ({
         {post.title}
       </h3>
 
-      {/* Content preview */}
-      <div
-        className="wiselearn-feed-item-excerpt"
-        onClick={() => onNavigate(`/posts/${post.id}`)}
-        dangerouslySetInnerHTML={{
-          __html: post.content?.replace(/<img[^>]*>/gi, '').slice(0, 300) || ''
-        }}
-      />
+      {/* Content preview：过长时折叠，可展开全文（仿微博） */}
+      <div className="wiselearn-feed-item-excerpt-wrap">
+        <div
+          className={`wiselearn-feed-item-excerpt${
+            needsContentExpand && !contentExpanded ? ' wiselearn-feed-item-excerpt--collapsed' : ''
+          }`}
+          onClick={() => onNavigate(`/posts/${post.id}`)}
+          dangerouslySetInnerHTML={{
+            __html: contentHtmlForFeed || ''
+          }}
+        />
+        {needsContentExpand ? (
+          <div className="wiselearn-feed-expand-row">
+            <button
+              type="button"
+              className="wiselearn-feed-expand-btn"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                setContentExpanded((v) => !v)
+              }}
+            >
+              {contentExpanded ? t('home.collapseFull') : t('home.expandFull')}
+            </button>
+          </div>
+        ) : null}
+      </div>
 
       {/* Image gallery：点击大图预览，多图可在预览内左右切换 */}
       {imageUrls.length > 0 && (
@@ -337,7 +376,7 @@ export const FeedPostItem: React.FC<FeedPostItemProps> = ({
           className={`wiselearn-feed-item-action${commentOpen ? ' active' : ''}`}
           onClick={handleCommentToggle}
         >
-          <MessageOutlined /> {t('post.comment')}
+          <MessageOutlined /> <span>{commentCount}</span>
         </button>
         <button
           type="button"
@@ -345,7 +384,7 @@ export const FeedPostItem: React.FC<FeedPostItemProps> = ({
           onClick={openShare}
           disabled={shareLoading}
         >
-          <ShareAltOutlined /> {t('post.share')}
+          <ShareAltOutlined /> <span>{shareCount}</span>
         </button>
         <span className="wiselearn-feed-item-stat">
           <EyeOutlined /> {post.view_count}
@@ -375,7 +414,7 @@ export const FeedPostItem: React.FC<FeedPostItemProps> = ({
                   value={commentText}
                   onChange={(e) => setCommentText(e.target.value)}
                   placeholder={t('post.feedInlineCommentPlaceholder')}
-                  autoSize={{ minRows: 2, maxRows: 6 }}
+                  autoSize={{ minRows: 1, maxRows: 4 }}
                   maxLength={2000}
                   className="wiselearn-feed-item-inline-comment__textarea"
                   onPressEnter={(e) => {
@@ -472,20 +511,16 @@ export const FeedPostItem: React.FC<FeedPostItemProps> = ({
         </div>
       )}
 
-      <Modal
-        title={t('post.share')}
+      <ShareCard
         open={shareOpen}
-        onCancel={() => setShareOpen(false)}
-        footer={null}
-        destroyOnHidden
-      >
-        <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-          <Input readOnly value={shareUrl} />
-          <Button type="primary" onClick={() => void copyShareLink()}>
-            {t('post.copyLink')}
-          </Button>
-        </div>
-      </Modal>
+        onClose={() => setShareOpen(false)}
+        title={post.title}
+        excerpt={post.content || ''}
+        coverUrl={imageUrls[0]}
+        authorName={post.author}
+        authorAvatar={post.author_avatar}
+        shareUrl={shareUrl}
+      />
     </div>
   )
 }

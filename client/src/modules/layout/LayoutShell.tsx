@@ -3,7 +3,7 @@ import { Layout, Badge, Typography, Drawer, Button } from 'antd'
 import {
   LogoutOutlined,
   MenuOutlined,
-  PlusOutlined,
+  EditOutlined,
   HomeOutlined,
   MessageOutlined,
   UserOutlined,
@@ -117,6 +117,10 @@ export const LayoutShell: React.FC = () => {
   const showRightHotBar =
     location.pathname === '/' || /^\/posts\/\d+$/.test(location.pathname)
 
+  /** 后台 / 私信：中间正文区用满栏宽（仍在外层 1200px 内）；首页等为窄信息流 */
+  const contentInnerWide =
+    location.pathname.startsWith('/admin') || location.pathname.startsWith('/messages')
+
   const fetchUnread = () => {
     if (!user) return
     Promise.all([getUnreadCount(), getNotificationsUnreadCount()])
@@ -173,19 +177,12 @@ export const LayoutShell: React.FC = () => {
 
   return (
     <Layout className="wiselearn-app-shell">
-      <Header
-        className="wiselearn-header-white"
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '16px 32px',
-          background: '#fff',
-          borderBottom: '1px solid #f0f0f0',
-          height: 72,
-          lineHeight: '40px'
-        }}
-      >
+      {/* 单一 1200px 列：顶栏白条与下方三栏共用左右边，避免错位 */}
+      <div className="wiselearn-page-shell">
+      <Header className="wiselearn-header-white">
+          <div
+            className={`wiselearn-header-inner${showRightHotBar ? ' wiselearn-header-inner--three-col' : ''}`}
+          >
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <Button
             type="text"
@@ -238,7 +235,14 @@ export const LayoutShell: React.FC = () => {
             </button>
           </span>
           {user && (
-            <span className="wiselearn-header-user" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span
+              className="wiselearn-header-user"
+              style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}
+              role="button"
+              tabIndex={0}
+              onClick={() => navigate('/profile')}
+              onKeyDown={(e) => e.key === 'Enter' && navigate('/profile')}
+            >
               <Avatar src={user.avatar} name={user.nickname} size={28} />
               <Typography.Text className="wiselearn-header-username" style={{ color: 'rgba(0,0,0,0.85)', fontSize: 14 }}>
                 {t('nav.welcome', { name: user.nickname })}
@@ -253,9 +257,58 @@ export const LayoutShell: React.FC = () => {
             </Typography.Link>
           )}
         </div>
+        </div>
       </Header>
 
-      {/* Mobile navigation drawer */}
+      <div className="wiselearn-main-layout-cluster">
+        <Layout
+          className={`wiselearn-main-layout${showRightHotBar ? ' wiselearn-main-layout--three-col' : ''}`}
+        >
+        {/* Left sidebar - Navigation */}
+        <Sider
+          width={180}
+          breakpoint="lg"
+          collapsedWidth="0"
+          trigger={null}
+          className="wiselearn-left-sider"
+        >
+          <LeftNav
+            selectedKeys={selectedKeys}
+            unreadCount={unreadCount}
+            adminPendingCount={adminPendingCount}
+            isAdmin={user?.isAdmin ?? false}
+            homeScrolledDown={homeScrolledDown}
+            onHomeClick={handleHomeNavClick}
+          />
+        </Sider>
+
+        {/* Main content area（内层收窄宽度，仿微博网页版） */}
+        <Content
+          className={`wiselearn-content-area wiselearn-main-scroll${contentInnerWide ? ' wiselearn-content-area--wide' : ''}`}
+        >
+          <div
+            className={`wiselearn-content-inner${contentInnerWide ? ' wiselearn-content-inner--wide' : ''}`}
+          >
+            <Outlet />
+          </div>
+        </Content>
+
+        {/* Right sidebar - Only visible on home feed */}
+        <Sider
+          width={260}
+          collapsedWidth={0}
+          collapsed={!showRightHotBar}
+          className={`wiselearn-right-sider${showRightHotBar ? ' wiselearn-right-sider--open' : ' wiselearn-right-sider--closed'}`}
+        >
+          <div className="wiselearn-right-sider-panel">
+            <RightBar />
+          </div>
+        </Sider>
+        </Layout>
+      </div>
+      </div>
+
+      {/* Mobile navigation drawer（全屏层，不参与 1200 列宽） */}
       <Drawer
         open={mobileNavOpen}
         placement="left"
@@ -287,43 +340,6 @@ export const LayoutShell: React.FC = () => {
         )}
       </Drawer>
 
-      <Layout className="wiselearn-main-layout">
-        {/* Left sidebar - Navigation */}
-        <Sider
-          width={200}
-          breakpoint="lg"
-          collapsedWidth="0"
-          trigger={null}
-          className="wiselearn-left-sider"
-        >
-          <LeftNav
-            selectedKeys={selectedKeys}
-            unreadCount={unreadCount}
-            adminPendingCount={adminPendingCount}
-            isAdmin={user?.isAdmin ?? false}
-            homeScrolledDown={homeScrolledDown}
-            onHomeClick={handleHomeNavClick}
-          />
-        </Sider>
-
-        {/* Main content area */}
-        <Content className="wiselearn-content-area wiselearn-main-scroll">
-          <Outlet />
-        </Content>
-
-        {/* Right sidebar - Only visible on home feed */}
-        <Sider
-          width={280}
-          collapsedWidth={0}
-          collapsed={!showRightHotBar}
-          className={`wiselearn-right-sider${showRightHotBar ? ' wiselearn-right-sider--open' : ' wiselearn-right-sider--closed'}`}
-        >
-          <div className="wiselearn-right-sider-panel">
-            <RightBar />
-          </div>
-        </Sider>
-      </Layout>
-
       {/* 移动端底部导航栏（小红书风格） */}
       <nav className="wiselearn-bottom-nav">
         <Link to="/" className={`wiselearn-bottom-nav-item${selectedKeys.includes('home') ? ' active' : ''}`}>
@@ -331,9 +347,8 @@ export const LayoutShell: React.FC = () => {
           <span className="wiselearn-bottom-nav-label">{t('nav.home')}</span>
         </Link>
         <Link to="/create" className={`wiselearn-bottom-nav-item${selectedKeys.includes('create') ? ' active' : ''}`}>
-          <div className="wiselearn-bottom-nav-plus">
-            <PlusOutlined />
-          </div>
+          <EditOutlined className="wiselearn-bottom-nav-icon" />
+          <span className="wiselearn-bottom-nav-label">{t('nav.create')}</span>
         </Link>
         <Link to="/messages" className={`wiselearn-bottom-nav-item${selectedKeys.includes('messages') ? ' active' : ''}`}>
           <Badge count={unreadCount} size="small" offset={[8, 0]}>

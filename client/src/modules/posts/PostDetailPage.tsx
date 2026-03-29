@@ -20,6 +20,7 @@ import {
 } from '../shared/api'
 import { useAuth } from '../auth/AuthContext'
 import { Avatar } from '../shared/Avatar'
+import { ShareCard } from '../shared/ShareCard'
 import { PostContentBlockNote } from './PostContentBlockNote'
 import './PostDetailPage.css'
 
@@ -43,6 +44,7 @@ function buildCommentTree(comments: any[]): CommentNode[] {
       else roots.push(node)
     }
   })
+  roots.reverse()
   return roots
 }
 
@@ -212,12 +214,15 @@ export const PostDetailPage: React.FC = () => {
     }
   }
 
+  const [shareOpen, setShareOpen] = useState(false)
+  const [shareUrl, setShareUrl] = useState('')
+
   const handleShare = async () => {
     if (!postId) return
     try {
       const { link } = await getShareLink(postId)
-      await navigator.clipboard.writeText(link)
-      message.success(t('post.shareSuccess'))
+      setShareUrl(link)
+      setShareOpen(true)
     } catch (err) {
       message.error((err as Error).message)
     }
@@ -284,7 +289,6 @@ export const PostDetailPage: React.FC = () => {
       </div>
       {post && (
         <article className="wiselearn-detail-article wiselearn-feed-card-frame wiselearn-feed-card-frame--interactive">
-          <h1 className="wiselearn-detail-title">{post.title}</h1>
           <div className="wiselearn-detail-author-row">
             <span
               style={{ cursor: post.user_id === user?.id ? 'default' : 'pointer' }}
@@ -330,6 +334,7 @@ export const PostDetailPage: React.FC = () => {
               </Button>
             )}
           </div>
+          <h1 className="wiselearn-detail-title">{post.title}</h1>
           {showSplitImageGallery && galleryUrls.length >= 2 && (
             <div
               className="wiselearn-detail-gallery wiselearn-detail-gallery--carousel"
@@ -595,6 +600,19 @@ export const PostDetailPage: React.FC = () => {
           })}
         </div>
       </section>
+
+      {post && (
+        <ShareCard
+          open={shareOpen}
+          onClose={() => setShareOpen(false)}
+          title={post.title}
+          excerpt={post.content || ''}
+          coverUrl={galleryUrls[0]}
+          authorName={post.author}
+          authorAvatar={post.author_avatar}
+          shareUrl={shareUrl}
+        />
+      )}
     </div>
   )
 }

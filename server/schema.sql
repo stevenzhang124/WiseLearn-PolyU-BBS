@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS posts (
   image_urls TEXT,
   view_count INT NOT NULL DEFAULT 0,
   like_count INT NOT NULL DEFAULT 0,
+  share_count INT NOT NULL DEFAULT 0,
   is_pinned TINYINT(1) NOT NULL DEFAULT 0,
   -- 0=待审核/驳回，1=已通过。默认 1 以兼容旧数据：避免升级后所有历史帖子都不可见
   audit_status TINYINT(1) NOT NULL DEFAULT 1,

@@ -165,7 +165,9 @@ export async function toggleLike(postId: number): Promise<{ liked: boolean }> {
   return res.data
 }
 
-export async function getShareLink(postId: number): Promise<{ link: string }> {
+export async function getShareLink(
+  postId: number
+): Promise<{ link: string; share_count: number }> {
   const res = await api.get(`/posts/${postId}/share-link`)
   return res.data
 }

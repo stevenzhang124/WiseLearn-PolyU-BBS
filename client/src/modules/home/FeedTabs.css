@@ -20,9 +20,9 @@
   scrollbar-width: none;
   -ms-overflow-style: none;
   cursor: grab;
-  touch-action: pan-x;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pinch-zoom;
   overscroll-behavior-x: contain;
-  overscroll-behavior-y: contain;
 }
 
 .wiselearn-feed-tabs-scroller:active {

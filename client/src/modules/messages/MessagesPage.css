@@ -54,7 +54,7 @@
 
 .wiselearn-notif-item-inner {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: flex-start;
   gap: 12px;
   width: 100%;
@@ -71,6 +71,15 @@
   font-size: 13px;
 }
 .wiselearn-notif-time {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+}
+.wiselearn-notif-time-inline {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.45);
+}
+.wiselearn-notif-post-ref {
   display: block;
   margin-top: 4px;
   font-size: 12px;

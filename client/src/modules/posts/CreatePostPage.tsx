@@ -2,11 +2,10 @@ import React, { useState, useRef, useCallback } from 'react'
 import { App, Button, Form, Input, Select } from 'antd'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { createPost, uploadImageApi } from '../shared/api'
+import { createPost } from '../shared/api'
 import { RichTextEditor } from './RichTextEditor'
 import type { RichTextEditorRef } from './RichTextEditor'
 import { EditorToolbar } from './EditorToolbar'
-import { generateTitleCoverFile } from './generateTitleCover'
 import { stripImagesFromHtml } from './extractImageUrlsFromContent'
 import { PostImageUploadSection } from './PostImageUploadSection'
 import { POST_CATEGORY_VALUES } from './postCategoryValues'
@@ -55,14 +54,7 @@ export const CreatePostPage: React.FC = () => {
     setCreating(true)
     try {
       const bodyHtml = stripImagesFromHtml(contentHtml)
-      let imageUrls: string[]
-      if (attachedImageUrls.length > 0) {
-        imageUrls = attachedImageUrls
-      } else {
-        const coverFile = await generateTitleCoverFile(values.title)
-        const { url } = await uploadImageApi(coverFile)
-        imageUrls = [url]
-      }
+      const imageUrls = attachedImageUrls.length > 0 ? attachedImageUrls : []
 
       await createPost({
         title: values.title,

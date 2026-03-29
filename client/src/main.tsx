@@ -31,7 +31,7 @@ const PolyUTheme: React.ComponentProps<typeof ConfigProvider>['theme'] = {
     colorInfo: POLYU_RED,
     borderRadius: 12,
     fontFamily:
-      '-apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif'
+      '"Microsoft YaHei", "微软雅黑", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Helvetica Neue", Arial, sans-serif'
   },
   components: {
     Layout: {

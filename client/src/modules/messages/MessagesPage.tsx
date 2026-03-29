@@ -45,6 +45,9 @@ export const MessagesPage: React.FC = () => {
   >([])
   const [loadingList, setLoadingList] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const chatContainerRef = useRef<HTMLDivElement>(null)
+  const prevMsgCountRef = useRef(0)
+  const isInitialLoadRef = useRef(true)
 
   const [likesList, setLikesList] = useState<any[]>([])
   const [followsList, setFollowsList] = useState<any[]>([])
@@ -96,6 +99,8 @@ export const MessagesPage: React.FC = () => {
   }
 
   useEffect(() => {
+    isInitialLoadRef.current = true
+    prevMsgCountRef.current = 0
     if (otherId != null && !Number.isNaN(otherId) && otherId > 0) {
       void loadConversation(otherId)
     } else {
@@ -112,7 +117,28 @@ export const MessagesPage: React.FC = () => {
   }, [otherId, user?.id])
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    const container = chatContainerRef.current
+    const prevCount = prevMsgCountRef.current
+    const newCount = messagesList.length
+    prevMsgCountRef.current = newCount
+
+    if (newCount === 0) return
+
+    const hasNewMessages = newCount > prevCount
+
+    if (isInitialLoadRef.current) {
+      isInitialLoadRef.current = false
+      messagesEndRef.current?.scrollIntoView({ behavior: 'instant' })
+      return
+    }
+
+    if (!hasNewMessages || !container) return
+
+    const distFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight
+    const isNearBottom = distFromBottom < 120
+    if (isNearBottom) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }
   }, [messagesList])
 
   const loadConversationsList = async () => {
@@ -288,9 +314,7 @@ export const MessagesPage: React.FC = () => {
                   <div className="wiselearn-conv-name">{item.actor.nickname}</div>
                   <Typography.Text type="secondary" className="wiselearn-notif-desc">
                     {t('notifications.likedYourPost', { title: item.postTitle })}
-                  </Typography.Text>
-                  <Typography.Text type="secondary" className="wiselearn-notif-time">
-                    {formatDate(item.createdAt)}
+                    <span className="wiselearn-notif-time-inline"> · {formatDate(item.createdAt)}</span>
                   </Typography.Text>
                 </div>
               </div>
@@ -332,9 +356,7 @@ export const MessagesPage: React.FC = () => {
                   <div className="wiselearn-conv-name">{item.actor.nickname}</div>
                   <Typography.Text type="secondary" className="wiselearn-notif-desc">
                     {t('notifications.followedYou')}
-                  </Typography.Text>
-                  <Typography.Text type="secondary" className="wiselearn-notif-time">
-                    {formatDate(item.createdAt)}
+                    <span className="wiselearn-notif-time-inline"> · {formatDate(item.createdAt)}</span>
                   </Typography.Text>
                 </div>
               </div>
@@ -376,12 +398,13 @@ export const MessagesPage: React.FC = () => {
                   <div className="wiselearn-conv-name">{item.actor.nickname}</div>
                   <Typography.Text type="secondary" className="wiselearn-notif-desc">
                     {t('notifications.commentedOrReplied')}
+                    <span className="wiselearn-notif-time-inline"> · {formatDate(item.createdAt)}</span>
                   </Typography.Text>
                   <Typography.Paragraph ellipsis={{ rows: 2 }} style={{ margin: '4px 0 0', fontSize: 13 }}>
                     {item.content}
                   </Typography.Paragraph>
-                  <Typography.Text type="secondary" className="wiselearn-notif-time">
-                    {formatDate(item.createdAt)} · 《{item.postTitle}》
+                  <Typography.Text type="secondary" className="wiselearn-notif-post-ref">
+                    《{item.postTitle}》
                   </Typography.Text>
                 </div>
               </div>
@@ -449,7 +472,7 @@ export const MessagesPage: React.FC = () => {
           {otherNickname ?? '...'}
         </Typography.Title>
       </div>
-      <div className="wiselearn-chat-messages">
+      <div className="wiselearn-chat-messages" ref={chatContainerRef}>
         {loading ? (
           <div className="wiselearn-chat-loading">{t('messages.loading')}</div>
         ) : (

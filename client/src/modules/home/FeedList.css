@@ -3,7 +3,7 @@
 .wiselearn-feed-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 6px;
 }
 
 /* Loading state */
@@ -47,9 +47,9 @@
 .wiselearn-feed-item {
   background: #fff;
   border-radius: 8px;
-  border: 1px solid #e8e8e8;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  padding: 20px;
+  border: 1px solid #f0f0f0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  padding: 14px 16px;
   transition: box-shadow 0.2s;
   text-align: left;
 }
@@ -137,61 +137,110 @@
 }
 
 /* Content preview */
+/* 正文区：完整 HTML（已去图）；过长时折叠约 6 行 */
+.wiselearn-feed-item-excerpt-wrap {
+  margin-bottom: 12px;
+}
+
 .wiselearn-feed-item-excerpt {
   font-size: 14px;
   color: #666;
-  line-height: 1.6;
-  margin-bottom: 12px;
+  line-height: 1.65;
   cursor: pointer;
-  overflow: hidden;
+  word-break: break-word;
+}
+
+.wiselearn-feed-item-excerpt--collapsed {
   display: -webkit-box;
-  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
+  -webkit-line-clamp: 6;
+  overflow: hidden;
+}
+
+.wiselearn-feed-item-excerpt p {
+  margin: 0 0 0.35em;
+}
+
+.wiselearn-feed-item-excerpt p:last-child {
+  margin-bottom: 0;
 }
 
 .wiselearn-feed-item-excerpt img {
   display: none;
 }
 
-/* Image gallery */
+.wiselearn-feed-expand-row {
+  margin-top: 6px;
+  text-align: left;
+}
+
+.wiselearn-feed-expand-btn {
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: none;
+  color: #eb7350;
+  font-size: 14px;
+  line-height: 1.5;
+  cursor: pointer;
+}
+
+.wiselearn-feed-expand-btn:hover {
+  color: #c43d28;
+  text-decoration: underline;
+}
+
+/* Image gallery：朋友圈/微博式 — 方块缩略图、左对齐（不拉满整行） */
 .wiselearn-feed-item-gallery {
-  display: grid;
+  display: inline-grid;
   gap: 4px;
   margin-bottom: 12px;
-  border-radius: 8px;
-  overflow: hidden;
+  justify-content: start;
+  justify-items: stretch;
+  width: auto;
+  max-width: 100%;
+  vertical-align: top;
 }
 
 .wiselearn-feed-item-gallery-img-root {
   width: 100%;
+  aspect-ratio: 1;
   display: block;
   line-height: 0;
+  overflow: hidden;
+  border-radius: 2px;
+  background: #f0f0f0;
+}
+
+.wiselearn-feed-item-gallery .ant-image {
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
 .wiselearn-feed-item-gallery.single {
-  grid-template-columns: 1fr;
-}
-
-.wiselearn-feed-item-gallery.single .wiselearn-feed-item-gallery-img {
-  max-height: 300px;
-  object-fit: contain;
+  grid-template-columns: min(240px, min(100%, 78vw));
 }
 
 .wiselearn-feed-item-gallery.double {
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, 1fr);
+  width: min(100%, 324px);
 }
 
 .wiselearn-feed-item-gallery.quad {
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, 1fr);
+  width: min(100%, 324px);
 }
 
+/* 三列图网（3～9 张）：网页端每张 160px，总宽 3×160+2×4=488px */
 .wiselearn-feed-item-gallery.multiple {
   grid-template-columns: repeat(3, 1fr);
+  width: min(100%, 488px);
 }
 
 .wiselearn-feed-item-gallery-img {
-  width: 100%;
-  height: 150px;
+  width: 100% !important;
+  height: 100% !important;
   object-fit: cover;
   cursor: pointer;
   transition: opacity 0.2s;
@@ -199,11 +248,6 @@
 
 .wiselearn-feed-item-gallery-img:hover {
   opacity: 0.9;
-}
-
-.wiselearn-feed-item-gallery.quad .wiselearn-feed-item-gallery-img,
-.wiselearn-feed-item-gallery.multiple .wiselearn-feed-item-gallery-img {
-  height: 120px;
 }
 
 /* Action bar */
@@ -381,7 +425,7 @@
 
 /* 内联评论（理工红） */
 .wiselearn-feed-item-inline-comment {
-  margin-top: 18px;
+  margin-top: 12px;
 }
 
 .wiselearn-feed-item-inline-comment__row {
@@ -409,8 +453,8 @@ textarea.wiselearn-feed-item-inline-comment__textarea,
   border-color: rgba(200, 16, 46, 0.45) !important;
   border-radius: 8px;
   padding-right: 48px;
-  padding-bottom: 44px;
-  resize: vertical;
+  padding-bottom: 8px;
+  resize: none;
 }
 
 textarea.wiselearn-feed-item-inline-comment__textarea:hover,
@@ -427,10 +471,10 @@ textarea.wiselearn-feed-item-inline-comment__textarea:focus,
 
 .wiselearn-feed-item-inline-comment__send-circle.ant-btn {
   position: absolute;
-  right: 10px;
-  bottom: 10px;
-  width: 36px;
-  height: 36px;
+  right: 6px;
+  bottom: 4px;
+  width: 30px;
+  height: 30px;
   min-width: 36px;
   padding: 0;
   display: inline-flex;
@@ -558,13 +602,17 @@ textarea.wiselearn-feed-item-inline-comment__textarea:focus,
     font-size: 15px;
   }
 
-  .wiselearn-feed-item-gallery-img {
-    height: 100px;
+  .wiselearn-feed-item-gallery.double,
+  .wiselearn-feed-item-gallery.quad {
+    width: min(100%, 220px);
   }
 
-  .wiselearn-feed-item-gallery.quad .wiselearn-feed-item-gallery-img,
-  .wiselearn-feed-item-gallery.multiple .wiselearn-feed-item-gallery-img {
-    height: 80px;
+  .wiselearn-feed-item-gallery.multiple {
+    width: min(100%, 300px);
+  }
+
+  .wiselearn-feed-item-gallery.single {
+    grid-template-columns: min(220px, min(100%, 82vw));
   }
 
   .wiselearn-feed-item-action {

@@ -2,12 +2,11 @@ import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { App, Button, Form, Input, Select, Typography } from 'antd'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { fetchPostDetail, updatePost, uploadImageApi } from '../shared/api'
+import { fetchPostDetail, updatePost } from '../shared/api'
 import { useAuth } from '../auth/AuthContext'
 import { RichTextEditor } from './RichTextEditor'
 import type { RichTextEditorRef } from './RichTextEditor'
 import { EditorToolbar } from './EditorToolbar'
-import { generateTitleCoverFile } from './generateTitleCover'
 import {
   extractImageUrlsFromContent,
   stripImagesFromHtml
@@ -108,14 +107,7 @@ export const EditPostPage: React.FC = () => {
     setSaving(true)
     try {
       const bodyHtml = stripImagesFromHtml(contentHtml)
-      let imageUrls: string[]
-      if (attachedImageUrls.length > 0) {
-        imageUrls = attachedImageUrls
-      } else {
-        const coverFile = await generateTitleCoverFile(values.title)
-        const { url } = await uploadImageApi(coverFile)
-        imageUrls = [url]
-      }
+      const imageUrls = attachedImageUrls.length > 0 ? attachedImageUrls : []
 
       await updatePost(postId, {
         title: values.title,

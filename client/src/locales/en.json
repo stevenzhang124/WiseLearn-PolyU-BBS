@@ -69,6 +69,8 @@
     "feedTabsAria": "Post categories; drag horizontally or scroll with the wheel",
     "feedImageGallery": "Post images",
     "previewImage": "Preview",
+    "expandFull": "Show more",
+    "collapseFull": "Show less",
     "category": {
       "all": "All",
       "campus": "Campus Life",
@@ -270,5 +272,14 @@
     "createPost": "Create Post",
     "myProfile": "My Profile",
     "messages": "Messages"
+  },
+  "share": {
+    "share": "Share",
+    "tapToView": "Tap to view full post",
+    "copyImage": "Copy image",
+    "saveImage": "Save image",
+    "imageSaved": "Image saved",
+    "imageCopied": "Image copied",
+    "imageFailed": "Failed, please try again"
   }
 }
