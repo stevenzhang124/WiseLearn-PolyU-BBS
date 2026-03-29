@@ -8,7 +8,7 @@ import {
   saveHomeFeedSnapshot,
   type HomeFeedRestorePayload
 } from '../shared/homeFeedRestore'
-import { getMainScrollElement, setMainScrollTop } from '../layout/mainScroll'
+import { getMainScrollElement, setMainScrollTop, HOME_SCROLL_TOP_REFRESH_EVENT } from '../layout/mainScroll'
 import { FeedTabs } from './FeedTabs'
 import { FeedList } from './FeedList'
 import './HomePage.css'
@@ -141,6 +141,17 @@ export const HomePage: React.FC = () => {
       document.removeEventListener('visibilitychange', onVisibility)
     }
   }, [refreshIfOnHome])
+
+  /** 左侧导航「首页」二次点击：回到顶部 + 刷新 */
+  useEffect(() => {
+    const onScrollTopRefresh = () => {
+      setMainScrollTop(0)
+      latestScrollY.current = 0
+      void loadPosts(1, sortTab, 'replace')
+    }
+    window.addEventListener(HOME_SCROLL_TOP_REFRESH_EVENT, onScrollTopRefresh)
+    return () => window.removeEventListener(HOME_SCROLL_TOP_REFRESH_EVENT, onScrollTopRefresh)
+  }, [loadPosts, sortTab])
 
   /** 卸载时写入快照：用实时跟踪的 latestScrollY 而非当场读取（此时 DOM 可能已切换） */
   useEffect(() => {

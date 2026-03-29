@@ -49,3 +49,39 @@
   display: inline-flex;
   align-items: center;
 }
+
+/* 首页已滚动时的「回到顶部」红色实心圆图标 */
+.wiselearn-home-back-top-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #C8102E;
+  color: #fff;
+  font-size: 13px;
+  line-height: 1;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  box-shadow: 0 2px 6px rgba(200, 16, 46, 0.35);
+}
+
+.wiselearn-home-back-top-icon .anticon {
+  color: #fff !important;
+  font-size: 13px;
+}
+
+.wiselearn-left-nav .ant-menu-item:hover .wiselearn-home-back-top-icon {
+  transform: scale(1.1);
+  box-shadow: 0 3px 10px rgba(200, 16, 46, 0.45);
+}
+
+.wiselearn-left-nav .ant-menu-item-selected .wiselearn-home-back-top-icon {
+  background: #fff;
+  color: #C8102E;
+  box-shadow: 0 2px 6px rgba(255, 255, 255, 0.5);
+}
+
+.wiselearn-left-nav .ant-menu-item-selected .wiselearn-home-back-top-icon .anticon {
+  color: #C8102E !important;
+}

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { Layout, Badge, Typography, Drawer, Button } from 'antd'
 import {
   LogoutOutlined,
@@ -16,6 +16,7 @@ import { Avatar } from '../shared/Avatar'
 import { fetchAdminPendingPosts, getUnreadCount, getNotificationsUnreadCount, updateUserLanguageApi } from '../shared/api'
 import { LeftNav } from './LeftNav'
 import { RightBar } from '../home/RightBar'
+import { getMainScrollElement, HOME_SCROLL_TOP_REFRESH_EVENT } from './mainScroll'
 
 const { Header, Content, Sider } = Layout
 
@@ -33,6 +34,37 @@ export const LayoutShell: React.FC = () => {
   const [unreadCount, setUnreadCount] = useState(0)
   const [adminPendingCount, setAdminPendingCount] = useState(0)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
+  const [homeScrolledDown, setHomeScrolledDown] = useState(false)
+  const scrollRafRef = useRef(0)
+
+  const isOnHome = location.pathname === '/'
+
+  useEffect(() => {
+    if (!isOnHome) {
+      setHomeScrolledDown(false)
+      return
+    }
+    const el = getMainScrollElement()
+    if (!el) return
+    const onScroll = () => {
+      cancelAnimationFrame(scrollRafRef.current)
+      scrollRafRef.current = requestAnimationFrame(() => {
+        setHomeScrolledDown(el.scrollTop > 200)
+      })
+    }
+    onScroll()
+    el.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      el.removeEventListener('scroll', onScroll)
+      cancelAnimationFrame(scrollRafRef.current)
+    }
+  }, [isOnHome])
+
+  const handleHomeNavClick = useCallback(() => {
+    if (isOnHome && homeScrolledDown) {
+      window.dispatchEvent(new CustomEvent(HOME_SCROLL_TOP_REFRESH_EVENT))
+    }
+  }, [isOnHome, homeScrolledDown])
 
   const setLang = (lng: 'zh' | 'en') => {
     i18n.changeLanguage(lng)
@@ -219,6 +251,8 @@ export const LayoutShell: React.FC = () => {
           unreadCount={unreadCount}
           adminPendingCount={adminPendingCount}
           isAdmin={user?.isAdmin ?? false}
+          homeScrolledDown={homeScrolledDown}
+          onHomeClick={() => { handleHomeNavClick(); setMobileNavOpen(false) }}
           onNavClick={() => setMobileNavOpen(false)}
         />
         {user && (
@@ -244,6 +278,8 @@ export const LayoutShell: React.FC = () => {
             unreadCount={unreadCount}
             adminPendingCount={adminPendingCount}
             isAdmin={user?.isAdmin ?? false}
+            homeScrolledDown={homeScrolledDown}
+            onHomeClick={handleHomeNavClick}
           />
         </Sider>
 

@@ -5,7 +5,8 @@ import {
   HomeOutlined,
   EditOutlined,
   UserOutlined,
-  DashboardOutlined
+  DashboardOutlined,
+  ArrowUpOutlined
 } from '@ant-design/icons'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -16,6 +17,10 @@ export interface LeftNavProps {
   unreadCount: number
   adminPendingCount: number
   isAdmin: boolean
+  /** 首页已滚动一定距离 */
+  homeScrolledDown?: boolean
+  /** 在首页且已滚动时点击「首页」的回调（回到顶+刷新） */
+  onHomeClick?: () => void
   onNavClick?: (key: string) => void
 }
 
@@ -28,19 +33,37 @@ export const LeftNav: React.FC<LeftNavProps> = ({
   unreadCount,
   adminPendingCount,
   isAdmin,
+  homeScrolledDown = false,
+  onHomeClick,
   onNavClick
 }) => {
   const { t } = useTranslation()
 
+  const isOnHomeAndScrolled = selectedKeys.includes('home') && homeScrolledDown
+
+  const homeIcon = isOnHomeAndScrolled ? (
+    <span className="wiselearn-home-back-top-icon">
+      <ArrowUpOutlined />
+    </span>
+  ) : (
+    <HomeOutlined />
+  )
+
   const navMenuItems = [
     {
       key: 'home',
-      icon: <HomeOutlined />,
+      icon: homeIcon,
       label: (
         <Link
           to="/"
           className="wiselearn-menu-link"
-          onClick={() => onNavClick?.('home')}
+          onClick={(e) => {
+            if (isOnHomeAndScrolled) {
+              e.preventDefault()
+              onHomeClick?.()
+            }
+            onNavClick?.('home')
+          }}
         >
           {t('nav.home')}
         </Link>
