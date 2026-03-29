@@ -205,19 +205,21 @@ adminRouter.post('/posts/:id/approve', async (req: AuthRequest, res) => {
       [id]
     )
 
-    const [langRows] = await conn.query(
-      'SELECT ui_lang FROM users WHERE id = ?',
-      [post.user_id]
-    )
-    const uiLang = (langRows as any[])[0]?.ui_lang
-    const isEn = uiLang === 'en'
-    const content = isEn
-      ? `Admin approved your post 《${post.title}》 and it is now published.`
-      : `管理员已通过审核：你的帖子《${post.title}》已发布。`
-    await conn.query(
-      'INSERT INTO messages (from_user_id, to_user_id, content) VALUES (?, ?, ?)',
-      [req.user!.id, post.user_id, content]
-    )
+    if (post.user_id !== req.user!.id) {
+      const [langRows] = await conn.query(
+        'SELECT ui_lang FROM users WHERE id = ?',
+        [post.user_id]
+      )
+      const uiLang = (langRows as any[])[0]?.ui_lang
+      const isEn = uiLang === 'en'
+      const content = isEn
+        ? `Admin approved your post 《${post.title}》 and it is now published.`
+        : `管理员已通过审核：你的帖子《${post.title}》已发布。`
+      await conn.query(
+        'INSERT INTO messages (from_user_id, to_user_id, content) VALUES (?, ?, ?)',
+        [req.user!.id, post.user_id, content]
+      )
+    }
 
     await conn.commit()
     res.json({ message: '审核通过' })
@@ -267,19 +269,21 @@ adminRouter.post('/posts/:id/reject', async (req: AuthRequest, res) => {
       [trimmed, id]
     )
 
-    const [langRows] = await conn.query(
-      'SELECT ui_lang FROM users WHERE id = ?',
-      [post.user_id]
-    )
-    const uiLang = (langRows as any[])[0]?.ui_lang
-    const isEn = uiLang === 'en'
-    const content = isEn
-      ? `Admin rejected your post 《${post.title}》.\nFeedback: ${trimmed}\nPlease revise and resubmit.`
-      : `管理员未通过审核：你的帖子《${post.title}》需整改。\n整改意见：${trimmed}\n请修改后等待再次审核。`
-    await conn.query(
-      'INSERT INTO messages (from_user_id, to_user_id, content) VALUES (?, ?, ?)',
-      [req.user!.id, post.user_id, content]
-    )
+    if (post.user_id !== req.user!.id) {
+      const [langRows] = await conn.query(
+        'SELECT ui_lang FROM users WHERE id = ?',
+        [post.user_id]
+      )
+      const uiLang = (langRows as any[])[0]?.ui_lang
+      const isEn = uiLang === 'en'
+      const content = isEn
+        ? `Admin rejected your post 《${post.title}》.\nFeedback: ${trimmed}\nPlease revise and resubmit.`
+        : `管理员未通过审核：你的帖子《${post.title}》需整改。\n整改意见：${trimmed}\n请修改后等待再次审核。`
+      await conn.query(
+        'INSERT INTO messages (from_user_id, to_user_id, content) VALUES (?, ?, ?)',
+        [req.user!.id, post.user_id, content]
+      )
+    }
 
     await conn.commit()
     res.json({ message: '已反馈整改意见' })

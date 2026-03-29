@@ -1,4 +1,5 @@
-FROM node:22-bullseye AS build
+# Vite 8 需要 Node 20.19+ / 22.12+
+FROM node:22-bookworm AS build
 
 WORKDIR /app
 COPY client/package.json client/package-lock.json ./client/

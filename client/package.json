@@ -15,6 +15,10 @@
   },
   "dependencies": {
     "@ant-design/icons": "^6.1.0",
+    "@blocknote/core": "^0.47.3",
+    "@blocknote/mantine": "^0.47.3",
+    "@blocknote/react": "^0.47.3",
+    "@emoji-mart/data": "^1.2.1",
     "@tanstack/react-query": "^5.90.21",
     "@tiptap/extension-image": "^3.20.1",
     "@tiptap/extension-placeholder": "^3.20.1",
@@ -22,7 +26,10 @@
     "@tiptap/starter-kit": "^3.20.1",
     "antd": "^6.3.2",
     "axios": "^1.13.6",
+    "browser-image-compression": "^2.0.2",
     "dompurify": "^3.3.3",
+    "emoji-mart": "^5.6.0",
+    "html-to-image": "^1.11.13",
     "i18next": "^25.8.18",
     "react-i18next": "^16.5.8",
     "react-router-dom": "^7.13.1"

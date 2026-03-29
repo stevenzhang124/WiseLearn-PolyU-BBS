@@ -1,17 +1,16 @@
 import React, { useEffect, useRef, useState } from 'react'
 import {
+  App,
   Card,
   Col,
   Descriptions,
   Input,
-  List,
   Row,
   Space,
   Statistic,
   Table,
   Tag,
   Button,
-  message,
   Modal
 } from 'antd'
 import { useTranslation } from 'react-i18next'
@@ -24,11 +23,13 @@ import {
   approvePostAdmin,
   rejectPostAdmin
 } from '../shared/api'
+import './AdminDashboardPage.css'
 
 /**
  * 管理后台：展示统计数据 + 热门帖子 + 帖子搜索/置顶/删除
  */
 export const AdminDashboardPage: React.FC = () => {
+  const { message } = App.useApp()
   const { t, i18n } = useTranslation()
   const [stats, setStats] = useState<any | null>(null)
   const [loading, setLoading] = useState(false)
@@ -170,7 +171,7 @@ export const AdminDashboardPage: React.FC = () => {
     <div>
       <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
         <Col xs={12} sm={6}>
-          <Card loading={loading}>
+          <Card loading={loading} className="wiselearn-admin-card">
             <Statistic
               title={t('admin.totalUsers')}
               value={stats?.totalUsers ?? 0}
@@ -178,7 +179,7 @@ export const AdminDashboardPage: React.FC = () => {
           </Card>
         </Col>
         <Col xs={12} sm={6}>
-          <Card>
+          <Card className="wiselearn-admin-card">
             <Statistic
               title={t('admin.totalPosts')}
               value={stats?.totalPosts ?? 0}
@@ -186,7 +187,7 @@ export const AdminDashboardPage: React.FC = () => {
           </Card>
         </Col>
         <Col xs={24} sm={12}>
-          <Card title={t('admin.recentNewUsers')}>
+          <Card title={t('admin.recentNewUsers')} className="wiselearn-admin-card">
             <Space wrap>
               {(stats?.dailyNewUsers ?? []).map((item: any) => (
                 <Tag key={item.date}>
@@ -200,24 +201,25 @@ export const AdminDashboardPage: React.FC = () => {
 
       <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
         <Col xs={24} md={12}>
-          <Card title={t('admin.hotPostsTop10')}>
-            <List
-              dataSource={stats?.hotPostsTop10 ?? []}
-              renderItem={(item: any) => (
-                <List.Item key={item.id}>
+          <Card title={t('admin.hotPostsTop10')} className="wiselearn-admin-card">
+            <div className="wiselearn-admin-hot-list">
+              {(stats?.hotPostsTop10 ?? []).map((item: any) => (
+                <div key={item.id} className="wiselearn-admin-hot-row">
                   <Space wrap>
                     <span>#{item.id}</span>
                     <span>{item.title}</span>
-                    <Tag color="blue">{t('admin.views')} {item.view_count}</Tag>
+                    <Tag color="blue">
+                      {t('admin.views')} {item.view_count}
+                    </Tag>
                   </Space>
-                </List.Item>
-              )}
-            />
+                </div>
+              ))}
+            </div>
           </Card>
         </Col>
         <Col xs={24} md={12}>
-          <Card title={t('admin.postSearch')}>
-            <Space direction="vertical" style={{ width: '100%' }}>
+          <Card title={t('admin.postSearch')} className="wiselearn-admin-card">
+            <Space orientation="vertical" style={{ width: '100%' }}>
               <Input.Search
                 placeholder={t('admin.searchPlaceholder')}
                 enterButton={t('admin.search')}
@@ -283,7 +285,7 @@ export const AdminDashboardPage: React.FC = () => {
         </Col>
       </Row>
 
-      <Card title={t('admin.pendingPostsTitle')} style={{ marginBottom: 16 }}>
+      <Card title={t('admin.pendingPostsTitle')} className="wiselearn-admin-card" style={{ marginBottom: 16 }}>
         <Table
           rowKey="id"
           loading={pendingLoading}
@@ -328,7 +330,7 @@ export const AdminDashboardPage: React.FC = () => {
         />
       </Card>
 
-      <Card title={t('admin.dataDesc')}>
+      <Card title={t('admin.dataDesc')} className="wiselearn-admin-card">
         <Descriptions column={1}>
           <Descriptions.Item label={t('admin.dataDescLabel')}>
             {t('admin.dataDescText')}
@@ -343,7 +345,7 @@ export const AdminDashboardPage: React.FC = () => {
         cancelText={t('post.cancel')}
         onCancel={() => setRejectModalOpen(false)}
         onOk={confirmReject}
-        destroyOnClose
+        destroyOnHidden
       >
         <Input.TextArea
           rows={4}

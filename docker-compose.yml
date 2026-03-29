@@ -11,6 +11,16 @@ services:
       - ./server/migrations/add-users-avatar.sql:/docker-entrypoint-initdb.d/02-avatar.sql:ro
       - ./server/migrations/add-follows-table.sql:/docker-entrypoint-initdb.d/03-follows.sql:ro
       - ./server/migrations/add-user-notification-read.sql:/docker-entrypoint-initdb.d/04-notification.sql:ro
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD || exit 1'
+        ]
+      interval: 3s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
 
   api:
     build:
@@ -35,7 +45,7 @@ services:
       - uploads-data:/app/uploads
     depends_on:
       mysql:
-        condition: service_started
+        condition: service_healthy
 
   web:
     build:

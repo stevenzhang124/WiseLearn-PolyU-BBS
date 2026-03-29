@@ -1,25 +1,25 @@
-import React, { useEffect, useState } from 'react'
-import { Button, Form, Input, Select, Card, Typography, message } from 'antd'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
+import { App, Button, Form, Input, Select, Typography } from 'antd'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { fetchPostDetail, updatePost } from '../shared/api'
-import { uploadImageApi } from '../shared/api'
 import { useAuth } from '../auth/AuthContext'
 import { RichTextEditor } from './RichTextEditor'
-import { generateTitleCoverFile } from './generateTitleCover'
-
-const categoryValues = [
-  { value: 'teaching' },
-  { value: 'campus' },
-  { value: 'career' },
-  { value: 'news' },
-  { value: 'mutual' }
-]
+import type { RichTextEditorRef } from './RichTextEditor'
+import { EditorToolbar } from './EditorToolbar'
+import {
+  extractImageUrlsFromContent,
+  stripImagesFromHtml
+} from './extractImageUrlsFromContent'
+import { PostImageUploadSection } from './PostImageUploadSection'
+import { POST_CATEGORY_VALUES } from './postCategoryValues'
+import './PostEditorPage.css'
 
 /**
- * 编辑帖子页：仅作者可访问，加载后可修改标题/分类/内容并重新发布
+ * 编辑帖子页：布局与发帖页共用 PostEditorPage.css，仅数据加载与提交逻辑不同
  */
 export const EditPostPage: React.FC = () => {
+  const { message } = App.useApp()
   const { t } = useTranslation()
   const { id } = useParams<{ id: string }>()
   const postId = Number(id)
@@ -27,8 +27,28 @@ export const EditPostPage: React.FC = () => {
   const { user } = useAuth()
   const [form] = Form.useForm()
   const [contentHtml, setContentHtml] = useState('')
+  const [titleValue, setTitleValue] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [editorReady, setEditorReady] = useState(false)
+  const [attachedImageUrls, setAttachedImageUrls] = useState<string[]>([])
+  const editorRef = useRef<RichTextEditorRef>(null)
+  const contentSectionRef = useRef<HTMLDivElement>(null)
+
+  const scrollToContentSection = () => {
+    requestAnimationFrame(() => {
+      contentSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    })
+  }
+
+  const handleEditorReady = useCallback(() => {
+    setEditorReady(true)
+  }, [])
+
+  const categories = POST_CATEGORY_VALUES.map((value) => ({
+    label: t(`home.category.${value}` as const),
+    value
+  }))
 
   useEffect(() => {
     if (!postId || Number.isNaN(postId)) {
@@ -54,7 +74,15 @@ export const EditPostPage: React.FC = () => {
           title: post.title,
           category: post.category
         })
+        setTitleValue(post.title || '')
         setContentHtml(post.content || '')
+        const rawUrls = post.image_urls
+        const fromField =
+          typeof rawUrls === 'string' && rawUrls.trim()
+            ? rawUrls.split(',').map((s: string) => s.trim()).filter(Boolean)
+            : []
+        const fromContent = extractImageUrlsFromContent(post.content || '')
+        setAttachedImageUrls(fromField.length > 0 ? fromField : fromContent)
       })
       .catch((err) => {
         if (!cancelled) {
@@ -65,37 +93,26 @@ export const EditPostPage: React.FC = () => {
       .finally(() => {
         if (!cancelled) setLoading(false)
       })
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [postId, user?.id, form, navigate, t])
-
-  const categories = categoryValues.map((c) => ({
-    label: t(`home.category.${c.value}` as const),
-    value: c.value
-  }))
 
   const onSave = async (values: { title: string; category: string }) => {
     if (!contentHtml || contentHtml === '<p></p>') {
       message.warning(t('post.contentRequired'))
+      scrollToContentSection()
       return
     }
     setSaving(true)
     try {
-      const firstImgMatch = contentHtml.match(/<img[^>]+src=["'][^"']+["'][^>]*>/i)
-      const firstImgSrc = firstImgMatch ? firstImgMatch[0].match(/src=["']([^"']+)["']/i)?.[1] : null
-      let imageUrls: string[]
-
-      if (firstImgSrc) {
-        imageUrls = [firstImgSrc]
-      } else {
-        const coverFile = await generateTitleCoverFile(values.title)
-        const { url } = await uploadImageApi(coverFile)
-        imageUrls = [url]
-      }
+      const bodyHtml = stripImagesFromHtml(contentHtml)
+      const imageUrls = attachedImageUrls.length > 0 ? attachedImageUrls : []
 
       await updatePost(postId, {
         title: values.title,
         category: values.category,
-        content: contentHtml,
+        content: bodyHtml,
         imageUrls
       })
       message.success(t('post.updateSuccess'))
@@ -109,17 +126,26 @@ export const EditPostPage: React.FC = () => {
 
   if (loading) {
     return (
-      <Card className="wiselearn-card" loading>
-        <Typography.Paragraph>{t('common.loading')}</Typography.Paragraph>
-      </Card>
+      <div className="wiselearn-post-editor">
+        <div className="wiselearn-post-editor-body">
+          <Typography.Text type="secondary">{t('common.loading')}</Typography.Text>
+        </div>
+      </div>
     )
   }
 
   return (
-    <div>
-      <Typography.Title level={3}>{t('post.edit')}</Typography.Title>
-      <Card className="wiselearn-card">
-        <Form form={form} layout="vertical" onFinish={onSave}>
+    <div className="wiselearn-post-editor">
+      <div className="wiselearn-post-editor-body">
+        <Typography.Title level={4} className="wiselearn-post-editor-heading">
+          {t('post.edit')}
+        </Typography.Title>
+        <Form
+          form={form}
+          layout="vertical"
+          scrollToFirstError={{ behavior: 'smooth', block: 'center' }}
+          onFinish={onSave}
+        >
           <Form.Item
             label={t('post.title')}
             name="title"
@@ -128,40 +154,78 @@ export const EditPostPage: React.FC = () => {
               { max: 20, message: t('auth.titleTooLong') }
             ]}
           >
-            <Input maxLength={20} showCount placeholder={t('post.titlePlaceholder')} />
+            <div className="wiselearn-input-wrapper">
+              <Input
+                maxLength={20}
+                placeholder={t('post.titlePlaceholder')}
+                className="wiselearn-input"
+                onChange={(e) => setTitleValue(e.target.value)}
+              />
+              <span className="wiselearn-char-count">
+                {titleValue.length} / 20
+              </span>
+            </div>
           </Form.Item>
+
           <Form.Item
             label={t('post.category')}
             name="category"
             rules={[{ required: true, message: t('post.categoryRequired') }]}
           >
-            <Select options={categories} placeholder={t('post.categoryPlaceholder')} />
-          </Form.Item>
-          <Form.Item
-            label={t('post.content')}
-            required
-            help={t('post.contentHelp')}
-          >
-            <RichTextEditor
-              value={contentHtml}
-              onChange={setContentHtml}
-              placeholder={t('post.contentPlaceholder')}
-              minHeight={260}
+            <Select
+              options={categories}
+              placeholder={t('post.categoryPlaceholder')}
+              className="wiselearn-select"
             />
           </Form.Item>
-          <Form.Item>
-            <Button type="primary" htmlType="submit" loading={saving}>
-              {t('post.saveUpdate')}
-            </Button>
-            <Button
-              style={{ marginLeft: 8 }}
-              onClick={() => navigate(`/posts/${postId}`)}
+
+          <div ref={contentSectionRef} id="wiselearn-post-content-anchor">
+            <Form.Item
+              label={t('post.content')}
+              required
+              className="wiselearn-content-form-item"
             >
-              {t('post.cancel')}
-            </Button>
-          </Form.Item>
+              <div className="wiselearn-editor-wrapper">
+                <RichTextEditor
+                  ref={editorRef}
+                  value={contentHtml}
+                  onChange={setContentHtml}
+                  placeholder={t('post.contentPlaceholder')}
+                  minHeight={280}
+                  onReady={handleEditorReady}
+                  disableImages
+                />
+                <EditorToolbar
+                  editor={editorReady ? editorRef.current?.editor ?? null : null}
+                  showImageButton={false}
+                  showHashtagButton={false}
+                />
+              </div>
+            </Form.Item>
+          </div>
+
+          <div className="wiselearn-post-images-section">
+            <PostImageUploadSection urls={attachedImageUrls} onChange={setAttachedImageUrls} />
+          </div>
         </Form>
-      </Card>
+      </div>
+
+      <div className="wiselearn-post-editor-footer">
+        <Button
+          className="wiselearn-btn-cancel"
+          onClick={() => navigate(`/posts/${postId}`)}
+        >
+          {t('post.cancel')}
+        </Button>
+        <Button
+          type="primary"
+          className="wiselearn-btn-publish"
+          loading={saving}
+          onClick={() => form.submit()}
+        >
+          {t('post.saveUpdate')}
+        </Button>
+      </div>
     </div>
   )
 }

@@ -1,0 +1,135 @@
+/* EditorToolbar Styles */
+
+/* Editor footer bar - inside editor container */
+.wiselearn-editor-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 16px;
+  background: rgba(245, 245, 245, 0.8);
+  border-top: 1px solid #e8e8e8;
+  border-radius: 0 0 12px 12px;
+  transition: border-color 0.2s;
+}
+
+/* 发帖页：无右侧说明时收窄内边距 */
+.wiselearn-editor-footer--compact {
+  justify-content: flex-start;
+  gap: 8px;
+  padding: 8px 10px;
+}
+
+.wiselearn-editor-wrapper:hover .wiselearn-editor-footer,
+.wiselearn-editor-wrapper:focus-within .wiselearn-editor-footer {
+  border-top-color: #c8102e;
+}
+
+/* Left side: toolbar buttons container */
+.wiselearn-toolbar-buttons {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+/* Toolbar button - clean style like reference */
+.wiselearn-toolbar-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  color: #666;
+  font-size: 14px;
+  font-weight: 500;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.wiselearn-toolbar-btn:hover {
+  color: #C8102E;
+  background: rgba(200, 16, 46, 0.08);
+}
+
+.wiselearn-toolbar-icon {
+  font-size: 16px;
+}
+
+/* Right side: help text */
+.wiselearn-toolbar-help {
+  font-size: 12px;
+  color: #999;
+}
+
+/* Picker wrapper for positioning */
+.wiselearn-picker-wrapper {
+  position: relative;
+}
+
+/* emoji-mart（与 BlockNote 同款数据/组件库） */
+.wiselearn-emoji-mart-popover {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  margin-bottom: 8px;
+  z-index: 1000;
+  width: min(100vw - 32px, 352px);
+  max-height: min(70vh, 420px);
+  overflow: hidden;
+  border: 1px solid #e8e8e8;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background: #fff;
+}
+
+.wiselearn-emoji-mart-root {
+  width: 100%;
+  max-height: min(70vh, 420px);
+}
+
+.wiselearn-emoji-mart-root em-emoji-picker {
+  width: 100%;
+  height: min(70vh, 420px);
+  --rgb-background: 255, 255, 255;
+}
+
+/* Hashtag picker popup */
+.wiselearn-hashtag-picker {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  margin-bottom: 8px;
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  z-index: 1000;
+  min-width: 240px;
+  max-width: 320px;
+}
+
+.wiselearn-hashtag-item {
+  padding: 6px 12px;
+  background: #f5f5f5;
+  border: none;
+  border-radius: 16px;
+  font-size: 13px;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.wiselearn-hashtag-item:hover {
+  background: #C8102E;
+  color: #fff;
+}

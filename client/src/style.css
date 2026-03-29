@@ -1,48 +1,49 @@
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
+  --text: #595959;
+  --text-h: #262626;
   --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
+  --border: #f0f0f0;
+  --code-bg: #fafafa;
+  --accent: #c8102e;
+  --accent-bg: rgba(200, 16, 46, 0.08);
+  --accent-border: rgba(200, 16, 46, 0.4);
+  --social-bg: rgba(245, 246, 247, 0.6);
   --shadow:
     rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --sans: 'Microsoft YaHei', '微软雅黑', system-ui, 'Segoe UI', Roboto, 'PingFang SC', 'Hiragino Sans GB', sans-serif;
+  --heading: 'Microsoft YaHei', '微软雅黑', system-ui, 'Segoe UI', Roboto, 'PingFang SC', 'Hiragino Sans GB', sans-serif;
   --mono: ui-monospace, Consolas, monospace;
 
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
+  font: 16px/1.625 var(--sans);
+  letter-spacing: 0;
+  color-scheme: light;
   color: var(--text);
-  background: var(--bg);
+  /* 页面底色由 html/body 统一设置（#f5f6f7 浅灰），:root 不参与底色 */
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
   @media (max-width: 1024px) {
-    font-size: 16px;
+    font-size: 15px;
   }
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
+    /* 校园站仍以浅色阅读为主，文字变量略调深以保证对比 */
+    --text: #595959;
+    --text-h: #262626;
+    --bg: #fafafa;
+    --border: #f0f0f0;
+    --code-bg: #fafafa;
+    --accent: #c8102e;
+    --accent-bg: rgba(200, 16, 46, 0.08);
+    --accent-border: rgba(200, 16, 46, 0.4);
+    --social-bg: rgba(245, 246, 247, 0.6);
     --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
+      rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
   }
 
   #social .button-icon {
@@ -50,8 +51,117 @@
   }
 }
 
+html,
 body {
+  height: 100%;
   margin: 0;
+}
+
+/*
+ * 视口背景：极浅中性灰纯色（仿微博/知乎），白卡片自然浮出
+ */
+html,
+body,
+#app {
+  background: #f5f6f7;
+}
+
+#app {
+  height: 100%;
+  min-height: 100dvh;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+/* 已登录壳：顶栏 + 三栏仅中间滚动 */
+.wiselearn-app-shell.ant-layout {
+  height: 100%;
+  max-height: 100dvh;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: transparent;
+}
+
+/* 顶栏 + 主区共用同一 1200px 盒：与视口同底色，靠轻阴影划界 */
+.wiselearn-page-shell {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  width: 100%;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  box-sizing: border-box;
+  background: transparent;
+  border-left: 1px solid rgba(0, 0, 0, 0.04);
+  border-right: 1px solid rgba(0, 0, 0, 0.04);
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.06);
+}
+
+.wiselearn-page-shell > .ant-layout-header.wiselearn-header-white {
+  flex-shrink: 0;
+  z-index: 100;
+  width: 100%;
+  padding: 0 !important;
+  height: auto !important;
+  min-height: 0;
+  line-height: normal !important;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  background: transparent !important;
+  border-bottom: none !important;
+}
+
+/*
+ * 顶栏白底：与 .wiselearn-page-shell 同宽，无额外 max-width 居中
+ */
+.wiselearn-header-inner {
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 72px;
+  padding: 16px clamp(4px, calc((100% - 1102px) / 2), 80px);
+  background: #fff;
+  border-bottom: 2px solid #c8102e;
+}
+
+.wiselearn-main-layout.ant-layout {
+  flex: 1;
+  min-height: 0 !important;
+  overflow: hidden;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: stretch;
+}
+
+.wiselearn-content-area.ant-layout-content.wiselearn-main-scroll {
+  flex: 1;
+  min-width: 0;
+  min-height: 0 !important;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  /* 隐藏滚动条，仍可用滚轮/触控滑动 */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.wiselearn-content-area.ant-layout-content.wiselearn-main-scroll::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 h1,
@@ -154,18 +264,6 @@ code {
     transform: perspective(2000px) rotateZ(300deg) rotateX(40deg) rotateY(39deg)
       scale(0.8);
   }
-}
-
-#app {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
 }
 
 #center {
@@ -308,6 +406,41 @@ code {
   padding-left: 1.5em;
   margin: 0.5em 0;
 }
+
+/*
+ * BlockNote 导出待办：toExternalHTML 为 ul>li>input[type=checkbox]+p，不是阅读态的 BlockNote 组件。
+ * 若不覆盖，会出现默认 list 圆点 + 复选框与文字分行，与编辑器内联观感不一致。
+ */
+.wiselearn-post-content ul:has(> li > input[type='checkbox']) {
+  list-style: none;
+  padding-left: 0;
+  margin-left: 0;
+}
+
+.wiselearn-post-content ul:has(> li > input[type='checkbox']) > li {
+  list-style: none;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0.25em 0;
+  padding-left: 0;
+}
+
+.wiselearn-post-content ul:has(> li > input[type='checkbox']) > li > input[type='checkbox'] {
+  flex-shrink: 0;
+  margin: 0.35em 0 0;
+  width: 1.05em;
+  height: 1.05em;
+  accent-color: #c8102e;
+}
+
+.wiselearn-post-content ul:has(> li > input[type='checkbox']) > li > p {
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+}
+
 .wiselearn-post-content img {
   max-width: 100%;
   height: auto;
@@ -411,14 +544,182 @@ code {
   font-weight: 600;
 }
 
-/* 主内容区域 */
+/* 主内容区域：中间滚动区略深于侧栏间隙，白帖子卡片更易浮出 */
 .wiselearn-content-area {
-  margin: 20px;
-  background: #f7f7f8;
-  padding: 24px;
-  border-radius: 16px;
-  min-height: 280px;
+  flex: 1;
+  min-width: 0;
+  padding: 16px 0;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  background: transparent;
+}
+
+/* 与首页 .wiselearn-feed-item 外框一致（帖子详情、用户资料等白卡片复用） */
+.wiselearn-feed-card-frame {
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #f0f0f0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: box-shadow 0.2s;
+}
+
+.wiselearn-feed-card-frame--interactive:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* 主区：与顶栏同属 .wiselearn-page-shell，宽度 100%，不再单独居中一层 */
+.wiselearn-main-layout-cluster {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  justify-content: stretch;
+  align-items: stretch;
+  width: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
+  padding: 0;
+}
+
+.wiselearn-main-layout-cluster .wiselearn-main-layout.ant-layout {
+  width: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
+  align-self: stretch;
+  gap: 6px;
+}
+
+.wiselearn-main-layout-cluster .wiselearn-left-sider {
+  margin-left: 0 !important;
+}
+
+.wiselearn-main-layout-cluster .wiselearn-right-sider {
+  margin-right: 0 !important;
+}
+
+/* Main layout：所有页面统一水平 padding，与顶栏 logo 对齐 */
+.wiselearn-main-layout {
+  flex: 1;
+  min-height: 0;
+  background: transparent;
+  gap: 6px;
+  box-sizing: border-box;
+  padding: 0 clamp(4px, calc((100% - 1102px) / 2), 80px);
+}
+
+.wiselearn-main-layout--three-col .wiselearn-left-sider,
+.wiselearn-main-layout--three-col .wiselearn-right-sider {
+  flex-shrink: 0;
+}
+
+.wiselearn-main-layout--three-col .wiselearn-content-area:not(.wiselearn-content-area--wide) {
+  flex: 0 0 650px !important;
+  width: 650px !important;
+  max-width: 650px !important;
+  min-width: 0;
+}
+
+/* 后台 / 私信等：无右侧栏，中间自适应 */
+.wiselearn-main-layout-cluster .wiselearn-content-area--wide {
+  flex: 1 1 auto !important;
+  width: auto !important;
+  max-width: none !important;
+  min-width: 0;
+}
+
+/*
+ * 中间主栏宽度：参考微博式单列，帖子列表更易读；后台等页面用 --wide
+ */
+.wiselearn-content-inner {
+  width: 100%;
+  max-width: 650px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 12px;
+  padding-right: 12px;
+  box-sizing: border-box;
+}
+
+.wiselearn-content-inner--wide {
+  max-width: 1200px;
+}
+
+/* 三栏模式下内层与中间栏同宽，取消「栏内居中」造成的大缝 */
+.wiselearn-main-layout--three-col .wiselearn-content-inner:not(.wiselearn-content-inner--wide) {
+  margin-left: 0;
+  margin-right: 0;
+  max-width: none;
+  width: 100%;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+/* Left sidebar：与顶栏一起固定，仅内部可滚（菜单过长时） */
+.wiselearn-left-sider {
+  background: transparent !important;
+  margin-left: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  align-self: stretch;
+  max-height: 100%;
+}
+
+.wiselearn-left-sider .ant-layout-sider-children {
+  min-height: min-content;
+}
+
+/* Right sidebar：列高固定，仅面板内列表滚动（避免与 sider 双滚动条） */
+.wiselearn-right-sider {
+  overflow: hidden;
+  align-self: stretch;
+  max-height: 100%;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  background: transparent !important;
+  margin-right: 0;
+}
+
+.wiselearn-right-sider .ant-layout-sider-children {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 热点面板：离开首页时淡出并向右滑出 */
+.wiselearn-right-sider-panel {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1), transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: opacity, transform;
+}
+
+.wiselearn-right-sider--open .wiselearn-right-sider-panel {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.wiselearn-right-sider--closed .wiselearn-right-sider-panel {
+  opacity: 0;
+  transform: translateX(28px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wiselearn-right-sider {
+    transition: none !important;
+  }
+
+  .wiselearn-right-sider-panel {
+    transition: none;
+    transform: none !important;
+  }
+
+  .wiselearn-right-sider--closed .wiselearn-right-sider-panel {
+    opacity: 0;
+  }
 }
 
 /* 汉堡按钮：底部导航栏替代了汉堡菜单，始终隐藏 */
@@ -448,17 +749,66 @@ code {
 
 /* <992px: 侧边栏收起，底部导航出现 */
 @media (max-width: 991px) {
-  .wiselearn-content-area {
-    margin: 8px;
-    padding: 12px;
-    border-radius: 8px;
-    /* 为底部导航留出空间 */
-    padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px) + 12px) !important;
+  .wiselearn-page-shell {
+    max-width: 100%;
+    padding: 0;
+    border-left: none;
+    border-right: none;
+    box-shadow: none;
   }
+
+  .wiselearn-header-inner {
+    padding: 10px 12px;
+    min-height: 56px;
+  }
+
+  .wiselearn-content-area {
+    margin: 0;
+    padding: 8px 0;
+    border-radius: 0;
+    /* 为底部导航留出空间 */
+    padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px) + 8px) !important;
+  }
+
+  .wiselearn-content-inner {
+    padding-left: 10px;
+    padding-right: 10px;
+    max-width: 100%;
+  }
+
+  /* 移动端：取消 layout 水平 padding，三栏退为单栏 */
+  .wiselearn-main-layout.ant-layout {
+    padding: 0;
+  }
+
+  .wiselearn-main-layout--three-col .wiselearn-content-area:not(.wiselearn-content-area--wide) {
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .wiselearn-main-layout--three-col .wiselearn-content-inner:not(.wiselearn-content-inner--wide) {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .wiselearn-main-layout.ant-layout {
+    overflow-x: hidden;
+  }
+
   .wiselearn-header-logo {
     height: 32px !important;
   }
   .wiselearn-header-subtitle {
+    display: none !important;
+  }
+  /* Hide right sidebar on mobile */
+  .wiselearn-left-sider {
+    display: none !important;
+    margin-left: 0;
+  }
+
+  .wiselearn-right-sider {
     display: none !important;
   }
 
@@ -504,23 +854,6 @@ code {
     line-height: 1;
     margin-top: 1px;
   }
-  /* 发帖按钮：红色圆角方块 */
-  .wiselearn-bottom-nav-plus {
-    width: 42px;
-    height: 32px;
-    border-radius: 10px;
-    background: #C8102E;
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    box-shadow: 0 2px 8px rgba(200, 16, 46, 0.35);
-  }
-  .wiselearn-bottom-nav-item:hover .wiselearn-bottom-nav-plus,
-  .wiselearn-bottom-nav-item.active .wiselearn-bottom-nav-plus {
-    background: #a00d24;
-  }
 }
 
 /* <767px: 手机端隐藏完整 logo，显示中国结图标，语言缩写 */
@@ -546,10 +879,10 @@ code {
 /* <640px: 小手机 */
 @media (max-width: 639px) {
   .wiselearn-content-area {
-    margin: 4px;
-    padding: 8px;
-    border-radius: 6px;
-    padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px) + 8px) !important;
+    margin: 0;
+    padding: 6px 0;
+    border-radius: 0;
+    padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px) + 6px) !important;
   }
   .wiselearn-header-username {
     display: none !important;

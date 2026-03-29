@@ -3,7 +3,14 @@ import cors from 'cors'
 import path from 'path'
 import { json, urlencoded } from 'express'
 import { config } from './config'
-import { ensurePostsAuditColumns, ensurePostsPublishedAtColumn, ensureUsersUiLangColumn, testConnection } from './db'
+import {
+  ensurePostsAuditColumns,
+  ensurePostsPublishedAtColumn,
+  ensurePostsShareCountColumn,
+  ensureUserNotificationReadTable,
+  ensureUsersUiLangColumn,
+  testConnection
+} from './db'
 import { authRouter } from './routes/auth'
 import { postRouter } from './routes/posts'
 import { messageRouter } from './routes/messages'
@@ -11,6 +18,7 @@ import { adminRouter } from './routes/admin'
 import { usersRouter } from './routes/users'
 import { uploadRouter } from './routes/upload'
 import { notificationsRouter } from './routes/notifications'
+import { shareRouter } from './routes/share'
 
 const app = express()
 
@@ -41,6 +49,9 @@ app.use('/api/admin', adminRouter)
 app.use('/api/users', usersRouter)
 app.use('/api/notifications', notificationsRouter)
 
+// H5 分享落地页（不需要登录，公开可访问）
+app.use('/s', shareRouter)
+
 // 全局错误处理
 app.use(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -56,7 +67,9 @@ async function bootstrap(): Promise<void> {
     await testConnection()
     await ensurePostsAuditColumns()
     await ensurePostsPublishedAtColumn()
+    await ensurePostsShareCountColumn()
     await ensureUsersUiLangColumn()
+    await ensureUserNotificationReadTable()
     app.listen(config.port, () => {
       // eslint-disable-next-line no-console
       console.log(`RedBrick API listening on port ${config.port}`)

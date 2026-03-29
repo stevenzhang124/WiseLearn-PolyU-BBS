@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Button, Card, Form, Input, Typography, Checkbox, message, Modal } from 'antd'
+import { App, Button, Card, Form, Input, Typography, Checkbox, Modal } from 'antd'
 import { useNavigate, Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from './AuthContext'
@@ -12,6 +12,7 @@ const POLYU_RED = '#C8102E'
  * 登录页：独立全屏，不显示侧栏/顶栏；理工红主题；含忘记密码（邮箱 6 位验证码重置）
  */
 export const LoginPage: React.FC = () => {
+  const { message } = App.useApp()
   const { t, i18n } = useTranslation()
   const { user, login } = useAuth()
   const navigate = useNavigate()
@@ -140,21 +141,6 @@ export const LoginPage: React.FC = () => {
       <div style={{ position: 'absolute', top: 24, right: 24, display: 'flex', gap: 8 }}>
         <button
           type="button"
-          onClick={() => { i18n.changeLanguage('zh'); localStorage.setItem('wiselearn_lang', 'zh') }}
-          style={{
-            border: 'none',
-            background: i18n.language === 'zh' ? POLYU_RED : 'transparent',
-            color: i18n.language === 'zh' ? '#fff' : 'rgba(0,0,0,0.65)',
-            padding: '6px 12px',
-            borderRadius: 8,
-            cursor: 'pointer',
-            fontSize: 14
-          }}
-        >
-          {t('lang.zh')}
-        </button>
-        <button
-          type="button"
           onClick={() => { i18n.changeLanguage('en'); localStorage.setItem('wiselearn_lang', 'en') }}
           style={{
             border: 'none',
@@ -167,6 +153,21 @@ export const LoginPage: React.FC = () => {
           }}
         >
           {t('lang.en')}
+        </button>
+        <button
+          type="button"
+          onClick={() => { i18n.changeLanguage('zh'); localStorage.setItem('wiselearn_lang', 'zh') }}
+          style={{
+            border: 'none',
+            background: i18n.language === 'zh' ? POLYU_RED : 'transparent',
+            color: i18n.language === 'zh' ? '#fff' : 'rgba(0,0,0,0.65)',
+            padding: '6px 12px',
+            borderRadius: 8,
+            cursor: 'pointer',
+            fontSize: 14
+          }}
+        >
+          {t('lang.zh')}
         </button>
       </div>
       <Card
@@ -258,7 +259,7 @@ export const LoginPage: React.FC = () => {
         open={resetModalOpen}
         onCancel={() => setResetModalOpen(false)}
         footer={null}
-        destroyOnClose
+        destroyOnHidden
         width={400}
       >
         <Form form={resetForm} layout="vertical">

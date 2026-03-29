@@ -1,76 +1,141 @@
-import React, { useEffect, useRef, useState } from 'react'
-import { Tabs, Typography, message } from 'antd'
-import { useTranslation } from 'react-i18next'
-import './HomePage.css'
-import { HeartOutlined, EyeOutlined } from '@ant-design/icons'
-import { useLocation, useNavigate } from 'react-router-dom'
-import { Avatar } from '../shared/Avatar'
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { App } from 'antd'
+import { useNavigate } from 'react-router-dom'
 import { fetchPosts } from '../shared/api'
-
-/** 从帖子内容取第一张图片 URL（用于列表封面） */
-function getFirstImageUrl(post: { content?: string; image_urls?: string | null }): string | null {
-  if (post.image_urls) {
-    const first = String(post.image_urls).split(',')[0]?.trim()
-    if (first) return first
-  }
-  if (post.content && /<img[^>]+src=["']([^"']+)["']/.test(post.content)) {
-    const m = post.content.match(/<img[^>]+src=["']([^"']+)["']/)
-    return m ? m[1] : null
-  }
-  return null
-}
+import {
+  HOME_FEED_RESTORE_KEY,
+  HOME_FEED_RESTORE_MAX_AGE_MS,
+  saveHomeFeedSnapshot,
+  type HomeFeedRestorePayload
+} from '../shared/homeFeedRestore'
+import { getMainScrollElement, getMainScrollTop, setMainScrollTop, HOME_SCROLL_TOP_REFRESH_EVENT } from '../layout/mainScroll'
+import { FeedTabs } from './FeedTabs'
+import { FeedList } from './FeedList'
+import './HomePage.css'
 
 /**
- * 首页：小红书风格卡片流（封面图 + 标题 + 作者 + 点赞/浏览）
+ * Home page with Weibo-style feed
+ * FeedTabs 切换分类 → fetchPosts 带 category → 后端按 category 筛选（与发帖 category 字段一致）
  */
 export const HomePage: React.FC = () => {
-  const { t } = useTranslation()
-  const [tab, setTab] = useState<'time' | 'hot'>('time')
+  const { message } = App.useApp()
+  const [sortTab] = useState<'time' | 'hot'>('time')
+  const [category, setCategory] = useState('all')
   const [loadingPosts, setLoadingPosts] = useState(false)
   const [posts, setPosts] = useState<any[]>([])
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
   const pageSize = 20
-  const location = useLocation()
   const navigate = useNavigate()
   const lastRefreshAt = useRef(0)
+  const feedCacheConsumedRef = useRef(false)
+  const scrollAfterRestoreY = useRef<number | null>(null)
+  const suppressFocusRefreshRef = useRef(false)
 
-  const loadPosts = async (pageNo = 1, sort: 'time' | 'hot' = tab) => {
-    setLoadingPosts(true)
+  const latestScrollY = useRef(0)
+  const latestFeedRef = useRef({
+    category,
+    sortTab,
+    posts,
+    page,
+    total
+  })
+  latestFeedRef.current = { category, sortTab, posts, page, total }
+
+  const loadPosts = useCallback(
+    async (pageNo = 1, sort: 'time' | 'hot' = sortTab, mode: 'replace' | 'append' = 'replace') => {
+      setLoadingPosts(true)
+      try {
+        const data = await fetchPosts({
+          page: pageNo,
+          pageSize,
+          sort,
+          ...(category !== 'all' ? { category } : {})
+        })
+        setPosts((prev) =>
+          pageNo === 1 || mode === 'replace' ? data.list : [...prev, ...data.list]
+        )
+        setTotal(data.pagination.total)
+        setPage(pageNo)
+      } catch (err) {
+        message.error((err as Error).message)
+      } finally {
+        setLoadingPosts(false)
+      }
+    },
+    [category, sortTab, pageSize]
+  )
+
+  /** 实时跟踪主滚动容器的 scrollTop，卸载时用此值保存快照 */
+  useEffect(() => {
+    const el = getMainScrollElement()
+    if (!el) return
+    const onScroll = () => { latestScrollY.current = el.scrollTop }
+    el.addEventListener('scroll', onScroll, { passive: true })
+    return () => el.removeEventListener('scroll', onScroll)
+  }, [])
+
+  /** 挂载时从 sessionStorage 恢复快照（category + posts + scrollY） */
+  useLayoutEffect(() => {
+    const raw = sessionStorage.getItem(HOME_FEED_RESTORE_KEY)
+    if (!raw) return
     try {
-      const data = await fetchPosts({
-        page: pageNo,
-        pageSize,
-        sort
-      })
-      setPosts(data.list)
-      setTotal(data.pagination.total)
-      setPage(pageNo)
-    } catch (err) {
-      message.error((err as Error).message)
-    } finally {
-      setLoadingPosts(false)
+      const d = JSON.parse(raw) as HomeFeedRestorePayload
+      if (Date.now() - d.savedAt > HOME_FEED_RESTORE_MAX_AGE_MS) {
+        sessionStorage.removeItem(HOME_FEED_RESTORE_KEY)
+        return
+      }
+      sessionStorage.removeItem(HOME_FEED_RESTORE_KEY)
+      setCategory(d.category)
+      setPosts(d.posts as any[])
+      setPage(d.page)
+      setTotal(d.total)
+      feedCacheConsumedRef.current = true
+      scrollAfterRestoreY.current = d.scrollY
+      suppressFocusRefreshRef.current = true
+      window.setTimeout(() => {
+        suppressFocusRefreshRef.current = false
+      }, 12000)
+    } catch {
+      sessionStorage.removeItem(HOME_FEED_RESTORE_KEY)
     }
-  }
+  }, [])
+
+  /** posts 恢复后，反复尝试设置 scrollTop 直到位置正确（图片加载会撑高 DOM） */
+  useLayoutEffect(() => {
+    if (scrollAfterRestoreY.current == null) return
+    if (posts.length === 0) return
+    const y = scrollAfterRestoreY.current
+    scrollAfterRestoreY.current = null
+
+    let attempts = 0
+    const maxAttempts = 15
+    const tryRestore = () => {
+      setMainScrollTop(y)
+      latestScrollY.current = y
+      attempts++
+      if (attempts < maxAttempts && Math.abs(getMainScrollTop() - y) > 2) {
+        requestAnimationFrame(tryRestore)
+      }
+    }
+    requestAnimationFrame(tryRestore)
+  }, [posts])
 
   useEffect(() => {
-    void loadPosts(1, tab)
-  }, [tab])
+    if (feedCacheConsumedRef.current) {
+      feedCacheConsumedRef.current = false
+      return
+    }
+    void loadPosts(1, sortTab, 'replace')
+  }, [sortTab, category, loadPosts])
 
-  const refreshIfOnHome = () => {
-    if (location.pathname !== '/') return
-    if (loadingPosts) return
+  const refreshIfOnHome = useCallback(() => {
+    if (suppressFocusRefreshRef.current) return
     const now = Date.now()
-    // 防止短时间内重复触发
     if (now - lastRefreshAt.current < 8000) return
     lastRefreshAt.current = now
-    void loadPosts(1, tab)
-  }
-
-  // 当从其他栏目返回首页 / 或窗口重新获得焦点时，刷新最新内容
-  useEffect(() => {
-    refreshIfOnHome()
-  }, [location.pathname, tab])
+    void loadPosts(1, sortTab, 'replace')
+  }, [loadPosts, sortTab])
 
   useEffect(() => {
     const onFocus = () => refreshIfOnHome()
@@ -83,98 +148,60 @@ export const HomePage: React.FC = () => {
       window.removeEventListener('focus', onFocus)
       document.removeEventListener('visibilitychange', onVisibility)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab, location.pathname])
+  }, [refreshIfOnHome])
+
+  /** 左侧导航「首页」二次点击：回到顶部 + 刷新 */
+  useEffect(() => {
+    const onScrollTopRefresh = () => {
+      setMainScrollTop(0)
+      latestScrollY.current = 0
+      void loadPosts(1, sortTab, 'replace')
+    }
+    window.addEventListener(HOME_SCROLL_TOP_REFRESH_EVENT, onScrollTopRefresh)
+    return () => window.removeEventListener(HOME_SCROLL_TOP_REFRESH_EVENT, onScrollTopRefresh)
+  }, [loadPosts, sortTab])
+
+  /** 卸载时写入快照：用实时跟踪的 latestScrollY 而非当场读取（此时 DOM 可能已切换） */
+  useEffect(() => {
+    return () => {
+      const s = latestFeedRef.current
+      const scrollY = latestScrollY.current
+      const meaningful = s.posts.length > 0 || s.page > 1 || scrollY >= 8
+      if (!meaningful) return
+      saveHomeFeedSnapshot({
+        scrollY,
+        category: s.category,
+        sortTab: s.sortTab,
+        posts: s.posts,
+        page: s.page,
+        total: s.total
+      })
+    }
+  }, [])
+
+  const handleNavigate = useCallback(
+    (path: string) => {
+      navigate(path)
+    },
+    [navigate]
+  )
 
   return (
     <div className="wiselearn-feed">
-      <div className="wiselearn-feed-header">
-        <Typography.Title level={4} style={{ margin: 0 }}>
-          {t('home.discover')}
-        </Typography.Title>
-        <Tabs
-          activeKey={tab}
-          onChange={(key) => setTab(key as 'time' | 'hot')}
-          items={[
-            { key: 'time', label: t('home.latest') },
-            { key: 'hot', label: t('home.hot') }
-          ]}
-          className="wiselearn-feed-tabs"
-        />
-      </div>
+      {/* Category tabs - Campus Living, Class Q&A, etc. */}
+      <FeedTabs
+        activeCategory={category}
+        onCategoryChange={setCategory}
+      />
 
-      <div className="wiselearn-feed-grid">
-        {loadingPosts ? (
-          <div className="wiselearn-feed-loading">{t('home.loading')}</div>
-        ) : (
-          posts.map((item) => {
-            const coverUrl = getFirstImageUrl(item)
-            const categoryLabel = t(`home.category.${item.category}` as const) || item.category
-            return (
-              <div
-                key={item.id}
-                className="wiselearn-feed-card"
-                onClick={() => navigate(`/posts/${item.id}`)}
-              >
-                <div className="wiselearn-feed-card-cover">
-                  {coverUrl ? (
-                    <img src={coverUrl} alt="" />
-                  ) : (
-                    <div className="wiselearn-feed-card-cover-placeholder" />
-                  )}
-                  {item.is_pinned ? (
-                    <span className="wiselearn-feed-card-pin">{t('home.pinned')}</span>
-                  ) : null}
-                </div>
-                <div className="wiselearn-feed-card-body">
-                  <Typography.Paragraph
-                    className="wiselearn-feed-card-title"
-                    ellipsis={{ rows: 2 }}
-                  >
-                    {item.title}
-                  </Typography.Paragraph>
-                  <div
-                    className="wiselearn-feed-card-meta"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <div
-                      className="wiselearn-feed-card-author"
-                      role="button"
-                      tabIndex={0}
-                      onKeyDown={(e) => e.key === 'Enter' && item.user_id && navigate(`/users/${item.user_id}`)}
-                      onClick={() => item.user_id && navigate(`/users/${item.user_id}`)}
-                    >
-                      <Avatar
-                        src={item.author_avatar}
-                        name={item.author}
-                        size={22}
-                      />
-                      <span className="wiselearn-feed-card-name">{item.author}</span>
-                    </div>
-                    <div className="wiselearn-feed-card-stats">
-                      <span><HeartOutlined /> {item.like_count}</span>
-                      <span><EyeOutlined /> {item.view_count}</span>
-                    </div>
-                  </div>
-                  <div className="wiselearn-feed-card-tag">{categoryLabel}</div>
-                </div>
-              </div>
-            )
-          })
-        )}
-      </div>
-
-      {!loadingPosts && total > pageSize && (
-        <div className="wiselearn-feed-pagination">
-          <button
-            type="button"
-            className="wiselearn-feed-load-more"
-            onClick={() => void loadPosts(page + 1, tab)}
-          >
-            {t('home.loadMore')}
-          </button>
-        </div>
-      )}
+      {/* Feed list */}
+      <FeedList
+        posts={posts}
+        loading={loadingPosts}
+        onLoadMore={() => void loadPosts(page + 1, sortTab, 'append')}
+        hasMore={total > pageSize * page}
+        onNavigate={handleNavigate}
+      />
     </div>
   )
 }

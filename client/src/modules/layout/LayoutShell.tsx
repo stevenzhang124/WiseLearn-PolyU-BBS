@@ -1,20 +1,22 @@
-import React, { useEffect, useState } from 'react'
-import { Layout, Menu, Badge, Typography, Drawer, Button } from 'antd'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
+import { Layout, Badge, Typography, Drawer, Button } from 'antd'
 import {
-  MessageOutlined,
-  HomeOutlined,
-  EditOutlined,
-  UserOutlined,
-  DashboardOutlined,
   LogoutOutlined,
   MenuOutlined,
-  PlusOutlined
+  EditOutlined,
+  HomeOutlined,
+  MessageOutlined,
+  UserOutlined,
+  DashboardOutlined
 } from '@ant-design/icons'
 import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
 import { Avatar } from '../shared/Avatar'
 import { fetchAdminPendingPosts, getUnreadCount, getNotificationsUnreadCount, updateUserLanguageApi } from '../shared/api'
+import { LeftNav } from './LeftNav'
+import { RightBar } from '../home/RightBar'
+import { getMainScrollElement, HOME_SCROLL_TOP_REFRESH_EVENT } from './mainScroll'
 
 const { Header, Content, Sider } = Layout
 
@@ -32,6 +34,60 @@ export const LayoutShell: React.FC = () => {
   const [unreadCount, setUnreadCount] = useState(0)
   const [adminPendingCount, setAdminPendingCount] = useState(0)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
+  const [homeScrolledDown, setHomeScrolledDown] = useState(false)
+  const scrollRafRef = useRef(0)
+
+  const isOnHome = location.pathname === '/'
+
+  useEffect(() => {
+    if (!isOnHome) {
+      setHomeScrolledDown(false)
+      return
+    }
+    const el = getMainScrollElement()
+    if (!el) return
+    const onScroll = () => {
+      cancelAnimationFrame(scrollRafRef.current)
+      scrollRafRef.current = requestAnimationFrame(() => {
+        setHomeScrolledDown(el.scrollTop > 200)
+      })
+    }
+    onScroll()
+    el.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      el.removeEventListener('scroll', onScroll)
+      cancelAnimationFrame(scrollRafRef.current)
+    }
+  }, [isOnHome])
+
+  const handleHomeNavClick = useCallback(() => {
+    if (isOnHome && homeScrolledDown) {
+      window.dispatchEvent(new CustomEvent(HOME_SCROLL_TOP_REFRESH_EVENT))
+    }
+  }, [isOnHome, homeScrolledDown])
+
+  /** 左右侧栏 wheel 事件转发给主滚动容器（整个侧栏区域都转发） */
+  useEffect(() => {
+    const leftSider = document.querySelector('.wiselearn-left-sider') as HTMLElement | null
+    const rightSider = document.querySelector('.wiselearn-right-sider') as HTMLElement | null
+
+    const forwardWheel = (e: WheelEvent) => {
+      const mainEl = getMainScrollElement()
+      if (!mainEl) return
+      const prev = mainEl.scrollTop
+      mainEl.scrollTop += e.deltaY
+      if (mainEl.scrollTop !== prev) {
+        e.preventDefault()
+      }
+    }
+
+    leftSider?.addEventListener('wheel', forwardWheel, { passive: false })
+    rightSider?.addEventListener('wheel', forwardWheel, { passive: false })
+    return () => {
+      leftSider?.removeEventListener('wheel', forwardWheel)
+      rightSider?.removeEventListener('wheel', forwardWheel)
+    }
+  }, [])
 
   const setLang = (lng: 'zh' | 'en') => {
     i18n.changeLanguage(lng)
@@ -54,7 +110,16 @@ export const LayoutShell: React.FC = () => {
   else if (location.pathname === '/create') selectedKeys.push('create')
   else if (location.pathname.startsWith('/profile')) selectedKeys.push('profile')
   else if (location.pathname.startsWith('/admin')) selectedKeys.push('admin')
+  else if (location.pathname.startsWith('/users/')) selectedKeys.push('userDetail')
   else selectedKeys.push('home')
+
+  /** 首页信息流 + 帖子详情页展示右侧热点栏，避免进入详情时 Sider 收起导致 Carousel 闪烁 */
+  const showRightHotBar =
+    location.pathname === '/' || /^\/posts\/\d+$/.test(location.pathname)
+
+  /** 后台 / 私信：中间正文区用满栏宽（仍在外层 1200px 内）；首页等为窄信息流 */
+  const contentInnerWide =
+    location.pathname.startsWith('/admin') || location.pathname.startsWith('/messages')
 
   const fetchUnread = () => {
     if (!user) return
@@ -110,66 +175,14 @@ export const LayoutShell: React.FC = () => {
     navigate('/login')
   }
 
-  const navMenuItems = [
-    {
-      key: 'home',
-      icon: <HomeOutlined />,
-      label: <Link to="/" className="wiselearn-menu-link" onClick={() => setMobileNavOpen(false)}>{t('nav.home')}</Link>
-    },
-    {
-      key: 'create',
-      icon: <EditOutlined />,
-      label: <Link to="/create" className="wiselearn-menu-link" onClick={() => setMobileNavOpen(false)}>{t('nav.create')}</Link>
-    },
-    {
-      key: 'messages',
-      icon: (
-        <Badge count={unreadCount} size="small" offset={[4, 0]}>
-          <MessageOutlined style={{ fontSize: 16 }} />
-        </Badge>
-      ),
-      label: <Link to="/messages" className="wiselearn-menu-link" onClick={() => setMobileNavOpen(false)}>{t('nav.messages')}</Link>
-    },
-    {
-      key: 'profile',
-      icon: <UserOutlined />,
-      label: <Link to="/profile" className="wiselearn-menu-link" onClick={() => setMobileNavOpen(false)}>{t('nav.profile')}</Link>
-    },
-    ...(user?.isAdmin
-      ? [
-          {
-            key: 'admin',
-            icon: <DashboardOutlined />,
-            label:
-              adminPendingCount > 0 ? (
-                <Badge count={adminPendingCount} size="small" offset={[4, 0]}>
-                  <Link to="/admin" className="wiselearn-menu-link" onClick={() => setMobileNavOpen(false)}>
-                    {t('nav.admin')}
-                  </Link>
-                </Badge>
-              ) : (
-                <Link to="/admin" className="wiselearn-menu-link" onClick={() => setMobileNavOpen(false)}>{t('nav.admin')}</Link>
-              )
-          }
-        ]
-      : [])
-  ]
-
   return (
-    <Layout style={{ minHeight: '100vh' }}>
-      <Header
-        className="wiselearn-header-white"
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          paddingInline: 16,
-          background: '#fff',
-          borderBottom: '1px solid #f0f0f0',
-          height: 56,
-          lineHeight: '56px'
-        }}
-      >
+    <Layout className="wiselearn-app-shell">
+      {/* 单一 1200px 列：顶栏白条与下方三栏共用左右边，避免错位 */}
+      <div className="wiselearn-page-shell">
+      <Header className="wiselearn-header-white">
+          <div
+            className={`wiselearn-header-inner${showRightHotBar ? ' wiselearn-header-inner--three-col' : ''}`}
+          >
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <Button
             type="text"
@@ -205,24 +218,31 @@ export const LayoutShell: React.FC = () => {
           <span className="wiselearn-lang-switch">
             <button
               type="button"
-              className={i18n.language === 'zh' ? 'active' : ''}
-              onClick={() => setLang('zh')}
-            >
-              <span className="wiselearn-lang-full">{t('lang.zh')}</span>
-              <span className="wiselearn-lang-abbr">中</span>
-            </button>
-            <span style={{ color: '#ddd', margin: '0 2px' }}>|</span>
-            <button
-              type="button"
               className={i18n.language === 'en' ? 'active' : ''}
               onClick={() => setLang('en')}
             >
               <span className="wiselearn-lang-full">{t('lang.en')}</span>
               <span className="wiselearn-lang-abbr">EN</span>
             </button>
+            <span style={{ color: '#ddd', margin: '0 2px' }}>|</span>
+            <button
+              type="button"
+              className={i18n.language === 'zh' ? 'active' : ''}
+              onClick={() => setLang('zh')}
+            >
+              <span className="wiselearn-lang-full">{t('lang.zh')}</span>
+              <span className="wiselearn-lang-abbr">中</span>
+            </button>
           </span>
           {user && (
-            <span className="wiselearn-header-user" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span
+              className="wiselearn-header-user"
+              style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}
+              role="button"
+              tabIndex={0}
+              onClick={() => navigate('/profile')}
+              onKeyDown={(e) => e.key === 'Enter' && navigate('/profile')}
+            >
               <Avatar src={user.avatar} name={user.nickname} size={28} />
               <Typography.Text className="wiselearn-header-username" style={{ color: 'rgba(0,0,0,0.85)', fontSize: 14 }}>
                 {t('nav.welcome', { name: user.nickname })}
@@ -237,14 +257,63 @@ export const LayoutShell: React.FC = () => {
             </Typography.Link>
           )}
         </div>
+        </div>
       </Header>
 
-      {/* Mobile navigation drawer */}
+      <div className="wiselearn-main-layout-cluster">
+        <Layout
+          className={`wiselearn-main-layout${showRightHotBar ? ' wiselearn-main-layout--three-col' : ''}`}
+        >
+        {/* Left sidebar - Navigation */}
+        <Sider
+          width={180}
+          breakpoint="lg"
+          collapsedWidth="0"
+          trigger={null}
+          className="wiselearn-left-sider"
+        >
+          <LeftNav
+            selectedKeys={selectedKeys}
+            unreadCount={unreadCount}
+            adminPendingCount={adminPendingCount}
+            isAdmin={user?.isAdmin ?? false}
+            homeScrolledDown={homeScrolledDown}
+            onHomeClick={handleHomeNavClick}
+          />
+        </Sider>
+
+        {/* Main content area（内层收窄宽度，仿微博网页版） */}
+        <Content
+          className={`wiselearn-content-area wiselearn-main-scroll${contentInnerWide ? ' wiselearn-content-area--wide' : ''}`}
+        >
+          <div
+            className={`wiselearn-content-inner${contentInnerWide ? ' wiselearn-content-inner--wide' : ''}`}
+          >
+            <Outlet />
+          </div>
+        </Content>
+
+        {/* Right sidebar - Only visible on home feed */}
+        <Sider
+          width={260}
+          collapsedWidth={0}
+          collapsed={!showRightHotBar}
+          className={`wiselearn-right-sider${showRightHotBar ? ' wiselearn-right-sider--open' : ' wiselearn-right-sider--closed'}`}
+        >
+          <div className="wiselearn-right-sider-panel">
+            <RightBar />
+          </div>
+        </Sider>
+        </Layout>
+      </div>
+      </div>
+
+      {/* Mobile navigation drawer（全屏层，不参与 1200 列宽） */}
       <Drawer
         open={mobileNavOpen}
         placement="left"
         onClose={() => setMobileNavOpen(false)}
-        width={220}
+        size={220}
         styles={{ body: { padding: 0 }, header: { padding: '12px 16px' } }}
         title={
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -253,13 +322,14 @@ export const LayoutShell: React.FC = () => {
         }
         className="wiselearn-mobile-nav-drawer"
       >
-        <Menu
-          theme="light"
-          mode="inline"
+        <LeftNav
           selectedKeys={selectedKeys}
-          style={{ borderRight: 0, paddingTop: 8 }}
-          className="wiselearn-side-menu"
-          items={navMenuItems}
+          unreadCount={unreadCount}
+          adminPendingCount={adminPendingCount}
+          isAdmin={user?.isAdmin ?? false}
+          homeScrolledDown={homeScrolledDown}
+          onHomeClick={() => { handleHomeNavClick(); setMobileNavOpen(false) }}
+          onNavClick={() => setMobileNavOpen(false)}
         />
         {user && (
           <div style={{ padding: '16px', borderTop: '1px solid #f0f0f0', marginTop: 'auto' }}>
@@ -270,30 +340,6 @@ export const LayoutShell: React.FC = () => {
         )}
       </Drawer>
 
-      <Layout>
-        <Sider
-          breakpoint="lg"
-          collapsedWidth="0"
-          trigger={null}
-          className="wiselearn-sider-white"
-          style={{ background: '#fff', borderRight: '1px solid #f0f0f0' }}
-        >
-          <Menu
-            theme="light"
-            mode="inline"
-            selectedKeys={selectedKeys}
-            style={{ borderRight: 0 }}
-            className="wiselearn-side-menu"
-            items={navMenuItems}
-          />
-        </Sider>
-        <Layout>
-          <Content className="wiselearn-content-area">
-            <Outlet />
-          </Content>
-        </Layout>
-      </Layout>
-
       {/* 移动端底部导航栏（小红书风格） */}
       <nav className="wiselearn-bottom-nav">
         <Link to="/" className={`wiselearn-bottom-nav-item${selectedKeys.includes('home') ? ' active' : ''}`}>
@@ -301,9 +347,8 @@ export const LayoutShell: React.FC = () => {
           <span className="wiselearn-bottom-nav-label">{t('nav.home')}</span>
         </Link>
         <Link to="/create" className={`wiselearn-bottom-nav-item${selectedKeys.includes('create') ? ' active' : ''}`}>
-          <div className="wiselearn-bottom-nav-plus">
-            <PlusOutlined />
-          </div>
+          <EditOutlined className="wiselearn-bottom-nav-icon" />
+          <span className="wiselearn-bottom-nav-label">{t('nav.create')}</span>
         </Link>
         <Link to="/messages" className={`wiselearn-bottom-nav-item${selectedKeys.includes('messages') ? ' active' : ''}`}>
           <Badge count={unreadCount} size="small" offset={[8, 0]}>

@@ -4,6 +4,16 @@ import { AuthRequest, authMiddleware } from '../middleware/auth'
 
 export const postRouter = Router()
 
+/** 与前端 FeedTabs / 发帖分类一致 */
+const FEED_CATEGORIES = [
+  'campus',
+  'teaching',
+  'news',
+  'trading',
+  'career',
+  'mutual'
+] as const
+
 // 所有帖子接口均需要登录
 postRouter.use(authMiddleware)
 
@@ -53,18 +63,41 @@ postRouter.get('/', async (req: AuthRequest, res) => {
   const page = Number(req.query.page) || 1
   const pageSize = Math.min(Number(req.query.pageSize) || 20, 50)
   const sort = (req.query.sort as string) || 'time'
+  const rawCategory = typeof req.query.category === 'string' ? req.query.category : undefined
+  const categoryFilter =
+    rawCategory &&
+    rawCategory !== 'all' &&
+    (FEED_CATEGORIES as readonly string[]).includes(rawCategory)
+      ? rawCategory
+      : undefined
 
   const offset = (page - 1) * pageSize
 
   // 置顶帖子始终排在最前；"最新"按审核通过时间倒序（回退到创建时间）；"热门"按热度倒序
+  // views / recent：侧栏「热门帖子」「最新帖子」专用，不按置顶插行，纯浏览量或纯时间
   let orderBy = 'p.is_pinned DESC, COALESCE(p.published_at, p.created_at) DESC'
   if (sort === 'hot') {
     orderBy = 'p.is_pinned DESC, (p.view_count + p.like_count * 2) DESC, COALESCE(p.published_at, p.created_at) DESC'
+  } else if (sort === 'views') {
+    orderBy = 'p.view_count DESC, COALESCE(p.published_at, p.created_at) DESC'
+  } else if (sort === 'recent') {
+    orderBy = 'COALESCE(p.published_at, p.created_at) DESC'
   }
 
   try {
     const isAdmin = Boolean(req.user?.isAdmin)
-    const whereSql = isAdmin ? '' : 'WHERE p.audit_status = 1'
+    const conditions: string[] = []
+    const listParams: (number | string)[] = []
+    if (!isAdmin) {
+      conditions.push('p.audit_status = 1')
+    }
+    if (categoryFilter) {
+      conditions.push('p.category = ?')
+      listParams.push(categoryFilter)
+    }
+    const whereSql = conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''
+
+    const uid = req.user!.id
     const [listRows] = await pool.query(
       `
       SELECT
@@ -76,28 +109,45 @@ postRouter.get('/', async (req: AuthRequest, res) => {
         p.image_urls,
         p.is_pinned,
         p.created_at,
+        p.published_at,
         p.view_count,
         p.like_count,
+        p.share_count,
+        (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS comment_count,
         u.nickname AS author,
-        u.avatar AS author_avatar
+        u.avatar AS author_avatar,
+        EXISTS(SELECT 1 FROM likes lk WHERE lk.post_id = p.id AND lk.user_id = ?) AS user_liked
       FROM posts p
       JOIN users u ON p.user_id = u.id
       ${whereSql}
       ORDER BY ${orderBy}
       LIMIT ? OFFSET ?
     `,
-      [pageSize, offset]
+      [uid, ...listParams, pageSize, offset]
     )
     const listBaseUrl = process.env.API_BASE_URL || 'http://localhost:4000'
     const list = (listRows as any[]).map((p) => ({
       ...p,
-      author_avatar: p.author_avatar ? `${listBaseUrl}${p.author_avatar}` : null
+      comment_count: Number(p.comment_count ?? 0),
+      share_count: Number(p.share_count ?? 0),
+      author_avatar: p.author_avatar ? `${listBaseUrl}${p.author_avatar}` : null,
+      user_liked: Boolean(p.user_liked)
     }))
 
+    const countConditions: string[] = []
+    const countParams: string[] = []
+    if (!isAdmin) {
+      countConditions.push('audit_status = 1')
+    }
+    if (categoryFilter) {
+      countConditions.push('category = ?')
+      countParams.push(categoryFilter)
+    }
+    const countWhere =
+      countConditions.length > 0 ? `WHERE ${countConditions.join(' AND ')}` : ''
     const [countRows] = await pool.query(
-      isAdmin
-        ? 'SELECT COUNT(*) as total FROM posts'
-        : 'SELECT COUNT(*) as total FROM posts WHERE audit_status = 1'
+      `SELECT COUNT(*) as total FROM posts ${countWhere}`,
+      countParams
     )
     const total = (countRows as any[])[0]?.total ?? 0
 
@@ -239,6 +289,75 @@ postRouter.get('/:id', async (req: AuthRequest, res) => {
     // eslint-disable-next-line no-console
     console.error('Get post error', err)
     res.status(500).json({ message: '获取帖子详情失败' })
+  }
+})
+
+/**
+ * 获取帖子评论（Feed 内联预览用，limit 默认 5，只返回一级+二级）
+ */
+postRouter.get('/:id/comments', async (req: AuthRequest, res) => {
+  const postId = Number(req.params.id)
+  if (Number.isNaN(postId)) {
+    res.status(400).json({ message: '帖子 ID 不合法' })
+    return
+  }
+  const limit = Math.min(Math.max(Number(req.query.limit) || 5, 1), 50)
+
+  try {
+    const baseUrl = process.env.API_BASE_URL || 'http://localhost:4000'
+    const [rows] = await pool.query(
+      `
+      SELECT
+        c.id,
+        c.user_id,
+        c.content,
+        c.parent_comment_id,
+        c.created_at,
+        u.nickname AS author,
+        u.avatar AS author_avatar
+      FROM comments c
+      JOIN users u ON c.user_id = u.id
+      WHERE c.post_id = ?
+      ORDER BY c.created_at ASC
+    `,
+      [postId]
+    )
+    const all = (rows as any[]).map((c) => ({
+      ...c,
+      author_avatar: c.author_avatar ? `${baseUrl}${c.author_avatar}` : null
+    }))
+
+    const roots = all.filter((c) => c.parent_comment_id == null).reverse()
+    const childMap = new Map<number, any[]>()
+    for (const c of all) {
+      if (c.parent_comment_id != null) {
+        const arr = childMap.get(c.parent_comment_id) || []
+        arr.push(c)
+        childMap.set(c.parent_comment_id, arr)
+      }
+    }
+
+    const result: any[] = []
+    for (const root of roots) {
+      if (result.length >= limit) break
+      result.push(root)
+      const children = childMap.get(root.id) || []
+      for (const child of children) {
+        if (result.length >= limit) break
+        result.push(child)
+      }
+    }
+
+    const [countRows] = await pool.query(
+      'SELECT COUNT(*) AS total FROM comments WHERE post_id = ?',
+      [postId]
+    )
+    const total = (countRows as any[])[0]?.total ?? 0
+
+    res.json({ comments: result, total })
+  } catch (err) {
+    console.error('Get comments error', err)
+    res.status(500).json({ message: '获取评论失败' })
   }
 })
 
@@ -386,9 +505,28 @@ postRouter.get('/:id/share-link', async (req: AuthRequest, res) => {
     return
   }
 
-  const baseUrl = req.headers.origin || `http://localhost:5173`
-  const link = `${baseUrl}/posts/${postId}`
-  res.json({ link })
+  const isAdmin = Boolean(req.user?.isAdmin)
+  try {
+    const [upd] = await pool.query(
+      `UPDATE posts SET share_count = share_count + 1
+       WHERE id = ? AND (audit_status = 1 OR user_id = ? OR ? = 1)`,
+      [postId, req.user!.id, isAdmin ? 1 : 0]
+    )
+    const affected = (upd as { affectedRows?: number }).affectedRows ?? 0
+    if (affected === 0) {
+      res.status(404).json({ message: '帖子不存在或不可见' })
+      return
+    }
+    const [cntRows] = await pool.query('SELECT share_count FROM posts WHERE id = ?', [postId])
+    const shareCount = Number((cntRows as { share_count: number }[])[0]?.share_count ?? 0)
+    const apiBase = process.env.API_BASE_URL || `${req.protocol}://${req.get('host')}`
+    const link = `${apiBase.replace(/\/$/, '')}/s/${postId}`
+    res.json({ link, share_count: shareCount })
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('Share link error', err)
+    res.status(500).json({ message: '生成分享链接失败' })
+  }
 })
 
 /**
