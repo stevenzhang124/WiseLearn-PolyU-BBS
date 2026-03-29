@@ -386,7 +386,7 @@ postRouter.get('/:id/share-link', async (req: AuthRequest, res) => {
     return
   }
 
-  const baseUrl = req.headers.origin || `http://localhost:5173`
+  const baseUrl = process.env.FRONTEND_URL || req.headers.origin || `http://localhost:5173`
   const link = `${baseUrl}/posts/${postId}`
   res.json({ link })
 })
