@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import {
   LikeOutlined,
   LikeFilled,
@@ -11,7 +11,7 @@ import { App, Button, Image, Input, Modal } from 'antd'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
 import { Avatar } from '../shared/Avatar'
-import { getShareLink, sendComment, toggleLike } from '../shared/api'
+import { fetchPostComments, getShareLink, sendComment, toggleLike } from '../shared/api'
 import './FeedList.css'
 
 export interface FeedPostItemProps {
@@ -83,6 +83,10 @@ export const FeedPostItem: React.FC<FeedPostItemProps> = ({
   const [commentOpen, setCommentOpen] = useState(false)
   const [commentText, setCommentText] = useState('')
   const [commentSubmitting, setCommentSubmitting] = useState(false)
+  const [comments, setComments] = useState<any[]>([])
+  const [commentTotal, setCommentTotal] = useState(0)
+  const [commentsLoading, setCommentsLoading] = useState(false)
+  const commentsFetchedRef = useRef(false)
 
   useEffect(() => {
     setLikeCount(post.like_count)
@@ -159,10 +163,30 @@ export const FeedPostItem: React.FC<FeedPostItemProps> = ({
     }
   }
 
+  const loadComments = useCallback(async () => {
+    setCommentsLoading(true)
+    try {
+      const data = await fetchPostComments(post.id, 5)
+      setComments(data.comments)
+      setCommentTotal(data.total)
+      commentsFetchedRef.current = true
+    } catch {
+      /* silent */
+    } finally {
+      setCommentsLoading(false)
+    }
+  }, [post.id])
+
   const handleCommentToggle = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    setCommentOpen((open) => !open)
+    setCommentOpen((prev) => {
+      const next = !prev
+      if (next && !commentsFetchedRef.current) {
+        void loadComments()
+      }
+      return next
+    })
   }
 
   const submitInlineComment = async () => {
@@ -181,7 +205,7 @@ export const FeedPostItem: React.FC<FeedPostItemProps> = ({
       await sendComment({ postId: post.id, content: text })
       message.success(t('post.commentSuccess'))
       setCommentText('')
-      setCommentOpen(false)
+      void loadComments()
     } catch (err) {
       message.error((err as Error).message)
     } finally {
@@ -336,6 +360,7 @@ export const FeedPostItem: React.FC<FeedPostItemProps> = ({
           role="region"
           aria-label={t('post.comment')}
         >
+          {/* 评论输入框 */}
           <div className="wiselearn-feed-item-inline-comment__row">
             <Avatar
               src={user?.avatar ?? null}
@@ -371,6 +396,79 @@ export const FeedPostItem: React.FC<FeedPostItemProps> = ({
               </div>
             </div>
           </div>
+
+          {/* 已有评论列表（最多 5 条，含二级回复） */}
+          {commentsLoading && comments.length === 0 ? (
+            <div className="wiselearn-feed-comments__loading">{t('post.comments')}...</div>
+          ) : comments.length > 0 ? (
+            <div className="wiselearn-feed-comments">
+              {(() => {
+                const roots = comments.filter((c) => c.parent_comment_id == null)
+                const childMap = new Map<number, any[]>()
+                for (const c of comments) {
+                  if (c.parent_comment_id != null) {
+                    const arr = childMap.get(c.parent_comment_id) || []
+                    arr.push(c)
+                    childMap.set(c.parent_comment_id, arr)
+                  }
+                }
+                return roots.map((root) => (
+                  <div key={root.id} className="wiselearn-feed-comment-block">
+                    <div className="wiselearn-feed-comment">
+                      <Avatar
+                        src={root.author_avatar}
+                        name={root.author}
+                        size={28}
+                        className="wiselearn-feed-comment__avatar"
+                      />
+                      <div className="wiselearn-feed-comment__body">
+                        <span className="wiselearn-feed-comment__author">{root.author}</span>
+                        <span className="wiselearn-feed-comment__text">{root.content}</span>
+                        <span className="wiselearn-feed-comment__time">
+                          {new Date(root.created_at).toLocaleString(i18n.language === 'en' ? 'en-US' : 'zh-CN', {
+                            month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                          })}
+                        </span>
+                      </div>
+                    </div>
+                    {(childMap.get(root.id) || []).map((reply) => (
+                      <div key={reply.id} className="wiselearn-feed-comment wiselearn-feed-comment--reply">
+                        <Avatar
+                          src={reply.author_avatar}
+                          name={reply.author}
+                          size={22}
+                          className="wiselearn-feed-comment__avatar"
+                        />
+                        <div className="wiselearn-feed-comment__body">
+                          <span className="wiselearn-feed-comment__author">{reply.author}</span>
+                          <span className="wiselearn-feed-comment__reply-indicator">
+                            {t('post.reply')} {root.author}：
+                          </span>
+                          <span className="wiselearn-feed-comment__text">{reply.content}</span>
+                          <span className="wiselearn-feed-comment__time">
+                            {new Date(reply.created_at).toLocaleString(i18n.language === 'en' ? 'en-US' : 'zh-CN', {
+                              month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                            })}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ))
+              })()}
+              {commentTotal > comments.length && (
+                <button
+                  type="button"
+                  className="wiselearn-feed-comments__view-all"
+                  onClick={() => onNavigate(`/posts/${post.id}#comments`)}
+                >
+                  {t('post.viewAllComments', { count: commentTotal })}
+                </button>
+              )}
+            </div>
+          ) : commentsFetchedRef.current ? (
+            <div className="wiselearn-feed-comments__empty">{t('notifications.noComments')}</div>
+          ) : null}
         </div>
       )}
 

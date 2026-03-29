@@ -289,6 +289,75 @@ postRouter.get('/:id', async (req: AuthRequest, res) => {
 })
 
 /**
+ * 获取帖子评论（Feed 内联预览用，limit 默认 5，只返回一级+二级）
+ */
+postRouter.get('/:id/comments', async (req: AuthRequest, res) => {
+  const postId = Number(req.params.id)
+  if (Number.isNaN(postId)) {
+    res.status(400).json({ message: '帖子 ID 不合法' })
+    return
+  }
+  const limit = Math.min(Math.max(Number(req.query.limit) || 5, 1), 50)
+
+  try {
+    const baseUrl = process.env.API_BASE_URL || 'http://localhost:4000'
+    const [rows] = await pool.query(
+      `
+      SELECT
+        c.id,
+        c.user_id,
+        c.content,
+        c.parent_comment_id,
+        c.created_at,
+        u.nickname AS author,
+        u.avatar AS author_avatar
+      FROM comments c
+      JOIN users u ON c.user_id = u.id
+      WHERE c.post_id = ?
+      ORDER BY c.created_at ASC
+    `,
+      [postId]
+    )
+    const all = (rows as any[]).map((c) => ({
+      ...c,
+      author_avatar: c.author_avatar ? `${baseUrl}${c.author_avatar}` : null
+    }))
+
+    const roots = all.filter((c) => c.parent_comment_id == null)
+    const childMap = new Map<number, any[]>()
+    for (const c of all) {
+      if (c.parent_comment_id != null) {
+        const arr = childMap.get(c.parent_comment_id) || []
+        arr.push(c)
+        childMap.set(c.parent_comment_id, arr)
+      }
+    }
+
+    const result: any[] = []
+    for (const root of roots) {
+      if (result.length >= limit) break
+      result.push(root)
+      const children = childMap.get(root.id) || []
+      for (const child of children) {
+        if (result.length >= limit) break
+        result.push(child)
+      }
+    }
+
+    const [countRows] = await pool.query(
+      'SELECT COUNT(*) AS total FROM comments WHERE post_id = ?',
+      [postId]
+    )
+    const total = (countRows as any[])[0]?.total ?? 0
+
+    res.json({ comments: result, total })
+  } catch (err) {
+    console.error('Get comments error', err)
+    res.status(500).json({ message: '获取评论失败' })
+  }
+})
+
+/**
  * 对帖子发表评论或回复评论（支持两级）
  */
 postRouter.post('/:id/comments', async (req: AuthRequest, res) => {

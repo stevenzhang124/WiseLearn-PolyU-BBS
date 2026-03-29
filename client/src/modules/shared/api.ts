@@ -129,6 +129,25 @@ export async function fetchPostDetail(id: number): Promise<any> {
   return res.data
 }
 
+export async function fetchPostComments(
+  postId: number,
+  limit = 5
+): Promise<{
+  comments: Array<{
+    id: number
+    user_id: number
+    content: string
+    parent_comment_id: number | null
+    created_at: string
+    author: string
+    author_avatar: string | null
+  }>
+  total: number
+}> {
+  const res = await api.get(`/posts/${postId}/comments`, { params: { limit } })
+  return res.data
+}
+
 export async function sendComment(data: {
   postId: number
   content: string

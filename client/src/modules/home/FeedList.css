@@ -456,6 +456,98 @@ textarea.wiselearn-feed-item-inline-comment__textarea:focus,
   color: #c8102e;
 }
 
+/* ── Feed 内联评论列表（微博风格） ── */
+.wiselearn-feed-comments {
+  margin-top: 14px;
+  padding: 12px 14px 0;
+  background: #f7f7f7;
+  border-radius: 8px;
+}
+
+.wiselearn-feed-comments__loading,
+.wiselearn-feed-comments__empty {
+  margin-top: 12px;
+  padding: 10px 14px;
+  color: #999;
+  font-size: 13px;
+  background: #f7f7f7;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.wiselearn-feed-comment-block {
+  padding-bottom: 8px;
+}
+
+.wiselearn-feed-comment-block + .wiselearn-feed-comment-block {
+  padding-top: 4px;
+}
+
+.wiselearn-feed-comment {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 4px 0;
+}
+
+.wiselearn-feed-comment--reply {
+  margin-left: 36px;
+}
+
+.wiselearn-feed-comment__avatar {
+  flex-shrink: 0;
+}
+
+.wiselearn-feed-comment__body {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: #333;
+}
+
+.wiselearn-feed-comment__author {
+  font-weight: 600;
+  color: #333;
+  margin-right: 6px;
+}
+
+.wiselearn-feed-comment__reply-indicator {
+  color: #999;
+  margin-right: 2px;
+}
+
+.wiselearn-feed-comment__text {
+  word-break: break-word;
+}
+
+.wiselearn-feed-comment__time {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  color: #bbb;
+}
+
+.wiselearn-feed-comments__view-all {
+  display: block;
+  margin: 10px auto 0;
+  padding: 10px 0;
+  background: none;
+  border: none;
+  border-top: 1px solid #eee;
+  color: #999;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  text-align: center;
+  width: 100%;
+  transition: color 0.2s;
+}
+
+.wiselearn-feed-comments__view-all:hover {
+  color: #c8102e;
+}
+
 /* Mobile adjustments */
 @media (max-width: 639px) {
   .wiselearn-feed-item {

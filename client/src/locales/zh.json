@@ -114,6 +114,7 @@
     "copyFailed": "复制失败，请手动选择链接",
     "comments": "评论",
     "commentsCount": "评论 {{count}}",
+    "viewAllComments": "查看全部{{count}}条评论",
     "saySomething": "说点什么...",
     "commentRequired": "请输入评论内容",
     "submitComment": "发表评论",

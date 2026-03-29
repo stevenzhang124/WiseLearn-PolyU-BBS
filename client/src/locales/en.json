@@ -114,6 +114,7 @@
     "copyFailed": "Copy failed — select the link manually",
     "comments": "Comments",
     "commentsCount": "Comments ({{count}})",
+    "viewAllComments": "View all {{count}} comments",
     "saySomething": "Say something...",
     "commentRequired": "Please enter a comment",
     "submitComment": "Post comment",
