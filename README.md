@@ -1,6 +1,6 @@
-# WiseLearn - PolyU 校园交流平台
+# RedBrick - PolyU 校园交流平台
 
-本项目为香港理工大学（PolyU）校园内部交流平台 **WiseLearn** 的示例实现，包括前端（React + TypeScript）和后端（Node.js + Express + MySQL）。
+本项目为香港理工大学（PolyU）校园内部交流平台 **RedBrick** 的示例实现，包括前端（React + TypeScript）和后端（Node.js + Express + MySQL）。
 
 ## 一、技术栈
 
@@ -13,7 +13,7 @@
 
 ### 1. 准备环境
 
-- Node.js 18+
+- Node.js 20+（前端构建使用 Vite 8，需 20.19+ 或 22.12+；本地与 Docker 镜像已按此版本对齐）
 - 本地或远程 MySQL 数据库
 
 ### 2. 初始化数据库
@@ -21,13 +21,13 @@
 1. 在 MySQL 中创建数据库，例如：
 
    ```sql
-   CREATE DATABASE wiselearn CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+   CREATE DATABASE redbrick CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
    ```
 
 2. 执行后端目录下的 `schema.sql`：
 
    ```bash
-   mysql -u root -p wiselearn < server/schema.sql
+   mysql -u root -p redbrick < server/schema.sql
    ```
 
 3. 执行迁移（按需）：`server/migrations/add-users-avatar.sql`、`add-follows-table.sql`、`add-user-notification-read.sql`（消息中心点赞/关注/评论未读用）。
@@ -44,7 +44,7 @@ DB_HOST=localhost
 DB_PORT=3306
 DB_USER=root
 DB_PASSWORD=你的数据库密码
-DB_NAME=wiselearn
+DB_NAME=redbrick
 JWT_SECRET=请替换为随机生成的安全字符串
 API_BASE_URL=http://localhost:4000
 ```
@@ -81,6 +81,8 @@ npm run dev
 
 浏览器访问 Vite 提示的地址（通常是 `http://localhost:5173`）。
 
+若登录时出现网络连接失败，请先确认**后端已启动**（`cd server && npm run dev`，默认端口 4000）。若后端运行在其他地址，可在 `client` 目录下新建 `.env` 并设置 `VITE_API_BASE_URL=http://你的后端地址:端口/api`（可参考 `client/.env.example`）。
+
 ### 6. 管理员登录与后台
 
 1. **创建管理员账号**（在 `server` 目录下执行，邮箱须为 `@polyu.edu.hk` 或 `@connect.polyu.edu.hk`）：
@@ -112,10 +114,74 @@ npm run dev
 
 ## 五、图片上传说明
 
-- 发帖时在富文本中点击「图片」或粘贴/拖拽图片即可上传（接口 `POST /api/upload/image`，保存至 `server/uploads`，单张限 5MB，格式 JPEG/PNG/GIF/WEBP）。
+- 发帖时在富文本中点击「图片」或粘贴/拖拽图片即可上传（接口 `POST /api/upload/image`，保存至 `server/uploads`，单张限 10MB，格式 JPEG/PNG/GIF/WEBP）。
 - 图片通过 `http://localhost:4000/uploads/文件名` 访问，前端需能访问后端域名；生产环境请配置 `API_BASE_URL` 并保证静态目录可访问。
 
-## 六、后续扩展建议
+## 六、Docker 打包与上线
+
+使用 Docker 可将前端、后端与 MySQL 一并打包，便于在服务器上一键启动。
+
+### 1. 前置要求
+
+- 已安装 [Docker](https://docs.docker.com/get-docker/) 与 [Docker Compose](https://docs.docker.com/compose/install/)（或 Docker Desktop 自带 Compose）。
+
+### 2. 项目内已提供的文件
+
+- `server/Dockerfile`：后端 Node 镜像（构建后运行 `node dist/index.js`）。
+- `web/Dockerfile`：多阶段构建，先构建前端静态资源，再用 Nginx 提供页面并反代 `/api`、`/uploads`。
+- `web/nginx.conf`：Nginx 配置（SPA 回退、API 与上传目录反向代理）。
+- `docker-compose.yml`：编排 MySQL、后端 API、前端 Nginx 三个服务。
+
+### 3. 修改生产配置（必做）
+
+在运行前请编辑 `docker-compose.yml` 中 `api` 服务的环境变量：
+
+- **`JWT_SECRET`**：改为随机强密钥，勿用默认值。
+- **`DB_PASSWORD`** / **`MYSQL_ROOT_PASSWORD`** 等：按需修改数据库密码。
+- **`API_BASE_URL`**：后端生成图片/头像链接时使用，需为**浏览器可访问的站点根地址**（不含 `/api`）。
+  - 本机试运行：`http://localhost:8080`
+  - 正式上线：改为你的域名，例如 `https://your-domain.com`
+
+前端构建时已使用 `VITE_API_BASE_URL=/api`，会请求同域下的 `/api`，无需再改。
+
+### 4. 构建与启动
+
+在**项目根目录**执行：
+
+```bash
+docker compose build
+docker compose up -d
+```
+
+- 前端页面：<http://localhost:8080>
+- 后端健康检查：<http://localhost:8080/api/health>
+
+### 5. 初始化管理员（首次部署）
+
+数据库首次由 MySQL 容器根据 `server/schema.sql` 自动初始化。创建管理员需在 API 容器内执行：
+
+```bash
+docker compose exec api npm run create-admin -- 你的邮箱@polyu.edu.hk 你的密码 管理员
+```
+
+邮箱须为 `@polyu.edu.hk` 或 `@connect.polyu.edu.hk`。
+
+### 6. 可选：迁移脚本与 SMTP
+
+- 若需执行 `server/migrations/` 下迁移（如头像、关注、消息未读等），可在数据库就绪后自行导入，或挂载到 MySQL 的 `docker-entrypoint-initdb.d`。
+- 邮件验证码：在 `docker-compose.yml` 的 `api` 服务中增加 SMTP 相关环境变量（`SMTP_HOST`、`SMTP_PORT`、`SMTP_USER`、`SMTP_PASS`、`MAIL_FROM`），与本地开发 `.env` 一致即可。
+
+### 7. 仅构建镜像用于部署
+
+若要在其他机器或 CI 中只构建镜像、不启动：
+
+```bash
+docker compose build
+```
+
+将生成的 `polyu_bbs-api`、`polyu_bbs-web` 等镜像推送至镜像仓库，在目标服务器拉取后使用同一 `docker-compose.yml`（或等价编排）启动即可。上线时记得将 `API_BASE_URL` 设为该站点的公网域名。
+
+## 七、后续扩展建议
 
 - 帖子分类的后台管理（增删改分类）
 - 用户等级、积分体系

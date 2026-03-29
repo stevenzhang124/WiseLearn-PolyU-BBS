@@ -1,26 +1,29 @@
 import React, { useEffect, useRef, useState } from 'react'
 import {
+  App,
   Card,
   Descriptions,
   Form,
   Input,
   Button,
   Tabs,
-  List,
-  message,
-  Typography
+  Spin,
+  Typography,
+  Tag
 } from 'antd'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { Avatar } from '../shared/Avatar'
 import { getActivities, updateNicknameApi, uploadAvatarApi, getMyProfileApi } from '../shared/api'
+import { MAX_IMAGE_UPLOAD_BYTES } from '../shared/imageUploadLimits'
 import './ProfilePage.css'
 
 /**
  * 个人中心：显示基本信息（含关注数、粉丝数、收到赞，左排）+ 修改昵称 + 发帖/评论/点赞记录；点击关注/粉丝进入列表页
  */
 export const ProfilePage: React.FC = () => {
+  const { message } = App.useApp()
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const { user, refreshMe } = useAuth()
@@ -96,7 +99,7 @@ export const ProfilePage: React.FC = () => {
       message.warning(t('profile.avatarFormat'))
       return
     }
-    if (file.size > 5 * 1024 * 1024) {
+    if (file.size > MAX_IMAGE_UPLOAD_BYTES) {
       message.warning(t('profile.avatarSize'))
       return
     }
@@ -116,7 +119,7 @@ export const ProfilePage: React.FC = () => {
   const locale = i18n.language === 'en' ? 'en-US' : 'zh-CN'
   return (
     <div>
-      <Card title={t('profile.basicInfo')} style={{ marginBottom: 24 }}>
+      <Card title={t('profile.basicInfo')} className="wiselearn-profile-card" style={{ marginBottom: 24 }}>
         <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 16 }}>
           <input
             ref={fileInputRef}
@@ -192,7 +195,7 @@ export const ProfilePage: React.FC = () => {
               }
             ]}
           >
-            <Input />
+            <Input maxLength={20} showCount />
           </Form.Item>
           <Form.Item>
             <Button type="primary" htmlType="submit">
@@ -208,36 +211,60 @@ export const ProfilePage: React.FC = () => {
             {
               key: 'posts',
               label: t('profile.myPosts'),
-              children: (
-                <List
-                  loading={loading}
-                  dataSource={activities.posts}
-                  className="wiselearn-profile-list"
-                  renderItem={(item) => (
-                    <List.Item
-                      key={item.id}
-                      className="wiselearn-profile-list-item"
-                      onClick={() => navigate(`/posts/${item.id}`)}
-                    >
-                      <span className="wiselearn-profile-list-text">
-                        {item.title}（{new Date(item.created_at).toLocaleString(locale)}）
-                      </span>
-                    </List.Item>
-                  )}
-                />
+              children: loading ? (
+                <div className="wiselearn-profile-list-loading">
+                  <Spin />
+                </div>
+              ) : activities.posts.length === 0 ? (
+                <Typography.Text type="secondary">{t('user.noPosts')}</Typography.Text>
+              ) : (
+                <div className="wiselearn-profile-list" role="list">
+                  {activities.posts.map((item) => {
+                    const status =
+                      item.audit_status === 1
+                        ? 'published'
+                        : item.audit_reason
+                          ? 'revision'
+                          : 'pending'
+                    const statusLabel =
+                      status === 'published'
+                        ? t('profile.postStatusPublished')
+                        : status === 'pending'
+                          ? t('profile.postStatusPending')
+                          : t('profile.postStatusRevision')
+                    const tagColor = status === 'published' ? 'green' : status === 'pending' ? 'orange' : 'red'
+                    return (
+                      <div
+                        key={item.id}
+                        role="listitem"
+                        className="wiselearn-profile-list-item wiselearn-profile-list-item--row"
+                        onClick={() => navigate(`/posts/${item.id}`)}
+                      >
+                        <span className="wiselearn-profile-list-text">
+                          {item.title}（{new Date(item.created_at).toLocaleString(locale)}）
+                        </span>
+                        <Tag color={tagColor}>{statusLabel}</Tag>
+                      </div>
+                    )
+                  })}
+                </div>
               )
             },
             {
               key: 'comments',
               label: t('profile.myComments'),
-              children: (
-                <List
-                  loading={loading}
-                  dataSource={activities.comments}
-                  className="wiselearn-profile-list"
-                  renderItem={(item) => (
-                    <List.Item
+              children: loading ? (
+                <div className="wiselearn-profile-list-loading">
+                  <Spin />
+                </div>
+              ) : activities.comments.length === 0 ? (
+                <Typography.Text type="secondary">{t('notifications.noComments')}</Typography.Text>
+              ) : (
+                <div className="wiselearn-profile-list" role="list">
+                  {activities.comments.map((item) => (
+                    <div
                       key={item.id}
+                      role="listitem"
                       className="wiselearn-profile-list-item"
                       onClick={() => navigate(`/posts/${item.post_id}`)}
                     >
@@ -245,22 +272,26 @@ export const ProfilePage: React.FC = () => {
                         {t('profile.commentedIn', { title: item.post_title, content: item.content })}（
                         {new Date(item.created_at).toLocaleString(locale)}）
                       </span>
-                    </List.Item>
-                  )}
-                />
+                    </div>
+                  ))}
+                </div>
               )
             },
             {
               key: 'likes',
               label: t('profile.myLikes'),
-              children: (
-                <List
-                  loading={loading}
-                  dataSource={activities.likes}
-                  className="wiselearn-profile-list"
-                  renderItem={(item) => (
-                    <List.Item
+              children: loading ? (
+                <div className="wiselearn-profile-list-loading">
+                  <Spin />
+                </div>
+              ) : activities.likes.length === 0 ? (
+                <Typography.Text type="secondary">{t('notifications.noLikes')}</Typography.Text>
+              ) : (
+                <div className="wiselearn-profile-list" role="list">
+                  {activities.likes.map((item) => (
+                    <div
                       key={item.id}
+                      role="listitem"
                       className="wiselearn-profile-list-item"
                       onClick={() => navigate(`/posts/${item.post_id}`)}
                     >
@@ -268,9 +299,9 @@ export const ProfilePage: React.FC = () => {
                         {t('profile.likedPost', { title: item.post_title })} （
                         {new Date(item.created_at).toLocaleString(locale)}）
                       </span>
-                    </List.Item>
-                  )}
-                />
+                    </div>
+                  ))}
+                </div>
               )
             }
           ]}

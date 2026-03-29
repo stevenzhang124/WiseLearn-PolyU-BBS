@@ -1,7 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom'
-import { ConfigProvider } from 'antd'
+import { App, ConfigProvider } from 'antd'
 import zhCN from 'antd/locale/zh_CN'
 import enUS from 'antd/locale/en_US'
 import { useTranslation } from 'react-i18next'
@@ -31,7 +31,7 @@ const PolyUTheme: React.ComponentProps<typeof ConfigProvider>['theme'] = {
     colorInfo: POLYU_RED,
     borderRadius: 12,
     fontFamily:
-      '-apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif'
+      '"Microsoft YaHei", "微软雅黑", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Helvetica Neue", Arial, sans-serif'
   },
   components: {
     Layout: {
@@ -80,41 +80,43 @@ function AppWithLocale() {
   const antdLocale = i18n.language === 'en' ? enUS : zhCN
   return (
     <ConfigProvider locale={antdLocale} theme={PolyUTheme}>
-      <AuthProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-            <Route
-              path="/"
-              element={
-                <RequireLayout>
-                  <LayoutShell />
-                </RequireLayout>
-              }
-            >
-              <Route index element={<HomePage />} />
-              <Route path="create" element={<CreatePostPage />} />
-              <Route path="posts/:id/edit" element={<EditPostPage />} />
-              <Route path="posts/:id" element={<PostDetailPage />} />
-              <Route path="users/:id" element={<UserProfilePage />} />
-              <Route path="profile" element={<ProfilePage />} />
-              <Route path="profile/following" element={<ProfileFollowListPage />} />
-              <Route path="profile/followers" element={<ProfileFollowListPage />} />
-              <Route path="messages/:userId" element={<MessagesPage />} />
-              <Route path="messages" element={<MessagesPage />} />
+      <App>
+        <AuthProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
               <Route
-                path="admin"
+                path="/"
                 element={
-                  <AdminRoute>
-                    <AdminDashboardPage />
-                  </AdminRoute>
+                  <RequireLayout>
+                    <LayoutShell />
+                  </RequireLayout>
                 }
-              />
-            </Route>
-          </Routes>
-        </BrowserRouter>
-      </AuthProvider>
+              >
+                <Route index element={<HomePage />} />
+                <Route path="create" element={<CreatePostPage />} />
+                <Route path="posts/:id/edit" element={<EditPostPage />} />
+                <Route path="posts/:id" element={<PostDetailPage />} />
+                <Route path="users/:id" element={<UserProfilePage />} />
+                <Route path="profile" element={<ProfilePage />} />
+                <Route path="profile/following" element={<ProfileFollowListPage />} />
+                <Route path="profile/followers" element={<ProfileFollowListPage />} />
+                <Route path="messages/:userId" element={<MessagesPage />} />
+                <Route path="messages" element={<MessagesPage />} />
+                <Route
+                  path="admin"
+                  element={
+                    <AdminRoute>
+                      <AdminDashboardPage />
+                    </AdminRoute>
+                  }
+                />
+              </Route>
+            </Routes>
+          </BrowserRouter>
+        </AuthProvider>
+      </App>
     </ConfigProvider>
   )
 }
