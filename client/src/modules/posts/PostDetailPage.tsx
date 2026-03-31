@@ -20,7 +20,6 @@ import {
 } from '../shared/api'
 import { useAuth } from '../auth/AuthContext'
 import { Avatar } from '../shared/Avatar'
-import { ShareCard } from '../shared/ShareCard'
 import { PostContentBlockNote } from './PostContentBlockNote'
 import './PostDetailPage.css'
 
@@ -214,28 +213,30 @@ export const PostDetailPage: React.FC = () => {
     }
   }
 
-  const [shareOpen, setShareOpen] = useState(false)
-  const [shareUrl, setShareUrl] = useState('')
-
   const handleShare = async () => {
     if (!postId) return
     try {
       const { link } = await getShareLink(postId)
-      setShareUrl(link)
-      setShareOpen(true)
+      await navigator.clipboard.writeText(link)
+      message.success(t('post.linkCopied'))
     } catch (err) {
       message.error((err as Error).message)
     }
   }
 
-  /** 与浏览器后退一致；离开过首页后再回来会按 sessionStorage 恢复 Feed 列表与滚动 */
+  /** 经分享链接登录进入时 history 被 replace，应回首页而非 history.back（避免回到登录或站外） */
   const handleBack = React.useCallback(() => {
+    const st = location.state as { wiselearnBackToHome?: boolean } | null
+    if (st?.wiselearnBackToHome) {
+      navigate('/', { replace: true })
+      return
+    }
     if (typeof window !== 'undefined' && window.history.length > 1) {
       navigate(-1)
     } else {
       navigate('/')
     }
-  }, [navigate])
+  }, [navigate, location.state])
 
   if (!postId) {
     return (
@@ -601,18 +602,6 @@ export const PostDetailPage: React.FC = () => {
         </div>
       </section>
 
-      {post && (
-        <ShareCard
-          open={shareOpen}
-          onClose={() => setShareOpen(false)}
-          title={post.title}
-          excerpt={post.content || ''}
-          coverUrl={galleryUrls[0]}
-          authorName={post.author}
-          authorAvatar={post.author_avatar}
-          shareUrl={shareUrl}
-        />
-      )}
     </div>
   )
 }

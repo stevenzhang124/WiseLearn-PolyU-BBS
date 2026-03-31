@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { App, Button, Card, Form, Input, Space, Typography } from 'antd'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { registerApi, sendVerificationCodeApi } from '../shared/api'
 import { useAuth } from './AuthContext'
+import { getNavigateAfterAuth } from './returnPathAfterAuth'
 
 const POLYU_RED = '#C8102E'
 const CODE_COOLDOWN_SEC = 60
@@ -16,14 +17,17 @@ export const RegisterPage: React.FC = () => {
   const { t, i18n } = useTranslation()
   const { user } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
   const [loading, setLoading] = useState(false)
   const [codeLoading, setCodeLoading] = useState(false)
   const [codeCooldown, setCodeCooldown] = useState(0)
   const [form] = Form.useForm()
 
   useEffect(() => {
-    if (user) navigate('/', { replace: true })
-  }, [user, navigate])
+    if (!user) return
+    const { to, state } = getNavigateAfterAuth(location)
+    navigate(to, { replace: true, ...(state ? { state } : {}) })
+  }, [user, navigate, location])
 
   useEffect(() => {
     if (codeCooldown <= 0) return
@@ -66,7 +70,7 @@ export const RegisterPage: React.FC = () => {
         code: values.code.trim()
       })
       message.success(t('auth.registerSuccess'))
-      navigate('/login')
+      navigate('/login', { state: location.state })
     } catch (err) {
       const msg = (err as Error).message
       message.error(
@@ -235,7 +239,10 @@ export const RegisterPage: React.FC = () => {
             </Button>
           </Form.Item>
           <Typography.Text type="secondary">
-            {t('auth.hasAccount')}<Link to="/login" style={{ color: POLYU_RED }}>{t('auth.goLogin')}</Link>
+            {t('auth.hasAccount')}
+            <Link to="/login" state={location.state} style={{ color: POLYU_RED }}>
+              {t('auth.goLogin')}
+            </Link>
           </Typography.Text>
         </Form>
       </Card>

@@ -1,6 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom'
+import { BrowserRouter, Route, Routes, Navigate, useLocation } from 'react-router-dom'
 import { App, ConfigProvider } from 'antd'
 import zhCN from 'antd/locale/zh_CN'
 import enUS from 'antd/locale/en_US'
@@ -58,8 +58,9 @@ const PolyUTheme: React.ComponentProps<typeof ConfigProvider>['theme'] = {
 
 function AdminRoute({ children }: { children: React.ReactElement }) {
   const { user } = useAuth()
+  const location = useLocation()
   if (!user) {
-    return <Navigate to="/login" replace />
+    return <Navigate to="/login" replace state={{ from: location }} />
   }
   if (!user.isAdmin) {
     return <Navigate to="/" replace />
@@ -69,8 +70,9 @@ function AdminRoute({ children }: { children: React.ReactElement }) {
 
 function RequireLayout({ children }: { children: React.ReactElement }) {
   const { user } = useAuth()
+  const location = useLocation()
   if (!user) {
-    return <Navigate to="/login" replace />
+    return <Navigate to="/login" replace state={{ from: location }} />
   }
   return children
 }
