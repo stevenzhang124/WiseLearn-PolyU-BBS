@@ -11,7 +11,6 @@ import { App, Button, Image, Input } from 'antd'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
 import { Avatar } from '../shared/Avatar'
-import { ShareCard } from '../shared/ShareCard'
 import { fetchPostComments, getShareLink, sendComment, toggleLike } from '../shared/api'
 import './FeedList.css'
 
@@ -92,8 +91,6 @@ export const FeedPostItem: React.FC<FeedPostItemProps> = ({
   /** 点赞成功瞬间触发的图标动画 */
   const [likePop, setLikePop] = useState(false)
   const likePopTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
-  const [shareOpen, setShareOpen] = useState(false)
-  const [shareUrl, setShareUrl] = useState('')
   const [shareLoading, setShareLoading] = useState(false)
   const [commentOpen, setCommentOpen] = useState(false)
   const [commentText, setCommentText] = useState('')
@@ -247,9 +244,9 @@ export const FeedPostItem: React.FC<FeedPostItemProps> = ({
     setShareLoading(true)
     try {
       const { link, share_count: sc } = await getShareLink(post.id)
-      setShareUrl(link)
       setShareCount(sc)
-      setShareOpen(true)
+      await navigator.clipboard.writeText(link)
+      message.success(t('post.linkCopied'))
     } catch (err) {
       message.error((err as Error).message)
     } finally {
@@ -511,16 +508,6 @@ export const FeedPostItem: React.FC<FeedPostItemProps> = ({
         </div>
       )}
 
-      <ShareCard
-        open={shareOpen}
-        onClose={() => setShareOpen(false)}
-        title={post.title}
-        excerpt={post.content || ''}
-        coverUrl={imageUrls[0]}
-        authorName={post.author}
-        authorAvatar={post.author_avatar}
-        shareUrl={shareUrl}
-      />
     </div>
   )
 }

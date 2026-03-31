@@ -1,5 +1,5 @@
 import React from 'react'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { HomePage } from '../home/HomePage'
 import { CreatePostPage } from '../posts/CreatePostPage'
 import { EditPostPage } from '../posts/EditPostPage'
@@ -17,8 +17,9 @@ import './MainContent.css'
  */
 const AdminRoute: React.FC<{ children: React.ReactElement }> = ({ children }) => {
   const { user } = useAuth()
+  const location = useLocation()
   if (!user) {
-    return <Navigate to="/login" replace />
+    return <Navigate to="/login" replace state={{ from: location }} />
   }
   if (!user.isAdmin) {
     return <Navigate to="/" replace />

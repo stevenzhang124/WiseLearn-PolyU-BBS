@@ -519,8 +519,9 @@ postRouter.get('/:id/share-link', async (req: AuthRequest, res) => {
     }
     const [cntRows] = await pool.query('SELECT share_count FROM posts WHERE id = ?', [postId])
     const shareCount = Number((cntRows as { share_count: number }[])[0]?.share_count ?? 0)
-    const apiBase = process.env.API_BASE_URL || `${req.protocol}://${req.get('host')}`
-    const link = `${apiBase.replace(/\/$/, '')}/s/${postId}`
+    const baseUrl =
+      process.env.FRONTEND_URL || req.headers.origin || `http://localhost:5173`
+    const link = `${baseUrl.replace(/\/$/, '')}/posts/${postId}`
     res.json({ link, share_count: shareCount })
   } catch (err) {
     // eslint-disable-next-line no-console
