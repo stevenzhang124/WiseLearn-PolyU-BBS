@@ -1,44 +1,146 @@
+/* RichTextEditor Styles - BlockNote Editor */
+
 .wiselearn-rich-editor {
-  border: 1px solid #d9d9d9;
-  border-radius: 8px;
-  overflow: hidden;
   background: #fff;
 }
 
-.wiselearn-rich-editor:hover {
-  border-color: #c8102e;
+/* BlockNote editor container */
+.wiselearn-rich-editor .bn-container {
+  --bn-colors-editor-background: #fff;
+  --bn-colors-editor-text: #333;
+  --bn-colors-menu-background: #f5f5f5;
+  --bn-colors-menu-text: #333;
+  --bn-colors-hover-background: #f0f0f0;
+  --bn-colors-selected-background: rgba(200, 16, 46, 0.1);
+  --bn-colors-accent: #C8102E;
+  --bn-colors-error: #ff4d4f;
+  --bn-font-size: 15px;
+  --bn-line-height: 1.6;
+  --bn-border-radius: 4px;
 }
 
-.wiselearn-editor-toolbar {
-  padding: 8px 12px;
-  border-bottom: 1px solid #f0f0f0;
-  background: #fafafa;
+.wiselearn-rich-editor .bn-editor {
+  padding: 12px 14px;
+  min-height: 200px;
+  text-align: left;
 }
 
-.wiselearn-editor-toolbar .ant-btn.is-active {
-  color: #c8102e;
+/* Override #app text-align: center */
+.wiselearn-rich-editor .bn-container {
+  text-align: left;
+}
+
+.wiselearn-rich-editor .bn-block-content {
+  text-align: left;
+}
+
+/* Formatting menu */
+.wiselearn-rich-editor .bn-formatting-menu {
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/*
+ * 块类型建议菜单（「/」与侧栏 +）：Floating UI 在外层设 max-height，内层 Stack 默认不收缩，
+ * 若不设 overflow，底部会被裁切且滚轮冒泡到主滚动区（页面已滑到底时像在列表里滑不动）。
+ */
+.wiselearn-rich-editor div:has(> #bn-suggestion-menu),
+.wiselearn-rich-editor div:has(> #bn-grid-suggestion-menu) {
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+  min-height: 0;
+}
+
+.wiselearn-rich-editor #bn-suggestion-menu.bn-suggestion-menu,
+.wiselearn-rich-editor #bn-grid-suggestion-menu.bn-grid-suggestion-menu {
+  min-height: 0;
+}
+
+/* 与 slash/建议菜单同一块 UI（类名为 bn-suggestion-menu） */
+.wiselearn-rich-editor .bn-suggestion-menu,
+.wiselearn-rich-editor .bn-slash-menu {
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Drag handle */
+.wiselearn-rich-editor .bn-drag-handle {
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.wiselearn-rich-editor:hover .bn-drag-handle {
+  opacity: 1;
+}
+
+/* Image blocks */
+.wiselearn-rich-editor .bn-image-block {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.wiselearn-rich-editor .bn-image-block img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Block side menu */
+.wiselearn-rich-editor .bn-side-menu {
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  z-index: 5;
+}
+
+/* Headings */
+.wiselearn-rich-editor [data-content-type="heading"] {
   font-weight: 600;
 }
 
-.wiselearn-editor-content {
-  padding: 12px 16px;
+.wiselearn-rich-editor [data-content-type="heading"][data-level="1"] {
+  font-size: 28px;
 }
 
-.wiselearn-editor-content .ProseMirror {
-  outline: none;
-  min-height: 160px;
+.wiselearn-rich-editor [data-content-type="heading"][data-content-type="heading"][data-level="2"] {
+  font-size: 24px;
 }
 
-.wiselearn-editor-content .ProseMirror p.is-editor-empty:first-child::before {
-  color: #bfbfbf;
-  content: attr(data-placeholder);
-  float: left;
-  height: 0;
-  pointer-events: none;
+.wiselearn-rich-editor [data-content-type="heading"][data-level="3"] {
+  font-size: 20px;
 }
 
+/* Lists */
+.wiselearn-rich-editor [data-content-type="numberedList"],
+.wiselearn-rich-editor [data-content-type="bulletList"] {
+  padding-left: 24px;
+}
+
+/* Code block */
+.wiselearn-rich-editor [data-content-type="codeBlock"] {
+  background: #f5f5f5;
+  border-radius: 8px;
+  padding: 16px;
+  font-family: 'Monaco', 'Menlo', monospace;
+  font-size: 14px;
+}
+
+/* Quote block */
+.wiselearn-rich-editor [data-content-type="quote"] {
+  border-left: 4px solid #C8102E;
+  padding-left: 16px;
+  color: #666;
+  font-style: italic;
+}
+
+/* ProseMirror content styling (display mode) */
 .wiselearn-editor-prose p {
   margin: 0.5em 0;
+  text-align: left;
 }
 
 .wiselearn-editor-prose ul,
@@ -54,3 +156,4 @@
   display: block;
   margin: 8px 0;
 }
+

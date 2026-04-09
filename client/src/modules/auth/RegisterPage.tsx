@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react'
-import { Button, Card, Form, Input, Space, Typography, message } from 'antd'
-import { Link, useNavigate } from 'react-router-dom'
+import { App, Button, Card, Form, Input, Space, Typography } from 'antd'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { registerApi, sendVerificationCodeApi } from '../shared/api'
 import { useAuth } from './AuthContext'
+import { getNavigateAfterAuth } from './returnPathAfterAuth'
 
 const POLYU_RED = '#C8102E'
 const CODE_COOLDOWN_SEC = 60
@@ -12,17 +13,21 @@ const CODE_COOLDOWN_SEC = 60
  * 注册页：邮箱验证码 + 理工红主题
  */
 export const RegisterPage: React.FC = () => {
+  const { message } = App.useApp()
   const { t, i18n } = useTranslation()
   const { user } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
   const [loading, setLoading] = useState(false)
   const [codeLoading, setCodeLoading] = useState(false)
   const [codeCooldown, setCodeCooldown] = useState(0)
   const [form] = Form.useForm()
 
   useEffect(() => {
-    if (user) navigate('/', { replace: true })
-  }, [user, navigate])
+    if (!user) return
+    const { to, state } = getNavigateAfterAuth(location)
+    navigate(to, { replace: true, ...(state ? { state } : {}) })
+  }, [user, navigate, location])
 
   useEffect(() => {
     if (codeCooldown <= 0) return
@@ -65,7 +70,7 @@ export const RegisterPage: React.FC = () => {
         code: values.code.trim()
       })
       message.success(t('auth.registerSuccess'))
-      navigate('/login')
+      navigate('/login', { state: location.state })
     } catch (err) {
       const msg = (err as Error).message
       message.error(
@@ -93,21 +98,6 @@ export const RegisterPage: React.FC = () => {
       <div style={{ position: 'absolute', top: 24, right: 24, display: 'flex', gap: 8 }}>
         <button
           type="button"
-          onClick={() => { i18n.changeLanguage('zh'); localStorage.setItem('wiselearn_lang', 'zh') }}
-          style={{
-            border: 'none',
-            background: i18n.language === 'zh' ? POLYU_RED : 'transparent',
-            color: i18n.language === 'zh' ? '#fff' : 'rgba(0,0,0,0.65)',
-            padding: '6px 12px',
-            borderRadius: 8,
-            cursor: 'pointer',
-            fontSize: 14
-          }}
-        >
-          {t('lang.zh')}
-        </button>
-        <button
-          type="button"
           onClick={() => { i18n.changeLanguage('en'); localStorage.setItem('wiselearn_lang', 'en') }}
           style={{
             border: 'none',
@@ -121,12 +111,28 @@ export const RegisterPage: React.FC = () => {
         >
           {t('lang.en')}
         </button>
+        <button
+          type="button"
+          onClick={() => { i18n.changeLanguage('zh'); localStorage.setItem('wiselearn_lang', 'zh') }}
+          style={{
+            border: 'none',
+            background: i18n.language === 'zh' ? POLYU_RED : 'transparent',
+            color: i18n.language === 'zh' ? '#fff' : 'rgba(0,0,0,0.65)',
+            padding: '6px 12px',
+            borderRadius: 8,
+            cursor: 'pointer',
+            fontSize: 14
+          }}
+        >
+          {t('lang.zh')}
+        </button>
       </div>
       <Card
         title={t('auth.registerTitle')}
         className="wiselearn-auth-card"
         style={{
-          width: 400,
+          width: '100%',
+          maxWidth: 400,
           borderRadius: 16,
           boxShadow: '0 8px 24px rgba(200, 16, 46, 0.12)',
           border: '1px solid rgba(200, 16, 46, 0.2)'
@@ -214,7 +220,7 @@ export const RegisterPage: React.FC = () => {
               }
             ]}
           >
-            <Input placeholder={t('auth.nicknamePlaceholder')} size="large" />
+            <Input placeholder={t('auth.nicknamePlaceholder')} size="large" maxLength={20} showCount />
           </Form.Item>
           <Form.Item>
             <Button
@@ -233,7 +239,10 @@ export const RegisterPage: React.FC = () => {
             </Button>
           </Form.Item>
           <Typography.Text type="secondary">
-            {t('auth.hasAccount')}<Link to="/login" style={{ color: POLYU_RED }}>{t('auth.goLogin')}</Link>
+            {t('auth.hasAccount')}
+            <Link to="/login" state={location.state} style={{ color: POLYU_RED }}>
+              {t('auth.goLogin')}
+            </Link>
           </Typography.Text>
         </Form>
       </Card>

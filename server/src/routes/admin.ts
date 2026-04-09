@@ -128,7 +128,7 @@ adminRouter.get('/posts/search', async (req: AuthRequest, res) => {
     const like = `%${keyword}%`
     const [rows] = await pool.query(
       `
-      SELECT id, title, view_count, like_count, created_at
+      SELECT id, title, view_count, like_count, is_pinned, created_at
       FROM posts
       WHERE title LIKE ? OR content LIKE ?
       ORDER BY created_at DESC
@@ -141,6 +141,159 @@ adminRouter.get('/posts/search', async (req: AuthRequest, res) => {
     // eslint-disable-next-line no-console
     console.error('Search posts error', err)
     res.status(500).json({ message: '搜索失败' })
+  }
+})
+
+/**
+ * 获取待审核帖子（管理员审核用）
+ */
+adminRouter.get('/posts/pending', async (req: AuthRequest, res) => {
+  const limit = Math.min(Number(req.query.limit) || 50, 100)
+
+  try {
+    const [rows] = await pool.query(
+      `
+      SELECT
+        p.id,
+        p.title,
+        p.user_id,
+        u.nickname AS author,
+        p.created_at,
+        p.audit_reason
+      FROM posts p
+      JOIN users u ON p.user_id = u.id
+      WHERE p.audit_status = 0
+      ORDER BY p.created_at DESC
+      LIMIT ?
+    `,
+      [limit]
+    )
+    res.json({ list: rows })
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('Pending posts error', err)
+    res.status(500).json({ message: '获取待审核帖子失败' })
+  }
+})
+
+/**
+ * 审核通过：更新审核状态 + 给发帖用户发私信通知
+ */
+adminRouter.post('/posts/:id/approve', async (req: AuthRequest, res) => {
+  const id = Number(req.params.id)
+  if (Number.isNaN(id)) {
+    res.status(400).json({ message: '帖子 ID 不合法' })
+    return
+  }
+
+  const conn = await pool.getConnection()
+  try {
+    await conn.beginTransaction()
+
+    const [postRows] = await conn.query(
+      'SELECT id, user_id, title FROM posts WHERE id = ?',
+      [id]
+    )
+    const post = (postRows as any[])[0]
+    if (!post) {
+      res.status(404).json({ message: '帖子不存在' })
+      return
+    }
+
+    await conn.query(
+      'UPDATE posts SET audit_status = 1, audit_reason = NULL, published_at = NOW() WHERE id = ?',
+      [id]
+    )
+
+    if (post.user_id !== req.user!.id) {
+      const [langRows] = await conn.query(
+        'SELECT ui_lang FROM users WHERE id = ?',
+        [post.user_id]
+      )
+      const uiLang = (langRows as any[])[0]?.ui_lang
+      const isEn = uiLang === 'en'
+      const content = isEn
+        ? `Admin approved your post 《${post.title}》 and it is now published.`
+        : `管理员已通过审核：你的帖子《${post.title}》已发布。`
+      await conn.query(
+        'INSERT INTO messages (from_user_id, to_user_id, content) VALUES (?, ?, ?)',
+        [req.user!.id, post.user_id, content]
+      )
+    }
+
+    await conn.commit()
+    res.json({ message: '审核通过' })
+  } catch (err) {
+    await conn.rollback()
+    // eslint-disable-next-line no-console
+    console.error('Approve post error', err)
+    res.status(500).json({ message: '审核失败' })
+  } finally {
+    conn.release()
+  }
+})
+
+/**
+ * 审核不通过：更新审核状态 + 保存整改意见 + 发私信给用户
+ */
+adminRouter.post('/posts/:id/reject', async (req: AuthRequest, res) => {
+  const id = Number(req.params.id)
+  if (Number.isNaN(id)) {
+    res.status(400).json({ message: '帖子 ID 不合法' })
+    return
+  }
+
+  const { reason } = req.body as { reason?: string }
+  const trimmed = typeof reason === 'string' ? reason.trim() : ''
+  if (!trimmed) {
+    res.status(400).json({ message: '需要提供整改意见' })
+    return
+  }
+
+  const conn = await pool.getConnection()
+  try {
+    await conn.beginTransaction()
+
+    const [postRows] = await conn.query(
+      'SELECT id, user_id, title FROM posts WHERE id = ?',
+      [id]
+    )
+    const post = (postRows as any[])[0]
+    if (!post) {
+      res.status(404).json({ message: '帖子不存在' })
+      return
+    }
+
+    await conn.query(
+      'UPDATE posts SET audit_status = 0, audit_reason = ? WHERE id = ?',
+      [trimmed, id]
+    )
+
+    if (post.user_id !== req.user!.id) {
+      const [langRows] = await conn.query(
+        'SELECT ui_lang FROM users WHERE id = ?',
+        [post.user_id]
+      )
+      const uiLang = (langRows as any[])[0]?.ui_lang
+      const isEn = uiLang === 'en'
+      const content = isEn
+        ? `Admin rejected your post 《${post.title}》.\nFeedback: ${trimmed}\nPlease revise and resubmit.`
+        : `管理员未通过审核：你的帖子《${post.title}》需整改。\n整改意见：${trimmed}\n请修改后等待再次审核。`
+      await conn.query(
+        'INSERT INTO messages (from_user_id, to_user_id, content) VALUES (?, ?, ?)',
+        [req.user!.id, post.user_id, content]
+      )
+    }
+
+    await conn.commit()
+    res.json({ message: '已反馈整改意见' })
+  } catch (err) {
+    await conn.rollback()
+    // eslint-disable-next-line no-console
+    console.error('Reject post error', err)
+    res.status(500).json({ message: '审核失败' })
+  } finally {
+    conn.release()
   }
 })
 

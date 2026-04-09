@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react'
-import { Button, Card, Form, Input, Typography, Checkbox, message, Modal } from 'antd'
-import { useNavigate, Link } from 'react-router-dom'
+import { App, Button, Card, Form, Input, Typography, Checkbox, Modal } from 'antd'
+import { useNavigate, Link, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from './AuthContext'
-import { sendResetCodeApi, resetPasswordApi } from '../shared/api'
+import { getNavigateAfterAuth } from './returnPathAfterAuth'
+import { sendResetCodeApi, resetPasswordApi, updateUserLanguageApi } from '../shared/api'
 
 /** 理工红主色 */
 const POLYU_RED = '#C8102E'
@@ -12,9 +13,11 @@ const POLYU_RED = '#C8102E'
  * 登录页：独立全屏，不显示侧栏/顶栏；理工红主题；含忘记密码（邮箱 6 位验证码重置）
  */
 export const LoginPage: React.FC = () => {
+  const { message } = App.useApp()
   const { t, i18n } = useTranslation()
   const { user, login } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
   const [loading, setLoading] = useState(false)
   const [resetModalOpen, setResetModalOpen] = useState(false)
   const [resetStep, setResetStep] = useState<1 | 2>(1)
@@ -25,8 +28,10 @@ export const LoginPage: React.FC = () => {
   const [resetting, setResetting] = useState(false)
 
   useEffect(() => {
-    if (user) navigate('/', { replace: true })
-  }, [user, navigate])
+    if (!user) return
+    const { to, state } = getNavigateAfterAuth(location)
+    navigate(to, { replace: true, ...(state ? { state } : {}) })
+  }, [user, navigate, location])
 
   useEffect(() => {
     if (!resetModalOpen || resetCodeCooldown <= 0) return
@@ -44,8 +49,11 @@ export const LoginPage: React.FC = () => {
     setLoading(true)
     try {
       await login(values.email, values.password, values.remember)
+      const lng = i18n.language === 'en' ? 'en' : 'zh'
+      void updateUserLanguageApi(lng).catch(() => {
+        // ignore: language persistence is best-effort
+      })
       message.success(t('auth.loginSuccess'))
-      navigate('/')
     } catch (err) {
       message.error((err as Error).message)
     } finally {
@@ -136,21 +144,6 @@ export const LoginPage: React.FC = () => {
       <div style={{ position: 'absolute', top: 24, right: 24, display: 'flex', gap: 8 }}>
         <button
           type="button"
-          onClick={() => { i18n.changeLanguage('zh'); localStorage.setItem('wiselearn_lang', 'zh') }}
-          style={{
-            border: 'none',
-            background: i18n.language === 'zh' ? POLYU_RED : 'transparent',
-            color: i18n.language === 'zh' ? '#fff' : 'rgba(0,0,0,0.65)',
-            padding: '6px 12px',
-            borderRadius: 8,
-            cursor: 'pointer',
-            fontSize: 14
-          }}
-        >
-          {t('lang.zh')}
-        </button>
-        <button
-          type="button"
           onClick={() => { i18n.changeLanguage('en'); localStorage.setItem('wiselearn_lang', 'en') }}
           style={{
             border: 'none',
@@ -164,12 +157,28 @@ export const LoginPage: React.FC = () => {
         >
           {t('lang.en')}
         </button>
+        <button
+          type="button"
+          onClick={() => { i18n.changeLanguage('zh'); localStorage.setItem('wiselearn_lang', 'zh') }}
+          style={{
+            border: 'none',
+            background: i18n.language === 'zh' ? POLYU_RED : 'transparent',
+            color: i18n.language === 'zh' ? '#fff' : 'rgba(0,0,0,0.65)',
+            padding: '6px 12px',
+            borderRadius: 8,
+            cursor: 'pointer',
+            fontSize: 14
+          }}
+        >
+          {t('lang.zh')}
+        </button>
       </div>
       <Card
         title={t('auth.loginTitle')}
         className="wiselearn-auth-card"
         style={{
-          width: 400,
+          width: '100%',
+          maxWidth: 400,
           borderRadius: 16,
           boxShadow: '0 8px 24px rgba(200, 16, 46, 0.12)',
           border: '1px solid rgba(200, 16, 46, 0.2)'
@@ -236,17 +245,27 @@ export const LoginPage: React.FC = () => {
             </Button>
           </Form.Item>
           <Typography.Text type="secondary">
-            {t('auth.noAccount')}<Link to="/register" style={{ color: POLYU_RED }}>{t('auth.goRegister')}</Link>
+            {t('auth.noAccount')}
+            <Link to="/register" state={location.state} style={{ color: POLYU_RED }}>
+              {t('auth.goRegister')}
+            </Link>
           </Typography.Text>
         </Form>
       </Card>
+
+      <Typography.Text
+        type="secondary"
+        style={{ marginTop: 24, fontSize: 12, color: 'rgba(0,0,0,0.4)', textAlign: 'center' }}
+      >
+        The Hong Kong Polytechnic University. 2026
+      </Typography.Text>
 
       <Modal
         title={t('auth.resetPasswordTitle')}
         open={resetModalOpen}
         onCancel={() => setResetModalOpen(false)}
         footer={null}
-        destroyOnClose
+        destroyOnHidden
         width={400}
       >
         <Form form={resetForm} layout="vertical">

@@ -1,153 +1,190 @@
-import React, { useCallback } from 'react'
-import { useEditor, EditorContent, type Editor } from '@tiptap/react'
-import StarterKit from '@tiptap/starter-kit'
-import Image from '@tiptap/extension-image'
-import Placeholder from '@tiptap/extension-placeholder'
-import { Button, Space } from 'antd'
-import { PictureOutlined } from '@ant-design/icons'
+import { useEffect, useState, useImperativeHandle, forwardRef, useMemo, useCallback } from 'react'
+import { BlockNoteEditor, BlockNoteSchema, defaultBlockSpecs } from '@blocknote/core'
+import { useCreateBlockNote } from '@blocknote/react'
+import { BlockNoteView } from '@blocknote/mantine'
+import { App } from 'antd'
 import { uploadImageApi } from '../shared/api'
+import { MAX_IMAGE_UPLOAD_BYTES } from '../shared/imageUploadLimits'
+import { stripImagesFromHtml } from './extractImageUrlsFromContent'
+import { useTranslation } from 'react-i18next'
 
+import '@blocknote/mantine/style.css'
 import './RichTextEditor.css'
+
+// Common hashtags for quick access
+export const COMMON_HASHTAGS = [
+  '#校园生活', '#求职分享', '#课程问答', '#学习经验',
+  '#宿舍日常', '#美食推荐', '#社团活动', '#考试经验'
+]
+
+export interface RichTextEditorRef {
+  editor: BlockNoteEditor | null
+  insertImage: (url: string) => void
+  insertText: (text: string) => void
+}
 
 interface RichTextEditorProps {
   value?: string
   onChange?: (html: string) => void
   placeholder?: string
   minHeight?: number
+  onReady?: () => void
+  /** 为 true 时移除图片/音视频/文件等媒体块与上传，正文仅排版；图片走独立上传区 */
+  disableImages?: boolean
 }
 
 /**
- * 富文本编辑器（Tiptap），支持加粗/列表/标题/图片上传
+ * Rich text editor using BlockNote (Notion-style block editor)
+ * 默认可插入图片；disableImages 时无 Media（无 image/video/file/audio），图片走独立上传区
  */
-export const RichTextEditor: React.FC<RichTextEditorProps> = ({
-  value = '',
-  onChange,
-  placeholder = '写点什么…',
-  minHeight = 200
-}) => {
-  const handleUploadImage = useCallback(async (editor: Editor) => {
-    const input = document.createElement('input')
-    input.type = 'file'
-    input.accept = 'image/jpeg,image/png,image/gif,image/webp'
-    input.onchange = async (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0]
-      if (!file) return
-      try {
-        const { url } = await uploadImageApi(file)
-        editor.chain().focus().setImage({ src: url }).run()
-      } catch (err) {
-        console.error('Upload image failed', err)
-      }
-    }
-    input.click()
-  }, [])
+export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(
+  ({
+    value = '',
+    onChange,
+    placeholder: _placeholder = '写点什么…',
+    minHeight = 200,
+    onReady,
+    disableImages = false
+  }, ref) => {
+    const { message } = App.useApp()
+    const { t } = useTranslation()
+    const [initialContentSet, setInitialContentSet] = useState(false)
 
-  const editor = useEditor({
-    extensions: [
-      StarterKit,
-      Image.configure({ inline: false, allowBase64: false }),
-      Placeholder.configure({ placeholder })
-    ],
-    content: value || '',
-    editorProps: {
-      attributes: { class: 'wiselearn-editor-prose' },
-      handleDrop: (view, event) => {
-        const files = event.dataTransfer?.files
-        if (!files?.length) return false
-        const file = files[0]
-        if (!file.type.startsWith('image/')) return false
-        uploadImageApi(file).then(({ url }) => {
-          const { schema } = view.state
-          const coordinates = view.posAtCoords({
-            left: event.clientX,
-            top: event.clientY
-          })
-          if (coordinates) {
-            const node = schema.nodes.image.create({ src: url })
-            const transaction = view.state.tr.insert(coordinates.pos, node)
-            view.dispatch(transaction)
-          }
-        }).catch(console.error)
-        return true
+    const uploadFile = useCallback(
+      async (file: File): Promise<string> => {
+        if (file.size > MAX_IMAGE_UPLOAD_BYTES) {
+          message.error(t('auth.imageTooLarge'))
+          throw new Error('File too large')
+        }
+
+        try {
+          const { url } = await uploadImageApi(file)
+          return url
+        } catch (err) {
+          console.error('Upload image failed', err)
+          throw err
+        }
       },
-      handlePaste: (view, event) => {
-        const items = event.clipboardData?.items
-        if (!items) return false
-        for (const item of items) {
-          if (item.type.indexOf('image') !== -1) {
-            const file = item.getAsFile()
-            if (file) {
-              uploadImageApi(file).then(({ url }) => {
-                const node = view.state.schema.nodes.image.create({ src: url })
-                const transaction = view.state.tr.replaceSelectionWith(node)
-                view.dispatch(transaction)
-              }).catch(console.error)
-              return true
+      [message, t]
+    )
+
+    const editorOptions = useMemo(() => {
+      const tiptap = {
+        _tiptapOptions: {
+          editorProps: {
+            attributes: {
+              class: 'wiselearn-blocknote-editor'
             }
           }
         }
-        return false
       }
-    },
-    onUpdate: ({ editor }) => {
-      onChange?.(editor.getHTML())
+      if (disableImages) {
+        const {
+          image: _image,
+          video: _video,
+          file: _file,
+          audio: _audio,
+          ...blockSpecs
+        } = defaultBlockSpecs
+        return {
+          schema: BlockNoteSchema.create({ blockSpecs }),
+          ...tiptap
+        }
+      }
+      return {
+        uploadFile,
+        ...tiptap
+      }
+    }, [disableImages, uploadFile])
+
+    const editor = useCreateBlockNote(editorOptions, [disableImages, uploadFile]) as BlockNoteEditor
+
+    useImperativeHandle(ref, () => ({
+      editor,
+      insertImage: (url: string) => {
+        if (disableImages || !editor) return
+        let refBlock: (typeof editor.document)[number] | undefined
+        try {
+          refBlock = editor.getTextCursorPosition().block
+        } catch {
+          refBlock = undefined
+        }
+        if (!refBlock) {
+          const doc = editor.document
+          refBlock = doc[doc.length - 1]
+        }
+        editor.insertBlocks([{ type: 'image', props: { url } }], refBlock, 'after')
+      },
+      insertText: (text: string) => {
+        if (!editor) return
+        let refBlock: (typeof editor.document)[number] | undefined
+        try {
+          refBlock = editor.getTextCursorPosition().block
+        } catch {
+          refBlock = undefined
+        }
+        if (!refBlock) {
+          const doc = editor.document
+          refBlock = doc[doc.length - 1]
+        }
+        editor.insertBlocks(
+          [{ type: 'paragraph', content: [{ type: 'text', text: text, styles: {} }] }],
+          refBlock,
+          'after'
+        )
+      }
+    }), [editor, disableImages])
+
+    useEffect(() => {
+      if (editor && onReady) {
+        onReady()
+      }
+    }, [editor, onReady])
+
+    useEffect(() => {
+      if (!editor || initialContentSet || !value || value === '<p></p>' || value === '') return
+
+      const insertInitialContent = async () => {
+        try {
+          const html = disableImages ? stripImagesFromHtml(value) : value
+          const blocks = await editor.tryParseHTMLToBlocks(html)
+          if (blocks && blocks.length > 0) {
+            editor.replaceBlocks(editor.document, blocks)
+            setInitialContentSet(true)
+          }
+        } catch (err) {
+          console.error('Failed to parse HTML content', err)
+        }
+      }
+
+      void insertInitialContent()
+    }, [editor, value, initialContentSet, disableImages])
+
+    const handleChange = async () => {
+      if (!onChange) return
+
+      try {
+        let html = await editor.blocksToHTMLLossy()
+        if (disableImages) {
+          html = stripImagesFromHtml(html)
+        }
+        onChange(html)
+      } catch (err) {
+        console.error('Failed to export HTML', err)
+      }
     }
-  })
 
-  React.useEffect(() => {
-    if (!editor) return
-    if (value === '' || value === '<p></p>') {
-      if (editor.getHTML() !== '<p></p>') editor.commands.setContent('', { emitUpdate: false })
-    }
-  }, [value, editor])
+    return (
+      <div className="wiselearn-rich-editor" style={{ minHeight }}>
+        <BlockNoteView
+          editor={editor}
+          editable={true}
+          onChange={handleChange}
+          theme="light"
+        />
+      </div>
+    )
+  }
+)
 
-  if (!editor) return null
-
-  return (
-    <div className="wiselearn-rich-editor" style={{ minHeight }}>
-      <Space className="wiselearn-editor-toolbar" wrap>
-        <Button
-          type="text"
-          size="small"
-          onClick={() => editor.chain().focus().toggleBold().run()}
-          className={editor.isActive('bold') ? 'is-active' : ''}
-        >
-          B
-        </Button>
-        <Button
-          type="text"
-          size="small"
-          onClick={() => editor.chain().focus().toggleItalic().run()}
-          className={editor.isActive('italic') ? 'is-active' : ''}
-        >
-          I
-        </Button>
-        <Button
-          type="text"
-          size="small"
-          onClick={() => editor.chain().focus().toggleBulletList().run()}
-          className={editor.isActive('bulletList') ? 'is-active' : ''}
-        >
-          列表
-        </Button>
-        <Button
-          type="text"
-          size="small"
-          onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          className={editor.isActive('orderedList') ? 'is-active' : ''}
-        >
-          有序
-        </Button>
-        <Button
-          type="text"
-          size="small"
-          icon={<PictureOutlined />}
-          onClick={() => handleUploadImage(editor)}
-        >
-          图片
-        </Button>
-      </Space>
-      <EditorContent editor={editor} className="wiselearn-editor-content" />
-    </div>
-  )
-}
+RichTextEditor.displayName = 'RichTextEditor'
