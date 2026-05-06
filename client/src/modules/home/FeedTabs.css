@@ -1,7 +1,9 @@
 /* FeedTabs - 横向分类 + 左右渐变 + 拖拽 / 滚轮仅作用于本区域 */
 
 .wiselearn-feed-tabs-root {
-  position: relative;
+  position: sticky;
+  top: 0;
+  z-index: 20;
   margin-bottom: 12px;
   border-radius: 8px;
   border: 1px solid #e8e8e8;
