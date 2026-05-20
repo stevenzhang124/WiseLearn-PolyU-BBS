@@ -172,6 +172,13 @@ export async function getShareLink(
   return res.data
 }
 
+export async function trackShareAction(
+  postId: number
+): Promise<{ share_count: number }> {
+  const res = await api.post(`/posts/${postId}/share-track`)
+  return res.data
+}
+
 export async function getActivities(): Promise<any> {
   const res = await api.get('/posts/me/activities')
   return res.data

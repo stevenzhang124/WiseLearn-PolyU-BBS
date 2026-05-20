@@ -14,13 +14,13 @@ import { useTranslation } from 'react-i18next'
 import {
   deleteComment,
   fetchPostDetail,
-  getShareLink,
   sendComment,
   toggleLike
 } from '../shared/api'
 import { useAuth } from '../auth/AuthContext'
 import { Avatar } from '../shared/Avatar'
 import { PostContentBlockNote } from './PostContentBlockNote'
+import { PostShareModal } from './PostShareModal'
 import './PostDetailPage.css'
 
 type CommentNode = { root: any; children: CommentNode[] }
@@ -115,6 +115,7 @@ export const PostDetailPage: React.FC = () => {
   const [gallerySlideIndex, setGallerySlideIndex] = useState(0)
   const galleryCarouselRef = useRef<CarouselRef>(null)
   const swipeGuard = useSwipeGuard()
+  const [shareModalOpen, setShareModalOpen] = useState(false)
 
   const loadDetail = async () => {
     if (!postId) return
@@ -213,15 +214,8 @@ export const PostDetailPage: React.FC = () => {
     }
   }
 
-  const handleShare = async () => {
-    if (!postId) return
-    try {
-      const { link } = await getShareLink(postId)
-      await navigator.clipboard.writeText(link)
-      message.success(t('post.linkCopied'))
-    } catch (err) {
-      message.error((err as Error).message)
-    }
+  const handleShare = () => {
+    setShareModalOpen(true)
   }
 
   /** 经分享链接登录进入时 history 被 replace，应回首页而非 history.back（避免回到登录或站外） */
@@ -441,6 +435,18 @@ export const PostDetailPage: React.FC = () => {
           </div>
         </article>
       )}
+
+      {post && postId > 0 ? (
+        <PostShareModal
+          open={shareModalOpen}
+          postId={postId}
+          postTitle={post.title}
+          onClose={() => setShareModalOpen(false)}
+          onShareCount={() => {
+            void loadDetail()
+          }}
+        />
+      ) : null}
 
       <section
         id="wiselearn-post-comments"

@@ -1,5 +1,7 @@
 import { Router } from 'express'
+import { config } from '../config'
 import { pool } from '../db'
+import { resolveShareBase } from '../shareUrl'
 
 export const shareRouter = Router()
 
@@ -42,22 +44,34 @@ shareRouter.get('/:id', async (req, res) => {
       return
     }
 
-    const apiBase = process.env.API_BASE_URL || `${req.protocol}://${req.get('host')}`
-    const frontendBase = process.env.FRONTEND_URL || req.headers.origin || 'http://localhost:5173'
+    const shareBase = resolveShareBase(req)
+    const apiBase = config.apiBaseUrl || shareBase
+    const frontendBase =
+      config.frontendUrl || req.headers.origin?.toString() || shareBase
+    const sharePageUrl = `${shareBase.replace(/\/$/, '')}/s/${postId}`
     const postUrl = `${frontendBase.replace(/\/$/, '')}/posts/${postId}`
 
-    const title = escapeHtml(post.title || 'PolyU RedBrick')
+    const rawTitle = post.title || 'PolyU RedBrick'
+    const title = escapeHtml(rawTitle)
     const plainText = stripHtml(post.content || '')
-    const description = escapeHtml(plainText.slice(0, 150) + (plainText.length > 150 ? '…' : ''))
+    const rawDescription =
+      plainText.slice(0, 150) + (plainText.length > 150 ? '…' : '') ||
+      `来自 ${post.author || 'PolyU RedBrick'} 的校园帖子`
+    const description = escapeHtml(rawDescription)
     const author = escapeHtml(post.author || '')
     const avatarUrl = post.author_avatar ? `${apiBase}${post.author_avatar}` : ''
 
     const imageUrls = post.image_urls
       ? String(post.image_urls).split(',').map((s: string) => s.trim()).filter(Boolean)
       : []
-    const coverUrl = imageUrls.length > 0
-      ? (imageUrls[0].startsWith('http') ? imageUrls[0] : `${apiBase}${imageUrls[0]}`)
-      : ''
+    const postCover =
+      imageUrls.length > 0
+        ? imageUrls[0].startsWith('http')
+          ? imageUrls[0]
+          : `${apiBase}${imageUrls[0]}`
+        : ''
+    const defaultCover = `${frontendBase.replace(/\/$/, '')}/polyu-logo.png`
+    const coverUrl = postCover || defaultCover
 
     const createdAt = new Date(post.created_at).toLocaleDateString('zh-CN', {
       year: 'numeric', month: 'long', day: 'numeric'
@@ -69,16 +83,21 @@ shareRouter.get('/:id', async (req, res) => {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${title} - PolyU RedBrick</title>
+<meta name="description" content="${description}">
 <meta property="og:type" content="article">
 <meta property="og:title" content="${title}">
 <meta property="og:description" content="${description}">
 <meta property="og:site_name" content="PolyU RedBrick">
-<meta property="og:url" content="${escapeHtml(postUrl)}">
-${coverUrl ? `<meta property="og:image" content="${escapeHtml(coverUrl)}">` : ''}
-<meta name="twitter:card" content="${coverUrl ? 'summary_large_image' : 'summary'}">
+<meta property="og:url" content="${escapeHtml(sharePageUrl)}">
+<meta property="og:image" content="${escapeHtml(coverUrl)}">
+<meta property="og:image:secure_url" content="${escapeHtml(coverUrl)}">
+<meta itemprop="name" content="${title}">
+<meta itemprop="description" content="${description}">
+<meta itemprop="image" content="${escapeHtml(coverUrl)}">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="${title}">
 <meta name="twitter:description" content="${description}">
-${coverUrl ? `<meta name="twitter:image" content="${escapeHtml(coverUrl)}">` : ''}
+<meta name="twitter:image" content="${escapeHtml(coverUrl)}">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Microsoft YaHei',system-ui,-apple-system,sans-serif;background:#f5f6f7;color:#262626;min-height:100vh;display:flex;flex-direction:column;align-items:center}

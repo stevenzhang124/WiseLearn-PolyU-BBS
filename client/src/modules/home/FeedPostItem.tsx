@@ -11,7 +11,8 @@ import { App, Button, Image, Input } from 'antd'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
 import { Avatar } from '../shared/Avatar'
-import { fetchPostComments, getShareLink, sendComment, toggleLike } from '../shared/api'
+import { fetchPostComments, sendComment, toggleLike } from '../shared/api'
+import { PostShareModal } from '../posts/PostShareModal'
 import './FeedList.css'
 
 export interface FeedPostItemProps {
@@ -91,7 +92,7 @@ export const FeedPostItem: React.FC<FeedPostItemProps> = ({
   /** 点赞成功瞬间触发的图标动画 */
   const [likePop, setLikePop] = useState(false)
   const likePopTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
-  const [shareLoading, setShareLoading] = useState(false)
+  const [shareModalOpen, setShareModalOpen] = useState(false)
   const [commentOpen, setCommentOpen] = useState(false)
   const [commentText, setCommentText] = useState('')
   const [commentSubmitting, setCommentSubmitting] = useState(false)
@@ -238,20 +239,10 @@ export const FeedPostItem: React.FC<FeedPostItemProps> = ({
     }
   }
 
-  const openShare = async (e: React.MouseEvent) => {
+  const openSharePanel = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    setShareLoading(true)
-    try {
-      const { link, share_count: sc } = await getShareLink(post.id)
-      setShareCount(sc)
-      await navigator.clipboard.writeText(link)
-      message.success(t('post.linkCopied'))
-    } catch (err) {
-      message.error((err as Error).message)
-    } finally {
-      setShareLoading(false)
-    }
+    setShareModalOpen(true)
   }
 
   return (
@@ -378,8 +369,7 @@ export const FeedPostItem: React.FC<FeedPostItemProps> = ({
         <button
           type="button"
           className="wiselearn-feed-item-action"
-          onClick={openShare}
-          disabled={shareLoading}
+          onClick={openSharePanel}
         >
           <ShareAltOutlined /> <span>{shareCount}</span>
         </button>
@@ -507,6 +497,14 @@ export const FeedPostItem: React.FC<FeedPostItemProps> = ({
           ) : null}
         </div>
       )}
+
+      <PostShareModal
+        open={shareModalOpen}
+        postId={post.id}
+        postTitle={post.title}
+        onClose={() => setShareModalOpen(false)}
+        onShareCount={(n) => setShareCount(n)}
+      />
 
     </div>
   )
