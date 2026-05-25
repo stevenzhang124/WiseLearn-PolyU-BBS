@@ -2,10 +2,32 @@ import { Router } from 'express'
 import { pool } from '../db'
 import { adminOnly, authMiddleware, AuthRequest } from '../middleware/auth'
 
+async function ensureSensitiveWordsTableExists(): Promise<void> {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS sensitive_words (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      word VARCHAR(100) NOT NULL UNIQUE,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    )
+  `)
+}
+
 export const adminRouter = Router()
 
 // 仅管理员可访问
 adminRouter.use(authMiddleware, adminOnly)
+
+adminRouter.use(async (_req, _res, next) => {
+  try {
+    await ensureSensitiveWordsTableExists()
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('Ensure sensitive words table error', err)
+  } finally {
+    next()
+  }
+})
 
 /**
  * 数据统计概览：

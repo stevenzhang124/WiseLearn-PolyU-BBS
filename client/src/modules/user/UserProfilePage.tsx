@@ -154,10 +154,11 @@ export const UserProfilePage: React.FC = () => {
                 view_count: item.view_count ?? 0,
                 image_urls: item.image_urls,
                 created_at: item.created_at,
-                  is_pinned: item.is_pinned,
-                  category: item.category ?? 'campus',
-                  user_liked: Boolean(item.user_liked)
-                }}
+                is_pinned: item.is_pinned,
+                category: item.category ?? 'campus',
+                anonymous: Boolean(item.anonymous),
+                user_liked: Boolean(item.user_liked)
+              }}
               onNavigate={(path) => navigate(path)}
             />
           ))}

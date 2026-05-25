@@ -248,7 +248,7 @@ export const FeedPostItem: React.FC<FeedPostItemProps> = ({
   }
 
   return (
-    <div className={`wiselearn-feed-item${headerMode === 'timeOnly' ? ' wiselearn-feed-item--profile' : ''}`}>
+    <div className={`wiselearn-feed-item${headerMode === 'timeOnly' ? ' wiselearn-feed-item--profile' : ''}${anonymous ? ' wiselearn-feed-item--anonymous' : ''}`}>
       {/* Author row */}
       <div
         className={

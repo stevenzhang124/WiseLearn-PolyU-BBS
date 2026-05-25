@@ -122,6 +122,53 @@ export async function ensurePostsAnonymousColumn(): Promise<void> {
   }
 }
 
+export async function ensureSensitiveWordsTable(): Promise<void> {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS sensitive_words (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      word VARCHAR(100) NOT NULL UNIQUE,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    )
+  `)
+}
+
+export async function ensurePostModerationColumns(): Promise<void> {
+  const dbName = config.db.database
+  const [rows] = await pool.query(
+    `SELECT column_name FROM information_schema.columns
+     WHERE table_schema = ? AND table_name = 'posts'`,
+    [dbName]
+  )
+  const colSet = new Set(
+    (rows as any[]).map((r: { column_name: string }) => String(r.column_name).toLowerCase())
+  )
+  const alters: string[] = []
+  if (!colSet.has('moderation_status')) {
+    alters.push("ALTER TABLE posts ADD COLUMN moderation_status VARCHAR(20) NOT NULL DEFAULT 'auto_approved'")
+  }
+  if (!colSet.has('moderation_reason')) {
+    alters.push('ALTER TABLE posts ADD COLUMN moderation_reason TEXT NULL')
+  }
+  if (!colSet.has('moderation_flags')) {
+    alters.push('ALTER TABLE posts ADD COLUMN moderation_flags TEXT NULL')
+  }
+  if (!colSet.has('review_required')) {
+    alters.push('ALTER TABLE posts ADD COLUMN review_required TINYINT(1) NOT NULL DEFAULT 0')
+  }
+  if (!colSet.has('contains_sensitive')) {
+    alters.push('ALTER TABLE posts ADD COLUMN contains_sensitive TINYINT(1) NOT NULL DEFAULT 0')
+  }
+  for (const sql of alters) {
+    try {
+      await pool.query(sql)
+    } catch (err: any) {
+      if (err?.code === 'ER_DUP_FIELDNAME' || err?.errno === 1060) continue
+      throw err
+    }
+  }
+}
+
 export async function ensurePostsPublishedAtColumn(): Promise<void> {
   const dbName = config.db.database
   const [rows] = await pool.query(

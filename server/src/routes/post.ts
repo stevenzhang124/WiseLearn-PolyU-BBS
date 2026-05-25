@@ -15,11 +15,79 @@ const FEED_CATEGORIES = [
   'mutual'
 ] as const
 
+function normalizeText(input: string): string {
+  return input
+    .toLowerCase()
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/[^\p{L}\p{N}\s]+/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+async function getSensitiveWords(): Promise<string[]> {
+  try {
+    const [rows] = await pool.query('SELECT word FROM sensitive_words ORDER BY word ASC')
+    return (rows as any[])
+      .map((r) => String(r.word || '').trim().toLowerCase())
+      .filter(Boolean)
+  } catch {
+    return []
+  }
+}
+
+function detectSuspiciousPatterns(title: string, content: string): string[] {
+  const text = `${title} ${content}`.toLowerCase()
+  const flags: string[] = []
+
+  const patterns: Array<[RegExp, string]> = [
+    [/(代写|代做|帮写|代交|包过|速成|定制)/, '代写/代做'],
+    [/(essay|assignment|report|lab report|homework|project|dissertation|thesis)/, 'assignment keywords'],
+    [/(加v|vx|wechat|whatsapp|telegram|tg|联系我|私聊)/, 'contact bait'],
+    [/(保过|答案|答案包|题库|刷题|开卷)/, 'exam shortcut'],
+    [/(代写作业|论文代写|代写论文|代做作业|帮忙写|包写)/, 'writing service'],
+    [/(招聘.*代写|代写.*招聘|兼职.*代写)/, 'suspicious recruitment']
+  ]
+
+  for (const [re, label] of patterns) {
+    if (re.test(text)) flags.push(label)
+  }
+
+  return flags
+}
+
+async function analyzeModeration(title: string, content: string): Promise<{
+  containsSensitive: boolean
+  reviewRequired: boolean
+  moderationStatus: 'auto_approved' | 'pending_review'
+  matchedWords: string[]
+  flags: string[]
+}> {
+  const words = await getSensitiveWords()
+  const normalized = normalizeText(`${title} ${content}`)
+  const matchedWords = words.filter((w) => normalized.includes(w))
+  const flags = detectSuspiciousPatterns(title, content)
+
+  const containsSensitive = matchedWords.length > 0
+  const reviewRequired = containsSensitive || flags.length > 0
+
+  return {
+    containsSensitive,
+    reviewRequired,
+    moderationStatus: reviewRequired ? 'pending_review' : 'auto_approved',
+    matchedWords,
+    flags
+  }
+}
+
 // 所有帖子接口均需要登录
 postRouter.use(authMiddleware)
 
 /**
  * 创建帖子（支持富文本内容和图片 URL 列表）
+ * - 管理员发帖：无论是否敏感词，都直接通过
+ * - 普通用户：
+ *   - 无敏感词/无可疑模式 => 预通过（audit_status = 1）
+ *   - 有敏感词/可疑模式 => 待审核（audit_status = 0）
  */
 postRouter.post('/', async (req: AuthRequest, res) => {
   const { title, content, category, imageUrls, anonymous } = req.body as {
@@ -43,16 +111,57 @@ postRouter.post('/', async (req: AuthRequest, res) => {
     res.status(400).json({ message: '标题不能超过 20 个字' })
     return
   }
+
+  const isAdmin = Boolean(req.user.isAdmin)
   const anonymousAllowed = category !== 'trading' && category !== 'news'
-  const isAnonymous = Boolean(anonymous) && anonymousAllowed
+  const isAnonymous = Boolean(anonymous) && anonymousAllowed && !isAdmin
 
   try {
+    const moderation =
+      isAdmin
+        ? {
+            containsSensitive: false,
+            reviewRequired: false,
+            moderationStatus: 'auto_approved' as const,
+            matchedWords: [] as string[],
+            flags: [] as string[]
+          }
+        : await analyzeModeration(title, content)
+
+    // 管理员发帖：直接通过
+    // 普通用户：clean -> 预通过；敏感/可疑 -> 待审核
+    const auditStatus = isAdmin || !moderation.reviewRequired ? 1 : 0
+    const auditReason =
+      moderation.reviewRequired
+        ? `敏感词/可疑内容命中：${[...moderation.matchedWords, ...moderation.flags].join(', ')}`
+        : null
+
     const images = Array.isArray(imageUrls) ? imageUrls.join(',') : null
+
     await pool.query(
-      'INSERT INTO posts (user_id, title, content, category, image_urls, anonymous, audit_status, audit_reason) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [req.user.id, title, content, category, images, isAnonymous ? 1 : 0, 0, null]
+      `INSERT INTO posts
+       (user_id, title, content, category, image_urls, anonymous, audit_status, audit_reason, published_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        req.user.id,
+        title,
+        content,
+        category,
+        images,
+        isAnonymous ? 1 : 0,
+        auditStatus,
+        auditReason,
+        auditStatus === 1 ? new Date() : null
+      ]
     )
-    res.json({ message: '发帖成功' })
+
+    res.json({
+      message: auditStatus === 1 ? '发帖成功，已直接发布' : '发帖成功，等待管理员审核',
+      moderation: {
+        ...moderation,
+        auditStatus
+      }
+    })
   } catch (err) {
     // eslint-disable-next-line no-console
     console.error('Create post error', err)
@@ -117,8 +226,8 @@ postRouter.get('/', async (req: AuthRequest, res) => {
         p.view_count,
         p.like_count,
         p.share_count,
-        (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS comment_count,
         p.anonymous,
+        (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS comment_count,
         u.nickname AS author,
         u.avatar AS author_avatar,
         EXISTS(SELECT 1 FROM likes lk WHERE lk.post_id = p.id AND lk.user_id = ?) AS user_liked
@@ -130,6 +239,7 @@ postRouter.get('/', async (req: AuthRequest, res) => {
     `,
       [uid, ...listParams, pageSize, offset]
     )
+
     const listBaseUrl = process.env.API_BASE_URL || 'http://localhost:4000'
     const list = (listRows as any[]).map((p) => ({
       ...p,
@@ -142,7 +252,7 @@ postRouter.get('/', async (req: AuthRequest, res) => {
     }))
 
     const countConditions: string[] = []
-    const countParams: string[] = []
+    const countParams: (number | string)[] = []
     if (!isAdmin) {
       countConditions.push('audit_status = 1')
     }
@@ -182,17 +292,21 @@ postRouter.put('/:id', async (req: AuthRequest, res) => {
     res.status(401).json({ message: '未登录' })
     return
   }
+
   const id = Number(req.params.id)
   if (Number.isNaN(id)) {
     res.status(400).json({ message: '帖子 ID 不合法' })
     return
   }
-  const { title, content, category, imageUrls } = req.body as {
+
+  const { title, content, category, imageUrls, anonymous } = req.body as {
     title?: string
     content?: string
     category?: string
     imageUrls?: string[]
+    anonymous?: boolean
   }
+
   if (!title || !content || !category) {
     res.status(400).json({ message: '标题、内容和分类为必填' })
     return
@@ -201,9 +315,10 @@ postRouter.put('/:id', async (req: AuthRequest, res) => {
     res.status(400).json({ message: '标题不能超过 20 个字' })
     return
   }
+
   try {
     const [rows] = await pool.query(
-      'SELECT id, user_id FROM posts WHERE id = ?',
+      'SELECT id, user_id, anonymous FROM posts WHERE id = ?',
       [id]
     )
     const post = (rows as any[])[0]
@@ -215,12 +330,43 @@ postRouter.put('/:id', async (req: AuthRequest, res) => {
       res.status(403).json({ message: '只能编辑自己的帖子' })
       return
     }
+
+    const isAdmin = Boolean(req.user.isAdmin)
+    const anonymousAllowed = category !== 'trading' && category !== 'news'
+    const isAnonymous = Boolean(anonymous) && anonymousAllowed && !isAdmin
+
+    const moderation = isAdmin
+      ? {
+          reviewRequired: false
+        }
+      : await analyzeModeration(title, content)
+
+    const auditStatus = isAdmin || !moderation.reviewRequired ? 1 : 0
+    const auditReason = moderation.reviewRequired
+      ? '包含敏感词或可疑内容，需要审核'
+      : null
+
     const images = Array.isArray(imageUrls) ? imageUrls.join(',') : null
     await pool.query(
-      'UPDATE posts SET title = ?, content = ?, category = ?, image_urls = ?, audit_status = 0, audit_reason = NULL WHERE id = ?',
-      [title, content, category, images, id]
+      `UPDATE posts
+       SET title = ?, content = ?, category = ?, image_urls = ?, anonymous = ?, audit_status = ?, audit_reason = ?, published_at = ?
+       WHERE id = ?`,
+      [
+        title,
+        content,
+        category,
+        images,
+        isAnonymous ? 1 : 0,
+        auditStatus,
+        auditReason,
+        auditStatus === 1 ? new Date() : null,
+        id
+      ]
     )
-    res.json({ message: '更新成功' })
+
+    res.json({
+      message: auditStatus === 1 ? '更新成功，已重新发布' : '更新成功，等待管理员审核'
+    })
   } catch (err) {
     // eslint-disable-next-line no-console
     console.error('Update post error', err)
@@ -258,16 +404,18 @@ postRouter.get('/:id', async (req: AuthRequest, res) => {
     `,
       [id, req.user!.id, isAdmin ? 1 : 0]
     )
+
     const post = (rows as any[])[0]
-    if (post) {
-      post.author_avatar = post.anonymous ? null : (post.author_avatar ? `${baseUrl}${post.author_avatar}` : null)
-      if (post.anonymous) {
-        post.author = '匿名用户'
-      }
-    }
     if (!post) {
       res.status(404).json({ message: '帖子不存在' })
       return
+    }
+
+    if (post.anonymous) {
+      post.author = '匿名用户'
+      post.author_avatar = null
+    } else if (post.author_avatar) {
+      post.author_avatar = `${baseUrl}${post.author_avatar}`
     }
 
     const [commentRows] = await pool.query(
@@ -287,6 +435,7 @@ postRouter.get('/:id', async (req: AuthRequest, res) => {
     `,
       [id]
     )
+
     const postUserId = post.user_id
     const comments = (commentRows as any[]).map((c) => ({
       ...c,
@@ -618,4 +767,3 @@ postRouter.get('/me/activities', async (req: AuthRequest, res) => {
     res.status(500).json({ message: '获取个人记录失败' })
   }
 })
-

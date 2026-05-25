@@ -33,6 +33,10 @@
   color: #333;
 }
 
+html[data-theme='dark'] .wiselearn-sidebar-title-main {
+  color: #eef2f8;
+}
+
 /* Sidebar tabs */
 .wiselearn-sidebar-tabs {
   display: flex;
@@ -56,12 +60,27 @@
   transition: all 0.2s;
 }
 
+html[data-theme='dark'] .wiselearn-sidebar-tab {
+  background: #1b202b;
+  color: #d9deea;
+}
+
 .wiselearn-sidebar-tab:hover {
   background: #ebebeb;
 }
 
+html[data-theme='dark'] .wiselearn-sidebar-tab:hover {
+  background: #232836;
+  color: #ffffff;
+}
+
 .wiselearn-sidebar-tab.active {
   background: #C8102E;
+  color: #fff;
+}
+
+html[data-theme='dark'] .wiselearn-sidebar-tab.active {
+  background: #c8102e;
   color: #fff;
 }
 
@@ -78,6 +97,12 @@
   padding: 12px 4px;
   font-size: 13px;
   text-align: left;
+}
+
+html[data-theme='dark'] .wiselearn-sidebar-status,
+html[data-theme='dark'] .wiselearn-sidebar-count,
+html[data-theme='dark'] .wiselearn-sidebar-count--muted {
+  color: #aab2c0;
 }
 
 .wiselearn-sidebar-post-item {
@@ -106,6 +131,10 @@
 
 .wiselearn-sidebar-item:hover {
   background: #f9f9f9;
+}
+
+html[data-theme='dark'] .wiselearn-sidebar-item:hover {
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .wiselearn-sidebar-rank {
@@ -137,6 +166,10 @@
   white-space: nowrap;
 }
 
+html[data-theme='dark'] .wiselearn-sidebar-title {
+  color: #eef2f8;
+}
+
 .wiselearn-sidebar-count {
   font-size: 12px;
   color: #999;
@@ -160,9 +193,19 @@
   transition: all 0.2s;
 }
 
+html[data-theme='dark'] .wiselearn-sidebar-link {
+  background: #1b202b;
+  color: #eef2f8;
+}
+
 .wiselearn-sidebar-link:hover {
   background: #ebebeb;
   color: #C8102E;
+}
+
+html[data-theme='dark'] .wiselearn-sidebar-link:hover {
+  background: #232836;
+  color: #ffffff;
 }
 
 /* Mobile - hide on screens < 992px */

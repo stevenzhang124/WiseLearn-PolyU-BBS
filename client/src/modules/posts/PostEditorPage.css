@@ -8,6 +8,56 @@
   overflow: visible;
 }
 
+html[data-theme='dark'] .wiselearn-post-editor {
+  background: #12151c;
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+
+html[data-theme='dark'] .wiselearn-post-editor-body,
+html[data-theme='dark'] .wiselearn-post-editor-footer {
+  background: #12151c;
+}
+
+html[data-theme='dark'] .wiselearn-post-editor-body .ant-form-item-label > label,
+html[data-theme='dark'] .wiselearn-post-editor-heading,
+html[data-theme='dark'] .wiselearn-char-count {
+  color: #eef2f8 !important;
+}
+
+html[data-theme='dark'] .wiselearn-input,
+html[data-theme='dark'] .wiselearn-select .ant-select-selector,
+html[data-theme='dark'] .wiselearn-editor-wrapper::after,
+html[data-theme='dark'] .wiselearn-editor-wrapper {
+  background: #171b24 !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+html[data-theme='dark'] .wiselearn-input,
+html[data-theme='dark'] .wiselearn-select .ant-select-selection-item,
+html[data-theme='dark'] .wiselearn-select .ant-select-selection-placeholder,
+html[data-theme='dark'] .wiselearn-editor-wrapper,
+html[data-theme='dark'] .wiselearn-editor-wrapper .wiselearn-rich-editor,
+html[data-theme='dark'] .wiselearn-editor-wrapper .bn-container {
+  color: #eef2f8 !important;
+}
+
+html[data-theme='dark'] .wiselearn-input::placeholder {
+  color: #7f8898 !important;
+}
+
+html[data-theme='dark'] .wiselearn-input:hover,
+html[data-theme='dark'] .wiselearn-select:hover .ant-select-selector,
+html[data-theme='dark'] .wiselearn-input:focus,
+html[data-theme='dark'] .wiselearn-input-focused,
+html[data-theme='dark'] .wiselearn-select-focused .ant-select-selector,
+html[data-theme='dark'] .wiselearn-select.ant-select-focused .ant-select-selector,
+html[data-theme='dark'] .wiselearn-editor-wrapper:hover::after,
+html[data-theme='dark'] .wiselearn-editor-wrapper:focus-within::after {
+  border-color: rgba(255, 255, 255, 0.22) !important;
+  box-shadow: 0 0 0 2px rgba(200, 16, 46, 0.18) !important;
+}
+
 .wiselearn-post-editor-body {
   padding: 24px 32px;
 }
@@ -140,6 +190,13 @@
   box-shadow: none;
 }
 
+html[data-theme='dark'] .wiselearn-editor-wrapper .ProseMirror,
+html[data-theme='dark'] .wiselearn-editor-wrapper .bn-editor,
+html[data-theme='dark'] .wiselearn-editor-wrapper .bn-block-content,
+html[data-theme='dark'] .wiselearn-editor-wrapper .bn-editor * {
+  color: #eef2f8 !important;
+}
+
 .wiselearn-post-editor-footer {
   display: flex;
   justify-content: flex-end;
@@ -149,6 +206,27 @@
   background: #f7f7f8;
   border-top: 1px solid #f0f0f0;
   border-radius: 0 0 8px 8px;
+}
+
+html[data-theme='dark'] .wiselearn-post-editor-footer {
+  border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+html[data-theme='dark'] .wiselearn-btn-cancel {
+  background: #171b24;
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #eef2f8;
+}
+
+html[data-theme='dark'] .wiselearn-btn-cancel:hover {
+  background: #1d2330;
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+html[data-theme='dark'] .wiselearn-btn-publish {
+  background: #c8102e;
+  box-shadow: 0 2px 8px rgba(200, 16, 46, 0.35);
 }
 
 .wiselearn-btn-cancel {

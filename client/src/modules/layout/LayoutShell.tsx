@@ -35,6 +35,10 @@ export const LayoutShell: React.FC = () => {
   const [adminPendingCount, setAdminPendingCount] = useState(0)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [homeScrolledDown, setHomeScrolledDown] = useState(false)
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    if (typeof window === 'undefined') return 'light'
+    return (localStorage.getItem('wiselearn_theme') as 'light' | 'dark' | null) || 'light'
+  })
   const scrollRafRef = useRef(0)
 
   const isOnHome = location.pathname === '/'
@@ -96,6 +100,18 @@ export const LayoutShell: React.FC = () => {
       // ignore: language persistence is best-effort
     })
   }
+
+  const toggleTheme = () => {
+    setTheme((prev) => {
+      const next = prev === 'light' ? 'dark' : 'light'
+      localStorage.setItem('wiselearn_theme', next)
+      return next
+    })
+  }
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme)
+  }, [theme])
 
   useEffect(() => {
     if (!user) return
@@ -200,7 +216,8 @@ export const LayoutShell: React.FC = () => {
               height: 40,
               width: 'auto',
               objectFit: 'contain',
-              display: 'block'
+              display: 'block',
+              filter: theme === 'dark' ? 'brightness(1.4) contrast(1.1)' : 'none'
             }}
           />
           {/* 移动端：仅中国结图标 */}
@@ -234,6 +251,15 @@ export const LayoutShell: React.FC = () => {
               <span className="wiselearn-lang-abbr">中</span>
             </button>
           </span>
+          <button
+            type="button"
+            className="wiselearn-theme-toggle"
+            onClick={toggleTheme}
+            aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+            title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+          >
+            {theme === 'light' ? '☀️' : '🌙'}
+          </button>
           {user && (
             <span
               className="wiselearn-header-user"
@@ -244,14 +270,14 @@ export const LayoutShell: React.FC = () => {
               onKeyDown={(e) => e.key === 'Enter' && navigate('/profile')}
             >
               <Avatar src={user.avatar} name={user.nickname} size={28} />
-              <Typography.Text className="wiselearn-header-username" style={{ color: 'rgba(0,0,0,0.85)', fontSize: 14 }}>
+              <Typography.Text className="wiselearn-header-username" style={{ color: theme === 'dark' ? 'rgba(255,255,255,0.92)' : 'rgba(0,0,0,0.85)', fontSize: 14 }}>
                 {t('nav.welcome', { name: user.nickname })}
                 {user.isAdmin ? t('nav.adminBadge') : ''}
               </Typography.Text>
             </span>
           )}
           {user && (
-            <Typography.Link onClick={onLogout} style={{ color: 'rgba(0,0,0,0.65)', display: 'flex', alignItems: 'center', gap: 4 }}>
+            <Typography.Link onClick={onLogout} style={{ color: theme === 'dark' ? 'rgba(255,255,255,0.76)' : 'rgba(0,0,0,0.65)', display: 'flex', alignItems: 'center', gap: 4 }}>
               <LogoutOutlined />
               <span className="wiselearn-header-logout-text">{t('nav.logout')}</span>
             </Typography.Link>

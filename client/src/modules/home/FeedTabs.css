@@ -13,6 +13,11 @@
   overflow: hidden;
 }
 
+html[data-theme='dark'] .wiselearn-feed-tabs-root {
+  background: #171b24;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
 .wiselearn-feed-tabs-scroller {
   display: flex;
   gap: 4px;
@@ -55,6 +60,14 @@
   background: linear-gradient(to left, #fff 0%, #fff 28%, rgba(255, 255, 255, 0.9) 52%, transparent 100%);
 }
 
+html[data-theme='dark'] .wiselearn-feed-tabs-fade--left {
+  background: linear-gradient(to right, #171b24 0%, #171b24 28%, rgba(23, 27, 36, 0.92) 52%, transparent 100%);
+}
+
+html[data-theme='dark'] .wiselearn-feed-tabs-fade--right {
+  background: linear-gradient(to left, #171b24 0%, #171b24 28%, rgba(23, 27, 36, 0.92) 52%, transparent 100%);
+}
+
 .wiselearn-feed-tab {
   flex-shrink: 0;
   padding: 8px 16px;
@@ -75,6 +88,20 @@
 }
 
 .wiselearn-feed-tab.active {
+  background: #c8102e;
+  color: #fff;
+}
+
+html[data-theme='dark'] .wiselearn-feed-tab {
+  color: #cfd6e3;
+}
+
+html[data-theme='dark'] .wiselearn-feed-tab:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+}
+
+html[data-theme='dark'] .wiselearn-feed-tab.active {
   background: #c8102e;
   color: #fff;
 }

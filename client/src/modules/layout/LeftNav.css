@@ -10,6 +10,37 @@
   padding: 8px 0;
 }
 
+html[data-theme='dark'] .wiselearn-left-nav {
+  background: #171b24 !important;
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+
+html[data-theme='dark'] .wiselearn-left-nav .ant-menu-item {
+  color: #eef2f8 !important;
+}
+
+html[data-theme='dark'] .wiselearn-left-nav .ant-menu-item:hover {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: #ffffff !important;
+}
+
+html[data-theme='dark'] .wiselearn-left-nav .ant-menu-item-selected {
+  background: rgba(200, 16, 46, 0.92) !important;
+  color: #ffffff !important;
+}
+
+html[data-theme='dark'] .wiselearn-left-nav .ant-menu-item-selected:hover {
+  background: #c8102e !important;
+}
+
+html[data-theme='dark'] .wiselearn-left-nav .ant-menu-item .anticon,
+html[data-theme='dark'] .wiselearn-left-nav .ant-menu-item-selected .anticon,
+html[data-theme='dark'] .wiselearn-left-nav .ant-menu-title-content,
+html[data-theme='dark'] .wiselearn-menu-link {
+  color: #eef2f8 !important;
+}
+
 .wiselearn-left-nav .ant-menu-item {
   margin: 4px 0 !important;
   height: 48px;

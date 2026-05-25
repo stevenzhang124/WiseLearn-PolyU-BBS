@@ -285,7 +285,7 @@ export const PostDetailPage: React.FC = () => {
       </div>
       {post && (
         <article className="wiselearn-detail-article wiselearn-feed-card-frame wiselearn-feed-card-frame--interactive">
-          <div className="wiselearn-detail-author-row">
+          <div className={`wiselearn-detail-author-row${anonymous ? ' wiselearn-detail-author-row--anonymous' : ''}`}>
             {anonymous ? (
               <span>
                 <Avatar

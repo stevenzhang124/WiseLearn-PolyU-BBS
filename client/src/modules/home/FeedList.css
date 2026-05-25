@@ -54,6 +54,11 @@
   text-align: left;
 }
 
+.wiselearn-feed-item--anonymous {
+  background: linear-gradient(180deg, rgba(200, 16, 46, 0.04), rgba(200, 16, 46, 0.015));
+  border-color: rgba(200, 16, 46, 0.18);
+}
+
 .wiselearn-feed-item:hover {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }

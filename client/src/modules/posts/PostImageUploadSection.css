@@ -35,6 +35,12 @@
   min-width: 0;
 }
 
+html[data-theme='dark'] .wiselearn-post-image-upload__label,
+html[data-theme='dark'] .wiselearn-post-image-upload__hint,
+html[data-theme='dark'] .wiselearn-post-image-upload__count {
+  color: #eef2f8;
+}
+
 .wiselearn-post-image-upload__head-right {
   display: flex;
   align-items: center;
@@ -70,6 +76,11 @@
   overflow: hidden;
   border: 1px solid #e8e8e8;
   background: #fafafa;
+}
+
+html[data-theme='dark'] .wiselearn-post-image-upload__thumb {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: #1b202b;
 }
 
 .wiselearn-post-image-upload__thumb img {
@@ -116,6 +127,11 @@
   transition: border-color 0.2s, background 0.2s;
 }
 
+html[data-theme='dark'] .wiselearn-post-image-upload__add {
+  border-color: rgba(255, 255, 255, 0.16);
+  background: #1b202b;
+}
+
 .wiselearn-post-image-upload__add:hover {
   border-color: #c8102e;
   background: #fff5f5;
@@ -138,6 +154,11 @@
   font-size: 12px;
   color: #999;
   pointer-events: none;
+}
+
+html[data-theme='dark'] .wiselearn-post-image-upload__add-inner,
+html[data-theme='dark'] .wiselearn-post-image-upload__add-icon {
+  color: #eef2f8;
 }
 
 .wiselearn-post-image-upload__add-icon {

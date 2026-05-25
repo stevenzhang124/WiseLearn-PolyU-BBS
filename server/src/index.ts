@@ -8,12 +8,14 @@ import {
   ensurePostsPublishedAtColumn,
   ensurePostsShareCountColumn,
   ensurePostsAnonymousColumn,
+  ensureSensitiveWordsTable,
+  ensurePostModerationColumns,
   ensureUserNotificationReadTable,
   ensureUsersUiLangColumn,
   testConnection
 } from './db'
 import { authRouter } from './routes/auth'
-import { postRouter } from './routes/posts'
+import { postRouter } from './routes/post'
 import { messageRouter } from './routes/messages'
 import { adminRouter } from './routes/admin'
 import { usersRouter } from './routes/users'
@@ -70,6 +72,8 @@ async function bootstrap(): Promise<void> {
     await ensurePostsPublishedAtColumn()
     await ensurePostsShareCountColumn()
     await ensurePostsAnonymousColumn()
+    await ensureSensitiveWordsTable()
+    await ensurePostModerationColumns()
     await ensureUsersUiLangColumn()
     await ensureUserNotificationReadTable()
     app.listen(config.port, () => {
