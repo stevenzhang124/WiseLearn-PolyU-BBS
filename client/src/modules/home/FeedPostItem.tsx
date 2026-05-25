@@ -33,6 +33,7 @@ export interface FeedPostItemProps {
     created_at: string
     is_pinned?: number
     category: string
+    anonymous?: boolean
     /** 当前登录用户是否已赞（列表接口返回） */
     user_liked?: boolean
   }
@@ -153,6 +154,7 @@ export const FeedPostItem: React.FC<FeedPostItemProps> = ({
   }
 
   const pinned = Boolean(post.is_pinned)
+  const anonymous = Boolean(post.anonymous)
 
   const contentHtmlForFeed = (post.content || '').replace(/<img[^>]*>/gi, '')
   const needsContentExpand =
@@ -257,6 +259,19 @@ export const FeedPostItem: React.FC<FeedPostItemProps> = ({
       >
         {headerMode === 'timeOnly' ? (
           <span className="wiselearn-feed-item-time-only">{formatTime(post.created_at)}</span>
+        ) : anonymous ? (
+          <div className="wiselearn-feed-item-author wiselearn-feed-item-author--anonymous">
+            <Avatar
+              src="/incognito.png"
+              name={t('post.anonymousUser')}
+              size={44}
+              className="wiselearn-feed-item-avatar"
+            />
+            <div className="wiselearn-feed-item-author-info">
+              <span className="wiselearn-feed-item-author-name">{t('post.anonymousUser')}</span>
+              <span className="wiselearn-feed-item-date">{formatTime(post.created_at)}</span>
+            </div>
+          </div>
         ) : (
           <div
             className="wiselearn-feed-item-author"

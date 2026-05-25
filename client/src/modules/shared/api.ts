@@ -113,6 +113,7 @@ export async function createPost(data: {
   content: string
   category: string
   imageUrls?: string[]
+  anonymous?: boolean
 }): Promise<void> {
   await api.post('/posts', data)
 }

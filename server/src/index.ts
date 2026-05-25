@@ -7,6 +7,7 @@ import {
   ensurePostsAuditColumns,
   ensurePostsPublishedAtColumn,
   ensurePostsShareCountColumn,
+  ensurePostsAnonymousColumn,
   ensureUserNotificationReadTable,
   ensureUsersUiLangColumn,
   testConnection
@@ -68,6 +69,7 @@ async function bootstrap(): Promise<void> {
     await ensurePostsAuditColumns()
     await ensurePostsPublishedAtColumn()
     await ensurePostsShareCountColumn()
+    await ensurePostsAnonymousColumn()
     await ensureUsersUiLangColumn()
     await ensureUserNotificationReadTable()
     app.listen(config.port, () => {

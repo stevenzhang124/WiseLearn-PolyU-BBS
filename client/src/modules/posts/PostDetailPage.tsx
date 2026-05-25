@@ -248,6 +248,7 @@ export const PostDetailPage: React.FC = () => {
   const post = detail?.post
   const comments: any[] = detail?.comments ?? []
   const commentTree = buildCommentTree(comments)
+  const anonymous = Boolean(post?.anonymous)
   /** 正文内嵌图片：旧帖，保持原样渲染，不启用 image_urls 顶栏图集 */
   const hasImageInContent = Boolean(
     post?.content && /<img[^>]*>/i.test(String(post.content))
@@ -285,39 +286,50 @@ export const PostDetailPage: React.FC = () => {
       {post && (
         <article className="wiselearn-detail-article wiselearn-feed-card-frame wiselearn-feed-card-frame--interactive">
           <div className="wiselearn-detail-author-row">
-            <span
-              style={{ cursor: post.user_id === user?.id ? 'default' : 'pointer' }}
-              onClick={() =>
-                post.user_id !== user?.id && navigate(`/users/${post.user_id}`)
-              }
-              role="button"
-              tabIndex={0}
-            >
-              <Avatar
-                src={post.author_avatar}
-                name={post.author}
-                size={40}
-                className="wiselearn-detail-avatar"
-              />
-            </span>
+            {anonymous ? (
+              <span>
+                <Avatar
+                  src="/incognito.png"
+                  name={t('post.anonymousUser')}
+                  size={40}
+                  className="wiselearn-detail-avatar"
+                />
+              </span>
+            ) : (
+              <span
+                style={{ cursor: post.user_id === user?.id ? 'default' : 'pointer' }}
+                onClick={() =>
+                  post.user_id !== user?.id && navigate(`/users/${post.user_id}`)
+                }
+                role="button"
+                tabIndex={0}
+              >
+                <Avatar
+                  src={post.author_avatar}
+                  name={post.author}
+                  size={40}
+                  className="wiselearn-detail-avatar"
+                />
+              </span>
+            )}
             <div className="wiselearn-detail-author-info">
               <span
                 className="wiselearn-detail-author-name"
                 onClick={() =>
-                  post.user_id !== user?.id && navigate(`/users/${post.user_id}`)
+                  !anonymous && post.user_id !== user?.id && navigate(`/users/${post.user_id}`)
                 }
                 style={{
-                  cursor: post.user_id === user?.id ? 'default' : 'pointer'
+                  cursor: anonymous || post.user_id === user?.id ? 'default' : 'pointer'
                 }}
               >
-                {post.author}
-                {post.user_id === user?.id ? t('post.me') : ''}
+                {anonymous ? t('post.anonymousUser') : post.author}
+                {!anonymous && post.user_id === user?.id ? t('post.me') : ''}
               </span>
               <span className="wiselearn-detail-date">
                 {new Date(post.created_at).toLocaleString('zh-CN')}
               </span>
             </div>
-            {post.user_id === user?.id && (
+            {post.user_id === user?.id && !anonymous && (
               <Button
                 type="default"
                 icon={<EditOutlined />}
@@ -507,14 +519,14 @@ export const PostDetailPage: React.FC = () => {
                       className="wiselearn-comment-author"
                       role="button"
                       tabIndex={0}
-                      onClick={() => c.user_id && navigate(`/users/${c.user_id}`)}
+                      onClick={() => !anonymous && c.user_id && navigate(`/users/${c.user_id}`)}
                       onKeyDown={(e) =>
-                        e.key === 'Enter' && c.user_id && navigate(`/users/${c.user_id}`)
+                        e.key === 'Enter' && !anonymous && c.user_id && navigate(`/users/${c.user_id}`)
                       }
                     >
-                      {c.author}
+                      {anonymous ? t('post.anonymousUser') : c.author}
                     </span>
-                    {c.is_author && (
+                    {!anonymous && c.is_author && (
                       <span className="wiselearn-comment-author-tag">{t('post.authorLabel')}</span>
                     )}
                   </div>
@@ -535,13 +547,13 @@ export const PostDetailPage: React.FC = () => {
                         setReplyingTo(
                           replyingTo?.commentId === c.id
                             ? null
-                            : { commentId: c.id, author: c.author }
+                            : { commentId: c.id, author: anonymous ? t('post.anonymousUser') : c.author }
                         )
                       }
                     >
                       {t('post.reply')}
                     </button>
-                    {c.author === user?.nickname && (
+                    {!anonymous && c.author === user?.nickname && (
                       <button
                         type="button"
                         className="wiselearn-comment-delete-btn"

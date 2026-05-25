@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback } from 'react'
-import { App, Button, Form, Input, Select } from 'antd'
+import { App, Button, Checkbox, Form, Input, Select } from 'antd'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { createPost } from '../shared/api'
@@ -33,7 +33,13 @@ export const CreatePostPage: React.FC = () => {
     })
   }
 
-  const categories = POST_CATEGORY_VALUES.map((value) => ({
+  const selectedAnonymous = Form.useWatch('anonymous', form) as boolean | undefined
+  const selectedCategory = Form.useWatch('category', form) as string | undefined
+  const anonymousDisabled = selectedCategory === 'trading' || selectedCategory === 'news'
+  const categories = POST_CATEGORY_VALUES.filter((value) => {
+    if (selectedAnonymous && (value === 'trading' || value === 'news')) return false
+    return true
+  }).map((value) => ({
     label: t(`home.category.${value}` as const),
     value
   }))
@@ -45,6 +51,7 @@ export const CreatePostPage: React.FC = () => {
   const onCreatePost = async (values: {
     title: string
     category: string
+    anonymous?: boolean
   }) => {
     if (!contentHtml || contentHtml === '<p></p>') {
       message.warning(t('post.contentRequired'))
@@ -60,7 +67,8 @@ export const CreatePostPage: React.FC = () => {
         title: values.title,
         category: values.category,
         content: bodyHtml,
-        imageUrls
+        imageUrls,
+        anonymous: Boolean(values.anonymous) && !anonymousDisabled
       })
       message.success(t('post.createSuccess'))
       form.resetFields()
@@ -115,6 +123,21 @@ export const CreatePostPage: React.FC = () => {
               placeholder={t('post.categoryPlaceholder')}
               className="wiselearn-select"
             />
+          </Form.Item>
+
+          <Form.Item shouldUpdate noStyle>
+            {() => (
+              <Form.Item
+                name="anonymous"
+                valuePropName="checked"
+                style={{ marginTop: -8, marginBottom: 16 }}
+                tooltip={anonymousDisabled ? t('post.anonymousDisabledHint') : undefined}
+              >
+                <Checkbox disabled={anonymousDisabled}>
+                  {t('post.anonymousPublish')}
+                </Checkbox>
+              </Form.Item>
+            )}
           </Form.Item>
 
           <div ref={contentSectionRef} id="wiselearn-post-content-anchor">

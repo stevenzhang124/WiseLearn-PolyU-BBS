@@ -22,11 +22,12 @@ postRouter.use(authMiddleware)
  * 创建帖子（支持富文本内容和图片 URL 列表）
  */
 postRouter.post('/', async (req: AuthRequest, res) => {
-  const { title, content, category, imageUrls } = req.body as {
+  const { title, content, category, imageUrls, anonymous } = req.body as {
     title?: string
     content?: string
     category?: string
     imageUrls?: string[]
+    anonymous?: boolean
   }
 
   if (!req.user) {
@@ -42,12 +43,14 @@ postRouter.post('/', async (req: AuthRequest, res) => {
     res.status(400).json({ message: '标题不能超过 20 个字' })
     return
   }
+  const anonymousAllowed = category !== 'trading' && category !== 'news'
+  const isAnonymous = Boolean(anonymous) && anonymousAllowed
 
   try {
     const images = Array.isArray(imageUrls) ? imageUrls.join(',') : null
     await pool.query(
-      'INSERT INTO posts (user_id, title, content, category, image_urls, audit_status, audit_reason) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [req.user.id, title, content, category, images, 0, null]
+      'INSERT INTO posts (user_id, title, content, category, image_urls, anonymous, audit_status, audit_reason) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      [req.user.id, title, content, category, images, isAnonymous ? 1 : 0, 0, null]
     )
     res.json({ message: '发帖成功' })
   } catch (err) {
@@ -115,6 +118,7 @@ postRouter.get('/', async (req: AuthRequest, res) => {
         p.like_count,
         p.share_count,
         (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS comment_count,
+        p.anonymous,
         u.nickname AS author,
         u.avatar AS author_avatar,
         EXISTS(SELECT 1 FROM likes lk WHERE lk.post_id = p.id AND lk.user_id = ?) AS user_liked
@@ -131,7 +135,9 @@ postRouter.get('/', async (req: AuthRequest, res) => {
       ...p,
       comment_count: Number(p.comment_count ?? 0),
       share_count: Number(p.share_count ?? 0),
-      author_avatar: p.author_avatar ? `${listBaseUrl}${p.author_avatar}` : null,
+      anonymous: Boolean(p.anonymous),
+      author: p.anonymous ? null : p.author,
+      author_avatar: p.anonymous ? null : (p.author_avatar ? `${listBaseUrl}${p.author_avatar}` : null),
       user_liked: Boolean(p.user_liked)
     }))
 
@@ -253,8 +259,11 @@ postRouter.get('/:id', async (req: AuthRequest, res) => {
       [id, req.user!.id, isAdmin ? 1 : 0]
     )
     const post = (rows as any[])[0]
-    if (post && post.author_avatar) {
-      post.author_avatar = `${baseUrl}${post.author_avatar}`
+    if (post) {
+      post.author_avatar = post.anonymous ? null : (post.author_avatar ? `${baseUrl}${post.author_avatar}` : null)
+      if (post.anonymous) {
+        post.author = '匿名用户'
+      }
     }
     if (!post) {
       res.status(404).json({ message: '帖子不存在' })
@@ -282,7 +291,8 @@ postRouter.get('/:id', async (req: AuthRequest, res) => {
     const comments = (commentRows as any[]).map((c) => ({
       ...c,
       author_avatar: c.author_avatar ? `${baseUrl}${c.author_avatar}` : null,
-      is_author: c.user_id === postUserId
+      is_author: c.user_id === postUserId,
+      can_message_author: !post.anonymous && c.user_id !== postUserId
     }))
 
     res.json({ post, comments })
