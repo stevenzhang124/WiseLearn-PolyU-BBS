@@ -124,10 +124,6 @@ export const PostShareModal: React.FC<PostShareModalProps> = ({
     window.open(url, '_blank', 'noopener,noreferrer')
   }, [])
 
-  const tryNativeShare = useCallback(async (): Promise<boolean> => {
-    return false
-  }, [])
-
   const trackIfNeeded = useCallback(async () => {
     if (trackedInSessionRef.current) return
     setTrackingShare(true)

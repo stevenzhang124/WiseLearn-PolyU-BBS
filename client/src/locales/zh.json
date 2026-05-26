@@ -270,7 +270,20 @@
     "approveSuccess": "已通过审核",
     "rejectSuccess": "已驳回并通知用户",
     "reasonRequired": "请输入整改意见",
-    "pendingNew": "有新的待审核帖子：{{count}}"
+    "pendingNew": "有新的待审核帖子：{{count}}",
+    "sensitiveWordsTitle": "敏感词词库",
+    "sensitiveWordsPlaceholder": "输入要新增的敏感词",
+    "sensitiveWordsAdd": "添加词条",
+    "sensitiveWordsEmpty": "暂无敏感词",
+    "sensitiveWordsAdded": "词条已添加",
+    "sensitiveWordsRemoved": "词条已删除",
+    "userManagementTitle": "用户管理",
+    "userDetails": "用户详情",
+    "userSearchPlaceholder": "按昵称或邮箱搜索",
+    "userSearch": "搜索用户",
+    "ban": "封禁",
+    "unban": "解封",
+    "userSearchHint": "可按昵称或邮箱搜索并管理用户"
   },
   "user": {
     "selfLabel": "（我）",

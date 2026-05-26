@@ -273,7 +273,20 @@
     "approveSuccess": "Approved",
     "rejectSuccess": "Rejected and notified the user",
     "reasonRequired": "Please enter the revision feedback",
-    "pendingNew": "New pending posts: {{count}}"
+    "pendingNew": "New pending posts: {{count}}",
+    "sensitiveWordsTitle": "Sensitive word dictionary",
+    "sensitiveWordsPlaceholder": "Add a sensitive word",
+    "sensitiveWordsAdd": "Add word",
+    "sensitiveWordsEmpty": "No sensitive words yet",
+    "sensitiveWordsAdded": "Word added",
+    "sensitiveWordsRemoved": "Word removed",
+    "userManagementTitle": "User management",
+    "userDetails": "User details",
+    "userSearchPlaceholder": "Search by nickname or email",
+    "userSearch": "Search users",
+    "ban": "Ban",
+    "unban": "Unban",
+    "userSearchHint": "Search and manage users by nickname or email"
   },
   "user": {
     "selfLabel": " (me)",

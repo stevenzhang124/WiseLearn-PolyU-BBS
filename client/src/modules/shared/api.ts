@@ -114,8 +114,9 @@ export async function createPost(data: {
   category: string
   imageUrls?: string[]
   anonymous?: boolean
-}): Promise<void> {
-  await api.post('/posts', data)
+}): Promise<{ message?: string; moderation?: { containsSensitive: boolean; reviewRequired: boolean; moderationStatus: 'auto_approved' | 'pending_review'; matchedWords: string[]; flags: string[]; auditStatus: number } }> {
+  const res = await api.post('/posts', data)
+  return res.data
 }
 
 export async function updatePost(
@@ -375,6 +376,21 @@ export async function fetchAdminStats(): Promise<any> {
   return res.data
 }
 
+export async function fetchSensitiveWords(): Promise<{
+  list: Array<{ id: number; word: string; created_at: string; updated_at: string }>
+}> {
+  const res = await api.get('/admin/sensitive-words')
+  return res.data
+}
+
+export async function addSensitiveWord(word: string): Promise<void> {
+  await api.post('/admin/sensitive-words', { word })
+}
+
+export async function deleteSensitiveWord(id: number): Promise<void> {
+  await api.delete(`/admin/sensitive-words/${id}`)
+}
+
 export async function searchAdminPosts(keyword: string): Promise<any> {
   const res = await api.get('/admin/posts/search', { params: { keyword } })
   return res.data
@@ -402,6 +418,17 @@ export async function approvePostAdmin(id: number): Promise<void> {
 
 export async function rejectPostAdmin(id: number, reason: string): Promise<void> {
   await api.post(`/admin/posts/${id}/reject`, { reason })
+}
+
+export async function fetchAdminUsers(params?: { keyword?: string; limit?: number; offset?: number }): Promise<{
+  list: Array<{ id: number; nickname: string; email: string; role: string; is_blocked: number; created_at: string }>
+}> {
+  const res = await api.get('/admin/users', { params })
+  return res.data
+}
+
+export async function blockAdminUser(id: number, blocked: boolean): Promise<void> {
+  await api.post(`/admin/users/${id}/block`, { blocked })
 }
 
 export async function updateUserLanguageApi(lang: 'zh' | 'en'): Promise<void> {

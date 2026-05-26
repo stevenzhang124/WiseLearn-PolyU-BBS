@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback } from 'react'
-import { App, Button, Checkbox, Form, Input, Select } from 'antd'
+import { App, Button, Checkbox, Form, Input, Modal, Select } from 'antd'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { createPost } from '../shared/api'
@@ -23,6 +23,9 @@ export const CreatePostPage: React.FC = () => {
   const [titleValue, setTitleValue] = useState('')
   const [editorReady, setEditorReady] = useState(false)
   const [attachedImageUrls, setAttachedImageUrls] = useState<string[]>([])
+  const [pendingPayload, setPendingPayload] = useState<any | null>(null)
+  const [moderationModalOpen, setModerationModalOpen] = useState(false)
+  const [moderationInfo, setModerationInfo] = useState<{ matchedWords: string[]; flags: string[] } | null>(null)
   const navigate = useNavigate()
   const editorRef = useRef<RichTextEditorRef>(null)
   const contentSectionRef = useRef<HTMLDivElement>(null)
@@ -48,6 +51,44 @@ export const CreatePostPage: React.FC = () => {
     setEditorReady(true)
   }, [])
 
+  const submitPost = async (payload: {
+    title: string
+    category: string
+    anonymous?: boolean
+    confirmed?: boolean
+  }) => {
+    setCreating(true)
+    try {
+      const bodyHtml = stripImagesFromHtml(contentHtml)
+      const imageUrls = attachedImageUrls.length > 0 ? attachedImageUrls : []
+      const result = await createPost({
+        title: payload.title,
+        category: payload.category,
+        content: bodyHtml,
+        imageUrls,
+        anonymous: Boolean(payload.anonymous) && !anonymousDisabled
+      })
+      if (result.moderation?.reviewRequired && !payload.confirmed) {
+        setPendingPayload(payload)
+        setModerationInfo({ matchedWords: result.moderation.matchedWords, flags: result.moderation.flags })
+        setModerationModalOpen(true)
+        return
+      }
+      message.success(result.message || t('post.createSuccess'))
+      form.resetFields()
+      setContentHtml('')
+      setTitleValue('')
+      setAttachedImageUrls([])
+      setPendingPayload(null)
+      setModerationInfo(null)
+      navigate('/')
+    } catch (err) {
+      message.error((err as Error).message)
+    } finally {
+      setCreating(false)
+    }
+  }
+
   const onCreatePost = async (values: {
     title: string
     category: string
@@ -58,29 +99,7 @@ export const CreatePostPage: React.FC = () => {
       scrollToContentSection()
       return
     }
-    setCreating(true)
-    try {
-      const bodyHtml = stripImagesFromHtml(contentHtml)
-      const imageUrls = attachedImageUrls.length > 0 ? attachedImageUrls : []
-
-      await createPost({
-        title: values.title,
-        category: values.category,
-        content: bodyHtml,
-        imageUrls,
-        anonymous: Boolean(values.anonymous) && !anonymousDisabled
-      })
-      message.success(t('post.createSuccess'))
-      form.resetFields()
-      setContentHtml('')
-      setTitleValue('')
-      setAttachedImageUrls([])
-      navigate('/')
-    } catch (err) {
-      message.error((err as Error).message)
-    } finally {
-      setCreating(false)
-    }
+    await submitPost(values)
   }
 
   return (
@@ -172,21 +191,37 @@ export const CreatePostPage: React.FC = () => {
       </div>
 
       <div className="wiselearn-post-editor-footer">
-        <Button
-          className="wiselearn-btn-cancel"
-          onClick={() => navigate('/')}
-        >
-          {t('post.cancel')}
-        </Button>
-        <Button
-          type="primary"
-          className="wiselearn-btn-publish"
-          loading={creating}
-          onClick={() => form.submit()}
-        >
-          {t('post.publish')}
-        </Button>
+        <Button className="wiselearn-btn-cancel" onClick={() => navigate('/')}>{t('post.cancel')}</Button>
+        <Button type="primary" className="wiselearn-btn-publish" loading={creating} onClick={() => form.submit()}>{t('post.publish')}</Button>
       </div>
+
+      <Modal
+        open={moderationModalOpen}
+        title={t('post.moderationTitle')}
+        okText={t('post.confirmSend')}
+        cancelText={t('post.reEdit')}
+        onOk={async () => {
+          if (!pendingPayload) return
+          setModerationModalOpen(false)
+          await submitPost({ ...pendingPayload, confirmed: true })
+        }}
+        onCancel={() => {
+          setModerationModalOpen(false)
+          setPendingPayload(null)
+          setModerationInfo(null)
+        }}
+        destroyOnHidden
+      >
+        <div style={{ lineHeight: 1.7 }}>
+          <div>{t('post.moderationWarning')}</div>
+          <div style={{ marginTop: 8 }}>
+            <strong>{t('post.moderationMatchedWords')}:</strong> {moderationInfo?.matchedWords?.length ? moderationInfo.matchedWords.join(', ') : '--'}
+          </div>
+          <div>
+            <strong>{t('post.moderationFlags')}:</strong> {moderationInfo?.flags?.length ? moderationInfo.flags.join(', ') : '--'}
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }

@@ -19,3 +19,20 @@
 .wiselearn-admin-hot-row:last-child {
   border-bottom: none;
 }
+
+.wiselearn-admin-card--clickable {
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.wiselearn-admin-card--clickable:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  border-color: #c8102e !important;
+}
+
+.wiselearn-admin-card__hint {
+  margin-top: 8px;
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.45);
+}

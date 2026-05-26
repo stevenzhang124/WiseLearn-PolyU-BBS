@@ -21,7 +21,12 @@ import {
   deletePostAdmin,
   fetchAdminPendingPosts,
   approvePostAdmin,
-  rejectPostAdmin
+  rejectPostAdmin,
+  fetchSensitiveWords,
+  addSensitiveWord,
+  deleteSensitiveWord,
+  fetchAdminUsers,
+  blockAdminUser
 } from '../shared/api'
 import './AdminDashboardPage.css'
 
@@ -42,6 +47,13 @@ export const AdminDashboardPage: React.FC = () => {
   const [rejectModalOpen, setRejectModalOpen] = useState(false)
   const [rejectPostId, setRejectPostId] = useState<number | null>(null)
   const [rejectReason, setRejectReason] = useState('')
+  const [sensitiveWords, setSensitiveWords] = useState<any[]>([])
+  const [newSensitiveWord, setNewSensitiveWord] = useState('')
+  const [sensitiveLoading, setSensitiveLoading] = useState(false)
+  const [userPanelOpen, setUserPanelOpen] = useState(false)
+  const [users, setUsers] = useState<any[]>([])
+  const [userKeyword, setUserKeyword] = useState('')
+  const [userLoading, setUserLoading] = useState(false)
   const locale = i18n.language === 'en' ? 'en-US' : 'zh-CN'
 
   const ADMIN_PENDING_CHANGED_EVENT = 'wiselearn:admin-pending-changed'
@@ -88,8 +100,39 @@ export const AdminDashboardPage: React.FC = () => {
     }
   }
 
+  const loadSensitiveWords = async () => {
+    setSensitiveLoading(true)
+    try {
+      const data = await fetchSensitiveWords()
+      setSensitiveWords(data.list ?? [])
+    } catch (err) {
+      message.error((err as Error).message)
+    } finally {
+      setSensitiveLoading(false)
+    }
+  }
+
+  const loadUsers = async (keyword = '') => {
+    setUserLoading(true)
+    try {
+      const data = await fetchAdminUsers({ keyword, limit: 100, offset: 0 })
+      setUsers(data.list ?? [])
+    } catch (err) {
+      message.error((err as Error).message)
+    } finally {
+      setUserLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (!userPanelOpen) return
+    void loadUsers(userKeyword)
+  }, [userPanelOpen])
+
   useEffect(() => {
     void loadPending(false)
+    void loadSensitiveWords()
+    void loadUsers()
   }, [])
 
   // 后台定时轮询待审核数量：用于提示“新帖子需要审核”
@@ -167,15 +210,59 @@ export const AdminDashboardPage: React.FC = () => {
     }
   }
 
+  const addWord = async () => {
+    const word = newSensitiveWord.trim()
+    if (!word) {
+      message.warning(t('admin.reasonRequired'))
+      return
+    }
+    try {
+      await addSensitiveWord(word)
+      message.success(t('admin.sensitiveWordsAdded'))
+      setNewSensitiveWord('')
+      await loadSensitiveWords()
+    } catch (err) {
+      message.error((err as Error).message)
+    }
+  }
+
+  const removeWord = async (id: number) => {
+    try {
+      await deleteSensitiveWord(id)
+      message.success(t('admin.sensitiveWordsRemoved'))
+      await loadSensitiveWords()
+    } catch (err) {
+      message.error((err as Error).message)
+    }
+  }
+
+  const toggleUserBlock = async (id: number, blocked: boolean) => {
+    try {
+      await blockAdminUser(id, blocked)
+      message.success(blocked ? t('admin.ban') : t('admin.unban'))
+      await loadUsers(userKeyword)
+    } catch (err) {
+      message.error((err as Error).message)
+    }
+  }
+
   return (
     <div>
       <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
         <Col xs={12} sm={6}>
-          <Card loading={loading} className="wiselearn-admin-card">
+          <Card
+            loading={loading}
+            className="wiselearn-admin-card wiselearn-admin-card--clickable"
+            onClick={() => setUserPanelOpen(true)}
+            hoverable
+          >
             <Statistic
               title={t('admin.totalUsers')}
               value={stats?.totalUsers ?? 0}
             />
+            <div className="wiselearn-admin-card__hint">
+              {t('admin.userSearchHint')}
+            </div>
           </Card>
         </Col>
         <Col xs={12} sm={6}>
@@ -306,9 +393,10 @@ export const AdminDashboardPage: React.FC = () => {
             {
               title: t('admin.reason'),
               dataIndex: 'audit_reason',
-              render: (v: string | null) => (v ? v : '--'),
-              width: 200,
-              responsive: ['lg'] as any
+              width: 240,
+              responsive: ['lg'] as any,
+              render: (v: string | null) =>
+                v ? <Tag color={String(v).includes('敏感') ? 'volcano' : 'gold'}>{v}</Tag> : '--'
             },
             {
               title: t('admin.actions'),
@@ -330,13 +418,55 @@ export const AdminDashboardPage: React.FC = () => {
         />
       </Card>
 
-      <Card title={t('admin.dataDesc')} className="wiselearn-admin-card">
-        <Descriptions column={1}>
-          <Descriptions.Item label={t('admin.dataDescLabel')}>
-            {t('admin.dataDescText')}
-          </Descriptions.Item>
-        </Descriptions>
-      </Card>
+      <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+        <Col xs={24} md={12}>
+          <Card title={t('admin.dataDesc')} className="wiselearn-admin-card">
+            <Descriptions column={1}>
+              <Descriptions.Item label={t('admin.dataDescLabel')}>
+                {t('admin.dataDescText')}
+              </Descriptions.Item>
+            </Descriptions>
+          </Card>
+        </Col>
+        <Col xs={24} md={12}>
+          <Card title={t('admin.sensitiveWordsTitle')} className="wiselearn-admin-card">
+            <Space direction="vertical" style={{ width: '100%' }}>
+              <Space.Compact style={{ width: '100%' }}>
+                <Input
+                  value={newSensitiveWord}
+                  onChange={(e) => setNewSensitiveWord(e.target.value)}
+                  placeholder={t('admin.sensitiveWordsPlaceholder')}
+                  onPressEnter={() => void addWord()}
+                />
+                <Button type="primary" onClick={() => void addWord()}>
+                  {t('admin.sensitiveWordsAdd')}
+                </Button>
+              </Space.Compact>
+              <Table
+                rowKey="id"
+                size="small"
+                loading={sensitiveLoading}
+                dataSource={sensitiveWords}
+                locale={{ emptyText: t('admin.sensitiveWordsEmpty') }}
+                pagination={false}
+                columns={[
+                  { title: t('admin.title'), dataIndex: 'word', ellipsis: true },
+                  {
+                    title: t('admin.actions'),
+                    key: 'actions',
+                    width: 100,
+                    render: (_: any, record: any) => (
+                      <Button size="small" danger onClick={() => void removeWord(record.id)}>
+                        {t('admin.delete')}
+                      </Button>
+                    )
+                  }
+                ]}
+              />
+            </Space>
+          </Card>
+        </Col>
+      </Row>
 
       <Modal
         open={rejectModalOpen}
@@ -353,6 +483,59 @@ export const AdminDashboardPage: React.FC = () => {
           onChange={(e) => setRejectReason(e.target.value)}
           placeholder={t('admin.reasonPlaceholder')}
         />
+      </Modal>
+
+      <Modal
+        open={userPanelOpen}
+        title={t('admin.userManagementTitle')}
+        onCancel={() => setUserPanelOpen(false)}
+        footer={null}
+        width={900}
+        destroyOnHidden
+      >
+        <Space direction="vertical" style={{ width: '100%' }}>
+          <Input.Search
+            placeholder={t('admin.userSearchPlaceholder')}
+            enterButton={t('admin.userSearch')}
+            value={userKeyword}
+            onChange={(e) => setUserKeyword(e.target.value)}
+            onSearch={(v) => void loadUsers(v)}
+          />
+          <Table
+            rowKey="id"
+            size="small"
+            loading={userLoading}
+            dataSource={users}
+            locale={{ emptyText: t('admin.userSearchHint') }}
+            columns={[
+              { title: t('admin.id'), dataIndex: 'id', width: 60 },
+              { title: t('profile.nickname'), dataIndex: 'nickname' },
+              { title: t('auth.email'), dataIndex: 'email', ellipsis: true },
+              { title: t('profile.role'), dataIndex: 'role', width: 100 },
+              {
+                title: t('admin.time'),
+                dataIndex: 'created_at',
+                width: 160,
+                render: (v: string) => new Date(v).toLocaleString(locale)
+              },
+              {
+                title: t('admin.actions'),
+                key: 'actions',
+                width: 200,
+                render: (_: any, record: any) => (
+                  <Space>
+                    <Button size="small" onClick={() => void toggleUserBlock(record.id, !record.is_blocked)}>
+                      {record.is_blocked ? t('admin.unban') : t('admin.ban')}
+                    </Button>
+                    <Tag color={record.is_blocked ? 'red' : 'green'}>
+                      {record.is_blocked ? t('admin.ban') : t('admin.unban')}
+                    </Tag>
+                  </Space>
+                )
+              }
+            ]}
+          />
+        </Space>
       </Modal>
     </div>
   )
