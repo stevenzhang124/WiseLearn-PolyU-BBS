@@ -116,8 +116,16 @@ adminRouter.post('/users/:id/block', async (req: AuthRequest, res) => {
   const id = Number(req.params.id)
   const { blocked } = req.body as { blocked?: boolean }
   if (Number.isNaN(id)) return res.status(400).json({ message: '用户 ID 不合法' })
+  if (req.user?.id === id) return res.status(400).json({ message: '管理员不能封禁自己' })
   try {
+    const [rows] = await pool.query('SELECT is_admin FROM users WHERE id = ?', [id])
+    const target = (rows as any[])[0]
+    if (!target) return res.status(404).json({ message: '用户不存在' })
+    if (Number(target.is_admin ?? 0) === 1) return res.status(403).json({ message: '不能封禁管理员' })
     await pool.query('UPDATE users SET is_blocked = ? WHERE id = ?', [blocked ? 1 : 0, id])
+    if (blocked) {
+      await pool.query('UPDATE users SET token_version = COALESCE(token_version, 0) + 1 WHERE id = ?', [id]).catch(() => null)
+    }
     res.json({ message: blocked ? '已封禁' : '已解封' })
   } catch (err) {
     console.error('Block user error', err)

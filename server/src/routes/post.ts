@@ -176,6 +176,7 @@ postRouter.get('/', async (req: AuthRequest, res) => {
   const page = Number(req.query.page) || 1
   const pageSize = Math.min(Number(req.query.pageSize) || 20, 50)
   const sort = (req.query.sort as string) || 'time'
+  const keyword = typeof req.query.keyword === 'string' ? req.query.keyword.trim() : ''
   const rawCategory = typeof req.query.category === 'string' ? req.query.category : undefined
   const categoryFilter =
     rawCategory &&
@@ -207,6 +208,10 @@ postRouter.get('/', async (req: AuthRequest, res) => {
     if (categoryFilter) {
       conditions.push('p.category = ?')
       listParams.push(categoryFilter)
+    }
+    if (keyword) {
+      conditions.push('(p.title LIKE ? OR p.content LIKE ?)')
+      listParams.push(`%${keyword}%`, `%${keyword}%`)
     }
     const whereSql = conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''
 

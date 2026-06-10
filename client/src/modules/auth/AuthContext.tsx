@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
+import { App } from 'antd'
 import { getMeApi, loginApi, setApiToken } from '../shared/api'
 
 export interface AuthUser {
@@ -27,6 +28,7 @@ const TOKEN_KEY = 'wiselearn_token'
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children
 }) => {
+  const { message } = App.useApp()
   const [user, setUser] = useState<AuthUser | null>(null)
   const [token, setToken] = useState<string | null>(() => {
     const stored = window.localStorage.getItem(TOKEN_KEY)
@@ -46,14 +48,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     password: string,
     remember: boolean
   ): Promise<void> => {
-    const { token: newToken, user: userInfo } = await loginApi(email, password)
-    setToken(newToken)
-    setUser(userInfo)
-    setApiToken(newToken)
-    if (remember) {
-      window.localStorage.setItem(TOKEN_KEY, newToken)
-    } else {
-      window.localStorage.removeItem(TOKEN_KEY)
+    try {
+      const { token: newToken, user: userInfo } = await loginApi(email, password)
+      setToken(newToken)
+      setUser(userInfo)
+      setApiToken(newToken)
+      if (remember) {
+        window.localStorage.setItem(TOKEN_KEY, newToken)
+      } else {
+        window.localStorage.removeItem(TOKEN_KEY)
+      }
+    } catch (err) {
+      const msg = (err as Error).message
+      if (msg.includes('封禁')) {
+        logout()
+        message.error(msg)
+        return
+      }
+      throw err
     }
   }
 

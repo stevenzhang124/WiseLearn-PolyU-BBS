@@ -39,6 +39,29 @@ export function authMiddleware(
   }
 }
 
+export async function rejectBlockedUser(
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  if (!req.user) {
+    next()
+    return
+  }
+  try {
+    const { pool } = await import('../db')
+    const [rows] = await pool.query('SELECT is_blocked FROM users WHERE id = ?', [req.user.id])
+    const row = (rows as any[])[0]
+    if (Number(row?.is_blocked ?? 0) === 1) {
+      res.status(403).json({ message: '账号已被封禁' })
+      return
+    }
+    next()
+  } catch {
+    next()
+  }
+}
+
 /**
  * 仅管理员可访问的中间件
  */

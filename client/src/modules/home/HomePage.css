@@ -4,6 +4,59 @@
   max-width: 100%;
   margin: 0 auto;
 }
+
+.wiselearn-feed-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 25;
+  padding: 8px 0 10px;
+  background: var(--page-bg, #f5f7fb);
+  backdrop-filter: blur(8px);
+}
+
+html[data-theme='dark'] .wiselearn-feed-topbar {
+  background: #0f141b;
+}
+
+.wiselearn-feed-search-bar {
+  margin-bottom: 10px;
+}
+
+.wiselearn-feed-search-input .ant-input-search,
+.wiselearn-feed-search-input .ant-input-search .ant-input-group,
+.wiselearn-feed-search-input .ant-input-search .ant-input-affix-wrapper,
+.wiselearn-feed-search-input .ant-input-search .ant-input-group-addon,
+.wiselearn-feed-search-input .ant-input-search .ant-input-search-button {
+  background: transparent !important;
+}
+
+.wiselearn-feed-search-input .ant-input-affix-wrapper,
+.wiselearn-feed-search-input .ant-input-search-button {
+  border-radius: 999px !important;
+}
+
+.wiselearn-feed-search-input .ant-input-group-addon .ant-btn {
+  border-radius: 0 999px 999px 0 !important;
+}
+
+html[data-theme='dark'] .wiselearn-feed-search-input .ant-input-affix-wrapper,
+html[data-theme='dark'] .wiselearn-feed-search-input .ant-input-search-button {
+  background: #171b24 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  color: rgba(255, 255, 255, 0.88) !important;
+}
+
+html[data-theme='dark'] .wiselearn-feed-search-input .ant-input::placeholder {
+  color: rgba(255, 255, 255, 0.45) !important;
+}
+
+html[data-theme='dark'] .wiselearn-feed-search-input .ant-input-search-button {
+  box-shadow: none;
+}
+
+html[data-theme='dark'] .wiselearn-feed-search-input .ant-input-search-button:hover {
+  background: #1d2330 !important;
+}
 .wiselearn-feed-header {
   display: flex;
   align-items: center;

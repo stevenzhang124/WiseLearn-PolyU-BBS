@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { App } from 'antd'
+import { App, Input } from 'antd'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { fetchPosts } from '../shared/api'
 import {
   HOME_FEED_RESTORE_KEY,
@@ -19,8 +20,10 @@ import './HomePage.css'
  */
 export const HomePage: React.FC = () => {
   const { message } = App.useApp()
+  const { t, i18n } = useTranslation()
   const [sortTab] = useState<'time' | 'hot'>('time')
   const [category, setCategory] = useState('all')
+  const [searchKeyword, setSearchKeyword] = useState('')
   const [loadingPosts, setLoadingPosts] = useState(false)
   const [posts, setPosts] = useState<any[]>([])
   const [page, setPage] = useState(1)
@@ -50,7 +53,8 @@ export const HomePage: React.FC = () => {
           page: pageNo,
           pageSize,
           sort,
-          ...(category !== 'all' ? { category } : {})
+          ...(category !== 'all' ? { category } : {}),
+          ...(searchKeyword.trim() ? { keyword: searchKeyword.trim() } : {})
         })
         setPosts((prev) =>
           pageNo === 1 || mode === 'replace' ? data.list : [...prev, ...data.list]
@@ -63,7 +67,7 @@ export const HomePage: React.FC = () => {
         setLoadingPosts(false)
       }
     },
-    [category, sortTab, pageSize]
+    [category, sortTab, pageSize, searchKeyword]
   )
 
   /** 实时跟踪主滚动容器的 scrollTop，卸载时用此值保存快照 */
@@ -188,11 +192,24 @@ export const HomePage: React.FC = () => {
 
   return (
     <div className="wiselearn-feed">
-      {/* Category tabs - Campus Living, Class Q&A, etc. */}
-      <FeedTabs
-        activeCategory={category}
-        onCategoryChange={setCategory}
-      />
+      <div className="wiselearn-feed-topbar">
+        <div className="wiselearn-feed-search-bar">
+          <Input.Search
+            value={searchKeyword}
+            onChange={(e) => setSearchKeyword(e.target.value)}
+            onSearch={() => void loadPosts(1, sortTab, 'replace')}
+            allowClear
+            placeholder={t('searchPlaceholder')}
+            className="wiselearn-feed-search-input"
+            size="large"
+          />
+        </div>
+        {/* Category tabs - Campus Living, Class Q&A, etc. */}
+        <FeedTabs
+          activeCategory={category}
+          onCategoryChange={setCategory}
+        />
+      </div>
 
       {/* Feed list */}
       <FeedList

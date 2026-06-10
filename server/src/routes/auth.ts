@@ -243,10 +243,23 @@ authRouter.post('/login', async (req, res) => {
   }
 
   try {
-    const [rows] = await pool.query(
-      'SELECT id, email, password_hash, nickname, is_admin FROM users WHERE email = ?',
-      [email]
+    const normalized = email.trim().toLowerCase()
+    const [colRows] = await pool.query(
+      `SELECT column_name FROM information_schema.columns
+       WHERE table_schema = DATABASE() AND table_name = 'users'`
     )
+    const colSet = new Set((colRows as any[]).map((r: { column_name: string }) => String(r.column_name).toLowerCase()))
+    const hasAdmin = colSet.has('is_admin')
+    const hasBlocked = colSet.has('is_blocked')
+    const selectCols = [
+      'id',
+      'email',
+      'password_hash',
+      'nickname',
+      hasAdmin ? 'is_admin' : '0 AS is_admin',
+      hasBlocked ? 'is_blocked' : '0 AS is_blocked'
+    ].join(', ')
+    const [rows] = await pool.query(`SELECT ${selectCols} FROM users WHERE email = ?`, [normalized])
     const user = (rows as any[])[0]
     if (!user) {
       res.status(401).json({ message: '邮箱或密码错误' })
@@ -256,6 +269,11 @@ authRouter.post('/login', async (req, res) => {
     const ok = await bcrypt.compare(password, user.password_hash)
     if (!ok) {
       res.status(401).json({ message: '邮箱或密码错误' })
+      return
+    }
+
+    if (Number(user.is_blocked ?? 0) === 1) {
+      res.status(403).json({ message: '账号已被封禁，请联系管理员' })
       return
     }
 
