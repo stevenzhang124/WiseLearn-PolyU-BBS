@@ -33,7 +33,9 @@ services:
       DB_PASSWORD: root_password
       DB_NAME: redbrick
       JWT_SECRET: replace_with_strong_secret
-      API_BASE_URL: http://localhost:8080
+      API_BASE_URL: ${API_BASE_URL:-http://localhost:8080}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:8080}
+      SHARE_BASE_URL: ${SHARE_BASE_URL:-http://localhost:8080}
     volumes:
       - ./server/uploads:/app/uploads
     depends_on:
