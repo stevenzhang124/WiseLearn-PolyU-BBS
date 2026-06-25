@@ -20,7 +20,7 @@ import './HomePage.css'
  */
 export const HomePage: React.FC = () => {
   const { message } = App.useApp()
-  const { t, i18n } = useTranslation()
+  const { t } = useTranslation()
   const [sortTab] = useState<'time' | 'hot'>('time')
   const [category, setCategory] = useState('all')
   const [searchKeyword, setSearchKeyword] = useState('')
