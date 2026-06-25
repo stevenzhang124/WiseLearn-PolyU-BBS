@@ -320,10 +320,19 @@ authRouter.get('/me', authMiddleware, async (req: AuthRequest, res) => {
   }
 
   try {
-    const [rows] = await pool.query(
-      'SELECT id, email, nickname, is_admin FROM users WHERE id = ?',
-      [req.user.id]
+    const [colRows] = await pool.query(
+      `SELECT column_name FROM information_schema.columns
+       WHERE table_schema = DATABASE() AND table_name = 'users'`
     )
+    const colSet = new Set((colRows as any[]).map((r: { column_name: string }) => String(r.column_name).toLowerCase()))
+    const hasAdmin = colSet.has('is_admin')
+    const selectCols = [
+      'id',
+      'email',
+      'nickname',
+      hasAdmin ? 'is_admin' : '0 AS is_admin'
+    ].join(', ')
+    const [rows] = await pool.query(`SELECT ${selectCols} FROM users WHERE id = ?`, [req.user.id])
     const user = (rows as any[])[0]
     if (!user) {
       res.status(404).json({ message: '用户不存在' })

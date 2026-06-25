@@ -65,15 +65,32 @@ export async function rejectBlockedUser(
 /**
  * 仅管理员可访问的中间件
  */
-export function adminOnly(
+export async function adminOnly(
   req: AuthRequest,
   res: Response,
   next: NextFunction
-): void {
-  if (!req.user?.isAdmin) {
-    res.status(403).json({ message: '无访问权限（仅管理员可访问）' })
-    return
+): Promise<void> {
+  try {
+    if (!req.user) {
+      res.status(403).json({ message: '无访问权限（仅管理员可访问）' })
+      return
+    }
+    const { pool } = await import('../db')
+    const [rows] = await pool.query('SELECT is_admin FROM users WHERE id = ?', [req.user.id])
+    const row = (rows as any[])[0]
+    const isAdmin = Number(row?.is_admin ?? (req.user.isAdmin ? 1 : 0)) === 1
+    if (!isAdmin) {
+      res.status(403).json({ message: '无访问权限（仅管理员可访问）' })
+      return
+    }
+    req.user.isAdmin = true
+    next()
+  } catch {
+    if (!req.user?.isAdmin) {
+      res.status(403).json({ message: '无访问权限（仅管理员可访问）' })
+      return
+    }
+    next()
   }
-  next()
 }
 
