@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import { pool } from '../db'
+import { getTableColumnSet } from '../dbColumns'
 import { adminOnly, authMiddleware, AuthRequest } from '../middleware/auth'
 
 function userSearchLike(keyword: string): string {
@@ -79,14 +80,7 @@ adminRouter.get('/users', async (req: AuthRequest, res) => {
   const limit = Math.min(Number(req.query.limit) || 50, 100)
   const offset = Math.max(Number(req.query.offset) || 0, 0)
   try {
-    const dbName = (await import('../config')).config.db.database
-    const [colRows] = await pool.query(
-      `SELECT column_name
-       FROM information_schema.columns
-       WHERE table_schema = ? AND table_name = 'users'`,
-      [dbName]
-    )
-    const colSet = new Set((colRows as any[]).map((r: { column_name: string }) => String(r.column_name).toLowerCase()))
+    const colSet = await getTableColumnSet(pool, 'users')
     const hasEmail = colSet.has('email')
     const hasRole = colSet.has('role')
     const hasBlocked = colSet.has('is_blocked')

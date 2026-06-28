@@ -46,3 +46,9 @@ coverage/
 *.tmp
 *.temp
 .cache/
+
+# env文件
+.env
+
+# yml文件
+.yml

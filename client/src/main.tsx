@@ -69,8 +69,11 @@ function AdminRoute({ children }: { children: React.ReactElement }) {
 }
 
 function RequireLayout({ children }: { children: React.ReactElement }) {
-  const { user } = useAuth()
+  const { user, authLoading } = useAuth()
   const location = useLocation()
+  if (authLoading) {
+    return null
+  }
   if (!user) {
     return <Navigate to="/login" replace state={{ from: location }} />
   }

@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import { pool } from '../db'
 import { config } from '../config'
+import { getTableColumnSet, toIsAdmin } from '../dbColumns'
 import { AuthUser, AuthRequest, authMiddleware } from '../middleware/auth'
 import { sendVerificationEmail, sendPasswordResetEmail } from '../email'
 import {
@@ -244,11 +245,7 @@ authRouter.post('/login', async (req, res) => {
 
   try {
     const normalized = email.trim().toLowerCase()
-    const [colRows] = await pool.query(
-      `SELECT column_name FROM information_schema.columns
-       WHERE table_schema = DATABASE() AND table_name = 'users'`
-    )
-    const colSet = new Set((colRows as any[]).map((r: { column_name: string }) => String(r.column_name).toLowerCase()))
+    const colSet = await getTableColumnSet(pool, 'users')
     const hasAdmin = colSet.has('is_admin')
     const hasBlocked = colSet.has('is_blocked')
     const selectCols = [
@@ -291,7 +288,7 @@ authRouter.post('/login', async (req, res) => {
       id: user.id,
       email: user.email,
       nickname: user.nickname,
-      isAdmin: Boolean(user.is_admin)
+      isAdmin: toIsAdmin(user.is_admin)
     }
     const token = jwt.sign(payload, config.jwtSecret, {
       expiresIn: config.jwtExpiresIn
@@ -320,11 +317,7 @@ authRouter.get('/me', authMiddleware, async (req: AuthRequest, res) => {
   }
 
   try {
-    const [colRows] = await pool.query(
-      `SELECT column_name FROM information_schema.columns
-       WHERE table_schema = DATABASE() AND table_name = 'users'`
-    )
-    const colSet = new Set((colRows as any[]).map((r: { column_name: string }) => String(r.column_name).toLowerCase()))
+    const colSet = await getTableColumnSet(pool, 'users')
     const hasAdmin = colSet.has('is_admin')
     const selectCols = [
       'id',
@@ -352,7 +345,7 @@ authRouter.get('/me', authMiddleware, async (req: AuthRequest, res) => {
       email: user.email,
       nickname: user.nickname,
       avatar,
-      isAdmin: Boolean(user.is_admin)
+      isAdmin: toIsAdmin(user.is_admin)
     })
   } catch (err) {
     // eslint-disable-next-line no-console

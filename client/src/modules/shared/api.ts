@@ -2,6 +2,17 @@ import axios from 'axios'
 import type { AuthUser } from '../auth/AuthContext'
 import { compressImageForUpload } from './compressImageForUpload'
 
+/** 统一解析登录/当前用户接口中的管理员标识（兼容 isAdmin / is_admin） */
+export function normalizeAuthUser(data: Record<string, unknown>): AuthUser {
+  return {
+    id: Number(data.id),
+    email: String(data.email ?? ''),
+    nickname: String(data.nickname ?? ''),
+    avatar: (data.avatar as string | null | undefined) ?? null,
+    isAdmin: Number(data.isAdmin ?? data.is_admin ?? 0) === 1
+  }
+}
+
 let inMemoryToken: string | null = null
 
 export function setApiToken(token: string | null): void {
@@ -51,7 +62,10 @@ export async function loginApi(
   password: string
 ): Promise<{ token: string; user: AuthUser }> {
   const res = await api.post('/auth/login', { email, password })
-  return res.data
+  return {
+    token: res.data.token,
+    user: normalizeAuthUser(res.data.user ?? {})
+  }
 }
 
 /** 发送注册验证码到邮箱（仅 PolyU 邮箱） */
@@ -90,7 +104,7 @@ export async function getMeApi(token?: string): Promise<AuthUser> {
         }
       : undefined
   })
-  return res.data
+  return normalizeAuthUser(res.data ?? {})
 }
 
 export async function updateNicknameApi(nickname: string): Promise<void> {

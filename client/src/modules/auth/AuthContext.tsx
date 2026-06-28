@@ -13,6 +13,8 @@ export interface AuthUser {
 interface AuthContextValue {
   user: AuthUser | null
   token: string | null
+  /** 正在用本地 token 拉取 /me，未完成前勿当作未登录 */
+  authLoading: boolean
   login: (email: string, password: string, remember: boolean) => Promise<void>
   logout: () => void
   refreshMe: () => Promise<void>
@@ -30,6 +32,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const { message } = App.useApp()
   const [user, setUser] = useState<AuthUser | null>(null)
+  const [authLoading, setAuthLoading] = useState(() => Boolean(window.localStorage.getItem(TOKEN_KEY)))
   const [token, setToken] = useState<string | null>(() => {
     const stored = window.localStorage.getItem(TOKEN_KEY)
     if (stored) {
@@ -39,9 +42,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   })
 
   useEffect(() => {
-    if (!token) return
-    void refreshMe()
-  }, [token])
+    if (!token) {
+      setAuthLoading(false)
+      return
+    }
+    // login() 已同步写入 user 时无需再拉 /me
+    if (user) {
+      setAuthLoading(false)
+      return
+    }
+    setAuthLoading(true)
+    void refreshMe().finally(() => setAuthLoading(false))
+  }, [token, user])
 
   const login = async (
     email: string,
@@ -91,6 +103,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       value={{
         user,
         token,
+        authLoading,
         login,
         logout,
         refreshMe
