@@ -1,7 +1,8 @@
-import express, { Router } from 'express'
+import { Router, type Response, type NextFunction } from 'express'
 import { pool } from '../db'
 import { authMiddleware, AuthRequest } from '../middleware/auth'
-import { upload } from './upload'
+import { upload, uploadImageErrorHandler } from './upload'
+import { processUploadedImage } from '../utils/processUploadedImage'
 
 export const usersRouter = Router()
 
@@ -9,8 +10,10 @@ usersRouter.use(authMiddleware)
 
 const baseUrl = () => process.env.API_BASE_URL || 'http://localhost:4000'
 
-function parseUserId(param: string): number | null {
-  const id = Number(param)
+function parseUserId(param: string | string[] | undefined): number | null {
+  const raw = Array.isArray(param) ? param[0] : param
+  if (raw == null || raw === '') return null
+  const id = Number(raw)
   return Number.isNaN(id) ? null : id
 }
 
@@ -292,29 +295,44 @@ usersRouter.get('/:id/posts', async (req: AuthRequest, res) => {
     return
   }
   const limit = Math.min(Number(req.query.limit) || 50, 100)
+  const isAdmin = Boolean(req.user?.isAdmin)
+  const isSelf = req.user?.id === id
 
   try {
+    const viewerId = req.user!.id
     let rows: any[]
     try {
       const [r] = await pool.query(
-        `SELECT p.id, p.title, p.content, p.image_urls, p.created_at, p.view_count, p.like_count,
-         u.nickname AS author, u.avatar AS author_avatar
-         FROM posts p JOIN users u ON p.user_id = u.id WHERE p.user_id = ? ORDER BY p.created_at DESC LIMIT ?`,
-        [id, limit]
+        `SELECT p.id, p.user_id, p.title, p.content, p.category, p.image_urls, p.created_at, p.view_count, p.like_count,
+         p.share_count, p.is_pinned, u.nickname AS author, u.avatar AS author_avatar,
+         (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS comment_count,
+         EXISTS(SELECT 1 FROM likes lk WHERE lk.post_id = p.id AND lk.user_id = ?) AS user_liked
+         FROM posts p JOIN users u ON p.user_id = u.id WHERE p.user_id = ?
+         ${isAdmin || isSelf ? '' : 'AND p.audit_status = 1'}
+         ORDER BY p.created_at DESC LIMIT ?`,
+        [viewerId, id, limit]
       )
       rows = r as any[]
     } catch {
       const [r] = await pool.query(
-        `SELECT p.id, p.title, p.content, p.image_urls, p.created_at, p.view_count, p.like_count,
-         u.nickname AS author FROM posts p JOIN users u ON p.user_id = u.id WHERE p.user_id = ? ORDER BY p.created_at DESC LIMIT ?`,
-        [id, limit]
+        `SELECT p.id, p.user_id, p.title, p.content, p.category, p.image_urls, p.created_at, p.view_count, p.like_count,
+         p.share_count, p.is_pinned, u.nickname AS author,
+         (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS comment_count,
+         EXISTS(SELECT 1 FROM likes lk WHERE lk.post_id = p.id AND lk.user_id = ?) AS user_liked
+         FROM posts p JOIN users u ON p.user_id = u.id WHERE p.user_id = ?
+         ${isAdmin || isSelf ? '' : 'AND p.audit_status = 1'}
+         ORDER BY p.created_at DESC LIMIT ?`,
+        [viewerId, id, limit]
       )
       rows = (r as any[]).map((p) => ({ ...p, author_avatar: null }))
     }
     const listBaseUrl = baseUrl()
     const list = rows.map((p) => ({
       ...p,
-      author_avatar: p.author_avatar ? `${listBaseUrl}${p.author_avatar}` : null
+      comment_count: Number((p as any).comment_count ?? 0),
+      share_count: Number((p as any).share_count ?? 0),
+      author_avatar: p.author_avatar ? `${listBaseUrl}${p.author_avatar}` : null,
+      user_liked: Boolean(p.user_liked)
     }))
     res.json({ list })
   } catch (err) {
@@ -368,7 +386,7 @@ usersRouter.get('/:id', async (req: AuthRequest, res) => {
 usersRouter.put(
   '/me/avatar',
   upload.single('file'),
-  async (req: AuthRequest, res) => {
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
     if (!req.user) {
       res.status(401).json({ message: '未登录' })
       return
@@ -377,7 +395,14 @@ usersRouter.put(
       res.status(400).json({ message: '请选择要上传的图片' })
       return
     }
-    const avatarPath = `/uploads/${req.file.filename}`
+    let processedName: string
+    try {
+      ;({ filename: processedName } = await processUploadedImage(req.file.path, 'avatar'))
+    } catch (err) {
+      next(err as Error)
+      return
+    }
+    const avatarPath = `/uploads/${processedName}`
     try {
       await pool.query('UPDATE users SET avatar = ? WHERE id = ?', [
         avatarPath,
@@ -390,7 +415,32 @@ usersRouter.put(
       res.status(500).json({ message: '头像更新失败' })
     }
   },
-  (err: Error, _req: express.Request, res: express.Response) => {
-    res.status(400).json({ message: err.message || '上传失败' })
-  }
+  uploadImageErrorHandler
 )
+
+/**
+ * 设置用户界面语言（用于管理员私信通知）
+ * PUT /api/users/me/language
+ * body: { lang: 'zh' | 'en' }
+ */
+usersRouter.put('/me/language', async (req: AuthRequest, res) => {
+  if (!req.user) {
+    res.status(401).json({ message: '未登录' })
+    return
+  }
+
+  const { lang } = req.body as { lang?: string }
+  const normalized = lang === 'en' ? 'en' : 'zh'
+
+  try {
+    await pool.query('UPDATE users SET ui_lang = ? WHERE id = ?', [
+      normalized,
+      req.user.id
+    ])
+    res.json({ message: '语言更新成功', lang: normalized })
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('Update language error', err)
+    res.status(500).json({ message: '语言更新失败' })
+  }
+})

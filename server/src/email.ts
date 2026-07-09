@@ -12,9 +12,9 @@ export async function sendVerificationEmail(
   const port = Number(process.env.SMTP_PORT) || 587
   const user = process.env.SMTP_USER
   const pass = process.env.SMTP_PASS
-  const from = process.env.MAIL_FROM || user || 'noreply@wiselearn.polyu.edu.hk'
+  const from = process.env.MAIL_FROM || user || 'noreply@redbrick.polyu.edu.hk'
 
-  const subject = 'WiseLearn 注册验证码 / Registration Verification Code'
+  const subject = 'RedBrick 注册验证码 / Registration Verification Code'
   const text = `您的验证码是：${code}\n有效期 10 分钟。\n\nYour verification code is: ${code}\nValid for 10 minutes.`
   const html = `
     <p>您的验证码是：<strong>${code}</strong></p>
@@ -26,7 +26,7 @@ export async function sendVerificationEmail(
 
   if (!host || !user || !pass) {
     // eslint-disable-next-line no-console
-    console.log('[WiseLearn] No SMTP configured. Verification code for', to, ':', code)
+    console.log('[RedBrick] No SMTP configured. Verification code for', to, ':', code)
     return
   }
 
@@ -55,9 +55,9 @@ export async function sendPasswordResetEmail(to: string, code: string): Promise<
   const port = Number(process.env.SMTP_PORT) || 587
   const user = process.env.SMTP_USER
   const pass = process.env.SMTP_PASS
-  const from = process.env.MAIL_FROM || user || 'noreply@wiselearn.polyu.edu.hk'
+  const from = process.env.MAIL_FROM || user || 'noreply@redbrick.polyu.edu.hk'
 
-  const subject = 'WiseLearn 找回密码验证码 / Password Reset Code'
+  const subject = 'RedBrick 找回密码验证码 / Password Reset Code'
   const text = `您的找回密码验证码是：${code}\n有效期 10 分钟。\n\nYour password reset code is: ${code}\nValid for 10 minutes.`
   const html = `
     <p>您的找回密码验证码是：<strong>${code}</strong></p>
@@ -69,7 +69,7 @@ export async function sendPasswordResetEmail(to: string, code: string): Promise<
 
   if (!host || !user || !pass) {
     // eslint-disable-next-line no-console
-    console.log('[WiseLearn] No SMTP configured. Password reset code for', to, ':', code)
+    console.log('[RedBrick] No SMTP configured. Password reset code for', to, ':', code)
     return
   }
 

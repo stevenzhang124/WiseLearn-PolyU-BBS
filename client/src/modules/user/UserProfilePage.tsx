@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react'
-import { Button, Typography, message } from 'antd'
-import { UserAddOutlined, MessageOutlined, UserOutlined, HeartOutlined, EyeOutlined } from '@ant-design/icons'
+import { App, Button, Typography } from 'antd'
+import { UserAddOutlined, MessageOutlined, UserOutlined } from '@ant-design/icons'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
 import { Avatar } from '../shared/Avatar'
+import { FeedPostItem } from '../home/FeedPostItem'
 import {
   getUserProfileApi,
   getUserPostsApi,
@@ -13,22 +14,11 @@ import {
 } from '../shared/api'
 import './UserProfilePage.css'
 
-function getFirstImageUrl(post: { content?: string; image_urls?: string | null }): string | null {
-  if (post.image_urls) {
-    const first = String(post.image_urls).split(',')[0]?.trim()
-    if (first) return first
-  }
-  if (post.content && /<img[^>]+src=["']([^"']+)["']/.test(post.content)) {
-    const m = post.content.match(/<img[^>]+src=["']([^"']+)["']/)
-    return m ? m[1] : null
-  }
-  return null
-}
-
 /**
- * 用户公开资料页（小红书风格）：昵称、头像、发帖数/粉丝数/获赞数、关注/私信、其发布的帖子
+ * 用户公开资料页：顶部信息 + 微博样式帖子列表（复用首页 FeedPostItem）
  */
 export const UserProfilePage: React.FC = () => {
+  const { message } = App.useApp()
   const { t } = useTranslation()
   const { id } = useParams<{ id: string }>()
   const userId = id ? Number(id) : 0
@@ -90,7 +80,7 @@ export const UserProfilePage: React.FC = () => {
   if (loading && !profile) {
     return (
       <div className="wiselearn-user-profile">
-        <div className="wiselearn-user-profile-loading">{t('common.loading')}</div>
+        <div className="wiselearn-user-profile-loading wiselearn-feed-card-frame">{t('common.loading')}</div>
       </div>
     )
   }
@@ -101,7 +91,7 @@ export const UserProfilePage: React.FC = () => {
 
   return (
     <div className="wiselearn-user-profile">
-      <div className="wiselearn-user-profile-header">
+      <div className="wiselearn-user-profile-header wiselearn-feed-card-frame wiselearn-feed-card-frame--interactive">
         <Avatar
           src={profile.avatar}
           name={profile.nickname}
@@ -145,44 +135,34 @@ export const UserProfilePage: React.FC = () => {
         </div>
       </div>
 
-      <div className="wiselearn-user-profile-posts">
-        <Typography.Title level={5} style={{ marginBottom: 16 }}>
-          {t('user.theirPosts')}
-        </Typography.Title>
-        {posts.length === 0 ? (
-          <div className="wiselearn-user-profile-empty">{t('user.noPosts')}</div>
-        ) : (
-          <div className="wiselearn-user-profile-grid">
-            {posts.map((item) => {
-              const coverUrl = getFirstImageUrl(item)
-              return (
-                <div
-                  key={item.id}
-                  className="wiselearn-user-profile-card"
-                  onClick={() => navigate(`/posts/${item.id}`)}
-                >
-                  <div className="wiselearn-user-profile-card-cover">
-                    {coverUrl ? (
-                      <img src={coverUrl} alt="" />
-                    ) : (
-                      <div className="wiselearn-user-profile-card-placeholder" />
-                    )}
-                  </div>
-                  <Typography.Paragraph
-                    className="wiselearn-user-profile-card-title"
-                    ellipsis={{ rows: 2 }}
-                  >
-                    {item.title}
-                  </Typography.Paragraph>
-                  <div className="wiselearn-user-profile-card-meta">
-                    <HeartOutlined /> {item.like_count} · <EyeOutlined /> {item.view_count}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        )}
-      </div>
+      {posts.length === 0 ? (
+        <div className="wiselearn-user-profile-empty wiselearn-feed-card-frame">{t('user.noPosts')}</div>
+      ) : (
+        <div className="wiselearn-user-profile-feed wiselearn-feed-list">
+          {posts.map((item) => (
+            <FeedPostItem
+              key={item.id}
+              headerMode="timeOnly"
+              post={{
+                id: item.id,
+                title: item.title,
+                content: item.content ?? '',
+                author: item.author,
+                author_avatar: item.author_avatar ?? null,
+                user_id: item.user_id ?? userId,
+                like_count: item.like_count ?? 0,
+                view_count: item.view_count ?? 0,
+                image_urls: item.image_urls,
+                created_at: item.created_at,
+                  is_pinned: item.is_pinned,
+                  category: item.category ?? 'campus',
+                  user_liked: Boolean(item.user_liked)
+                }}
+              onNavigate={(path) => navigate(path)}
+            />
+          ))}
+        </div>
+      )}
     </div>
   )
 }

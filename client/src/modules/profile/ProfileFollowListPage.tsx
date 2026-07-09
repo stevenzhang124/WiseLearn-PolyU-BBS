@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Card, List, Typography, message, Button } from 'antd'
+import { App, Card, Typography, Button, Spin } from 'antd'
 import { ArrowLeftOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useLocation } from 'react-router-dom'
@@ -14,6 +14,7 @@ type ListType = 'following' | 'followers'
  * 我的关注 / 我的粉丝 列表页
  */
 export const ProfileFollowListPage: React.FC = () => {
+  const { message } = App.useApp()
   const { t } = useTranslation()
   const navigate = useNavigate()
   const location = useLocation()
@@ -49,23 +50,30 @@ export const ProfileFollowListPage: React.FC = () => {
         {t('profile.backToProfile')}
       </Button>
       <Card title={title}>
-        <List
-          loading={loading}
-          dataSource={list}
-          locale={{ emptyText }}
-          renderItem={(item) => (
-            <List.Item
-              className="wiselearn-profile-list-item"
-              onClick={() => navigate(`/users/${item.id}`)}
-              style={{ cursor: 'pointer' }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', textAlign: 'left' }}>
-                <Avatar src={item.avatar} name={item.nickname} size={44} />
-                <Typography.Text strong>{item.nickname}</Typography.Text>
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: 32 }}>
+            <Spin />
+          </div>
+        ) : list.length === 0 ? (
+          <Typography.Text type="secondary">{emptyText}</Typography.Text>
+        ) : (
+          <div className="wiselearn-profile-follow-list" role="list">
+            {list.map((item) => (
+              <div
+                key={item.id}
+                role="listitem"
+                className="wiselearn-profile-list-item"
+                onClick={() => navigate(`/users/${item.id}`)}
+                style={{ cursor: 'pointer' }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', textAlign: 'left' }}>
+                  <Avatar src={item.avatar} name={item.nickname} size={44} />
+                  <Typography.Text strong>{item.nickname}</Typography.Text>
+                </div>
               </div>
-            </List.Item>
-          )}
-        />
+            ))}
+          </div>
+        )}
       </Card>
     </div>
   )

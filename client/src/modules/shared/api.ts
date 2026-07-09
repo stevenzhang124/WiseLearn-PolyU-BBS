@@ -1,5 +1,6 @@
 import axios from 'axios'
 import type { AuthUser } from '../auth/AuthContext'
+import { compressImageForUpload } from './compressImageForUpload'
 
 let inMemoryToken: string | null = null
 
@@ -7,10 +8,16 @@ export function setApiToken(token: string | null): void {
   inMemoryToken = token
 }
 
+const apiBaseURL =
+  (import.meta.env.VITE_API_BASE_URL as string)?.trim() ||
+  'http://localhost:4000/api'
+
 const api = axios.create({
-  baseURL: 'http://localhost:4000/api',
+  baseURL: apiBaseURL,
   timeout: 10000
 })
+
+const uploadTimeoutMs = 180000
 
 api.interceptors.request.use((config) => {
   const stored = window.localStorage.getItem('wiselearn_token')
@@ -24,10 +31,17 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (resp) => resp,
   (error) => {
-    const msg =
-      error.response?.data?.message ??
-      error.message ??
-      '请求失败，请稍后重试'
+    const isNetworkError =
+      error.message === 'Network Error' ||
+      error.code === 'ERR_NETWORK' ||
+      !error.response
+    const msg = isNetworkError
+      ? (localStorage.getItem('wiselearn_lang') === 'en'
+          ? 'Network error. Please check your connection and try again.'
+          : '网络连接失败，请检查网络后重试')
+      : (error.response?.data?.message ??
+          error.message ??
+          '请求失败，请稍后重试')
     return Promise.reject(new Error(msg))
   }
 )
@@ -86,7 +100,9 @@ export async function updateNicknameApi(nickname: string): Promise<void> {
 export async function fetchPosts(params: {
   page: number
   pageSize: number
-  sort: 'time' | 'hot'
+  sort: 'time' | 'hot' | 'views' | 'recent'
+  /** 不传或 all 表示全部分类 */
+  category?: string
 }): Promise<any> {
   const res = await api.get('/posts', { params })
   return res.data
@@ -113,6 +129,25 @@ export async function fetchPostDetail(id: number): Promise<any> {
   return res.data
 }
 
+export async function fetchPostComments(
+  postId: number,
+  limit = 5
+): Promise<{
+  comments: Array<{
+    id: number
+    user_id: number
+    content: string
+    parent_comment_id: number | null
+    created_at: string
+    author: string
+    author_avatar: string | null
+  }>
+  total: number
+}> {
+  const res = await api.get(`/posts/${postId}/comments`, { params: { limit } })
+  return res.data
+}
+
 export async function sendComment(data: {
   postId: number
   content: string
@@ -130,7 +165,9 @@ export async function toggleLike(postId: number): Promise<{ liked: boolean }> {
   return res.data
 }
 
-export async function getShareLink(postId: number): Promise<{ link: string }> {
+export async function getShareLink(
+  postId: number
+): Promise<{ link: string; share_count: number }> {
   const res = await api.get(`/posts/${postId}/share-link`)
   return res.data
 }
@@ -142,10 +179,12 @@ export async function getActivities(): Promise<any> {
 
 /** 上传图片，返回可访问的 URL（用于富文本插入图片） */
 export async function uploadImageApi(file: File): Promise<{ url: string }> {
+  const prepared = await compressImageForUpload(file, 'post')
   const form = new FormData()
-  form.append('file', file)
+  form.append('file', prepared)
   const res = await api.post<{ url: string }>('/upload/image', form, {
-    headers: { 'Content-Type': 'multipart/form-data' }
+    headers: { 'Content-Type': 'multipart/form-data' },
+    timeout: uploadTimeoutMs
   })
   return res.data
 }
@@ -217,10 +256,12 @@ export async function getUserPostsApi(userId: number): Promise<{ list: any[] }> 
 
 /** 上传当前用户头像，返回新头像 URL */
 export async function uploadAvatarApi(file: File): Promise<{ avatar: string }> {
+  const prepared = await compressImageForUpload(file, 'avatar')
   const form = new FormData()
-  form.append('file', file)
+  form.append('file', prepared)
   const res = await api.put<{ avatar: string }>('/users/me/avatar', form, {
-    headers: { 'Content-Type': 'multipart/form-data' }
+    headers: { 'Content-Type': 'multipart/form-data' },
+    timeout: uploadTimeoutMs
   })
   return res.data
 }
@@ -340,5 +381,22 @@ export async function pinPost(
 
 export async function deletePostAdmin(id: number): Promise<void> {
   await api.delete(`/admin/posts/${id}`)
+}
+
+export async function fetchAdminPendingPosts(limit = 50): Promise<any> {
+  const res = await api.get('/admin/posts/pending', { params: { limit } })
+  return res.data
+}
+
+export async function approvePostAdmin(id: number): Promise<void> {
+  await api.post(`/admin/posts/${id}/approve`)
+}
+
+export async function rejectPostAdmin(id: number, reason: string): Promise<void> {
+  await api.post(`/admin/posts/${id}/reject`, { reason })
+}
+
+export async function updateUserLanguageApi(lang: 'zh' | 'en'): Promise<void> {
+  await api.put('/users/me/language', { lang })
 }
 

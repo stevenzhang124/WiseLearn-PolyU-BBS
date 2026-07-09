@@ -1,0 +1,186 @@
+/* 发帖 / 编辑帖子共用：白卡片 + 表单区 + 底栏按钮 + 标题与分类输入样式 */
+
+.wiselearn-post-editor {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e8e8e8;
+  overflow: visible;
+}
+
+.wiselearn-post-editor-body {
+  padding: 24px 32px;
+}
+
+.wiselearn-post-editor-heading {
+  margin: 0 0 20px;
+  font-size: 18px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.85);
+}
+
+.wiselearn-post-editor-body .ant-form-item {
+  margin-bottom: 20px;
+}
+
+.wiselearn-post-editor-body .ant-form-item-label > label {
+  font-weight: 500;
+  color: #333;
+  font-size: 14px;
+  height: auto;
+}
+
+.wiselearn-post-editor-body .ant-form-item-label > label.ant-form-item-required::before {
+  color: #ff4d4f;
+  margin-right: 4px;
+}
+
+.wiselearn-input-wrapper {
+  position: relative;
+}
+
+.wiselearn-input {
+  border-radius: 12px;
+  padding: 10px 60px 10px 14px;
+  border: 1px solid #d9d9d9;
+  height: 42px;
+  font-size: 14px;
+}
+
+.wiselearn-input:hover {
+  border-color: #c8102e;
+}
+
+.wiselearn-input:focus,
+.wiselearn-input-focused {
+  border-color: #c8102e;
+  box-shadow: 0 0 0 2px rgba(200, 16, 46, 0.1);
+}
+
+.wiselearn-char-count {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 13px;
+  color: #999;
+  pointer-events: none;
+}
+
+.wiselearn-select {
+  width: 100%;
+}
+
+.wiselearn-select .ant-select-selector {
+  border-radius: 12px !important;
+  padding: 0 14px !important;
+  border: 1px solid #d9d9d9 !important;
+  height: 42px !important;
+  display: flex;
+  align-items: center;
+}
+
+.wiselearn-select:hover .ant-select-selector {
+  border-color: #c8102e !important;
+}
+
+.wiselearn-select-focused .ant-select-selector,
+.wiselearn-select.ant-select-focused .ant-select-selector {
+  border-color: #c8102e !important;
+  box-shadow: 0 0 0 2px rgba(200, 16, 46, 0.1) !important;
+}
+
+.wiselearn-content-form-item {
+  text-align: left;
+}
+
+.wiselearn-post-images-section {
+  margin-bottom: 20px;
+}
+
+.wiselearn-editor-wrapper {
+  border-radius: 12px;
+  overflow: visible;
+  background: #fff;
+  position: relative;
+}
+
+.wiselearn-editor-wrapper::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px #d9d9d9;
+  pointer-events: none;
+  transition: box-shadow 0.2s;
+  z-index: 2;
+}
+
+.wiselearn-editor-wrapper:hover::after {
+  box-shadow: inset 0 0 0 1px #c8102e;
+}
+
+.wiselearn-editor-wrapper:focus-within::after {
+  box-shadow: inset 0 0 0 1.5px #c8102e, 0 0 0 2px rgba(200, 16, 46, 0.1);
+}
+
+.wiselearn-editor-wrapper .wiselearn-rich-editor {
+  border: none;
+  border-radius: 0;
+  background: transparent;
+}
+
+.wiselearn-editor-wrapper .bn-container {
+  --bn-colors-editor-background: transparent;
+}
+
+.wiselearn-editor-wrapper .wiselearn-rich-editor:hover,
+.wiselearn-editor-wrapper .wiselearn-rich-editor:focus-within {
+  border: none;
+  box-shadow: none;
+}
+
+.wiselearn-post-editor-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 32px;
+  background: #f7f7f8;
+  border-top: 1px solid #f0f0f0;
+  border-radius: 0 0 8px 8px;
+}
+
+.wiselearn-btn-cancel {
+  padding: 8px 24px;
+  height: auto;
+  font-size: 14px;
+  font-weight: 500;
+  color: #666;
+  background: #fff;
+  border: 1px solid #d9d9d9;
+  border-radius: 20px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.wiselearn-btn-cancel:hover {
+  color: #333;
+  background: #f5f5f5;
+  border-color: #d9d9d9;
+}
+
+/* 发帖「发布」与编辑「保存」共用主按钮样式 */
+.wiselearn-btn-publish {
+  padding: 8px 28px;
+  height: auto;
+  font-size: 14px;
+  font-weight: 500;
+  background: #c8102e;
+  border: none;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(200, 16, 46, 0.25);
+}
+
+.wiselearn-btn-publish:hover {
+  background: #a60d26;
+}

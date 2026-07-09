@@ -1,0 +1,23 @@
+/* MainContent Styles */
+
+.wiselearn-main-content {
+  flex: 1;
+  min-width: 0;
+  padding: 24px;
+  overflow-y: auto;
+  background: #f5f5f5;
+}
+
+/* Mobile adjustments */
+@media (max-width: 991px) {
+  .wiselearn-main-content {
+    padding: 16px;
+    padding-bottom: 80px; /* Space for bottom nav */
+  }
+}
+
+@media (max-width: 639px) {
+  .wiselearn-main-content {
+    padding: 12px;
+  }
+}
